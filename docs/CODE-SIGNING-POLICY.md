@@ -52,8 +52,8 @@ While mapping, TSCC_WASD changes HidHide's configuration to hide physical contro
 restores it exactly when mapping stops (or on the next launch after a crash). The optional
 **automatic reconnect** helper is only set up when the user agrees to a Windows administrator
 prompt; it copies TSCC_WASD to `%ProgramFiles%\TSCC_WASD\Helper` and registers the on-demand task
-`\TSCC_WASD\ReconnectControllers`, which only power-cycles the USB ports of connected Xbox and
-NS2 Pro controllers. It is removed with **App settings → Remove**. **Start with
+`\TSCC_WASD\ReconnectControllers`, which only power-cycles the USB ports of connected game controllers that TSCC_WASD
+supports (Xbox, NS2 Pro, DualShock 4 / DualSense, Switch Pro). It is removed with **App settings → Remove**. **Start with
 Windows** adds a per-user sign-in entry, removed when the option is turned off. Installing the
 drivers always asks first and runs the official installers with a Windows administrator prompt.
 How to remove everything is described under *Uninstall* in the [README](../README.md#uninstall).
