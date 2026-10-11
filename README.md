@@ -76,7 +76,7 @@ are not mapped. See the [roadmap](PLAN.md).
 ## Quick start
 
 1. **Windows 10/11 x64.** Windows 11 is the tested platform. No separate .NET install is needed.
-2. Download a release ZIP from [Releases](https://github.com/CYRLLC/TSCC_WASD/releases)
+2. Download a release ZIP from [Releases](https://github.com/ynyrworks/TSCC_WASD/releases)
    (or build it, see below), extract it and run `TSCC_WASD.exe`. Preview builds are not
    code-signed yet, so SmartScreen may warn; compare the ZIP with its `.sha256` file first
    ([details](docs/SIGNING.md)).
@@ -224,7 +224,7 @@ are the building blocks TSCC_WASD relies on.
 
 ## Reporting problems
 
-Open a [GitHub issue](https://github.com/CYRLLC/TSCC_WASD/issues) and paste **About → Copy
+Open a [GitHub issue](https://github.com/ynyrworks/TSCC_WASD/issues) and paste **About → Copy
 diagnostics**; attach the log (**About → Open log folder**) if asked. Whether a game shows PS
 prompts is worth reporting too: use the *Game compatibility* template, and results are collected
 in the [compatibility list](docs/COMPATIBILITY.md).

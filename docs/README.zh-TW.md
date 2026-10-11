@@ -52,7 +52,7 @@ NS2 Pro 僅支援 USB，C 鍵與背面 GL/GR 尚未映射。
 ## 安裝與快速開始
 
 1. Windows 10／11 x64（Windows 11 為主要測試平台）。不需要另外安裝 .NET。
-2. 從 [Releases](https://github.com/CYRLLC/TSCC_WASD/releases) 下載 ZIP，解壓後執行 `TSCC_WASD.exe`。
+2. 從 [Releases](https://github.com/ynyrworks/TSCC_WASD/releases) 下載 ZIP，解壓後執行 `TSCC_WASD.exe`。
    預覽版尚未數位簽章，SmartScreen 可能出現警告；請先比對 ZIP 與 `.sha256` 檔（[說明](SIGNING.md)）。
 3. 第一次開啟時，程式會詢問是否用 `drivers` 資料夾內的官方安裝程式安裝 **ViGEmBus**（必要）與
    **HidHide**（強烈建議，不需手動設定）。選「是」，完成兩個安裝程式，依提示重新開機。
@@ -121,7 +121,7 @@ NS2 Pro 的細節見 [NS2 Pro 設定說明](NS2-PRO.md)，常見問題見[疑難
 
 ## 回報問題
 
-到 [GitHub Issues](https://github.com/CYRLLC/TSCC_WASD/issues) 回報，請先按「關於 → 複製診斷資訊」貼上，
+到 [GitHub Issues](https://github.com/ynyrworks/TSCC_WASD/issues) 回報，請先按「關於 → 複製診斷資訊」貼上，
 必要時附上日誌（「關於 → 開啟日誌資料夾」）。遊戲能不能顯示 PS 圖示，也歡迎用「遊戲相容性回報」範本告訴我們，
 結果會整理到[相容性清單](COMPATIBILITY.md)。
 

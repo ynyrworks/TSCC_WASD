@@ -25,10 +25,10 @@
         <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,16"
                    Text="{app:T Zh='PlayStation、DualShock、Xbox、Nintendo Switch、Steam 為各自所有者的商標，本專案與其無關聯。', En='PlayStation, DualShock, Xbox, Nintendo Switch and Steam are trademarks of their owners; this project is not affiliated with them.'}"/>
         <WrapPanel Margin="0,0,0,8">
-            <Button Content="GitHub" Click="OnOpen" Tag="https://github.com/CYRLLC/TSCC_WASD"/>
+            <Button Content="GitHub" Click="OnOpen" Tag="https://github.com/ynyrworks/TSCC_WASD"/>
             <Button Content="{app:T Zh=第三方聲明, En='Third-party notices'}" Click="OnOpen"
-                    Tag="https://github.com/CYRLLC/TSCC_WASD/blob/main/THIRD-PARTY-NOTICES.md"/>
-            <Button Content="{app:T Zh=回報問題, En='Report an issue'}" Click="OnOpen" Tag="https://github.com/CYRLLC/TSCC_WASD/issues"/>
+                    Tag="https://github.com/ynyrworks/TSCC_WASD/blob/main/THIRD-PARTY-NOTICES.md"/>
+            <Button Content="{app:T Zh=回報問題, En='Report an issue'}" Click="OnOpen" Tag="https://github.com/ynyrworks/TSCC_WASD/issues"/>
         </WrapPanel>
         <WrapPanel Margin="0,0,0,16">
             <Button Content="{app:T Zh=複製診斷資訊, En='Copy diagnostics'}" Command="{Binding CopyDiagnosticsCommand}"

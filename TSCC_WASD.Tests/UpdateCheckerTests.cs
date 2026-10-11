@@ -1,10 +1,35 @@
 using Xunit;
+using System.Net.Http;
 using TSCC_WASD.Core.Services;
 
 namespace TSCC_WASD.Tests;
 
 public class UpdateCheckerTests
 {
+    [Fact]
+    public async Task ChecksReleasesUnderTheCurrentOwner()
+    {
+        using var handler = new ReleaseHandler();
+        using var client = new HttpClient(handler);
+        Assert.Null(await UpdateChecker.GetLatestAsync(client));
+        Assert.Equal("https://api.github.com/repos/ynyrworks/TSCC_WASD/releases?per_page=20", handler.Url);
+        Assert.Equal("https://github.com/ynyrworks/TSCC_WASD/releases", UpdateChecker.ReleasesPage);
+    }
+
+    private sealed class ReleaseHandler : HttpMessageHandler
+    {
+        public string? Url { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
+        {
+            Url = request.RequestUri!.AbsoluteUri;
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("[]")
+            });
+        }
+    }
+
     private const string Releases = """
         [
           { "tag_name": "v0.5.0", "draft": true,  "prerelease": true,  "html_url": "https://x/draft" },

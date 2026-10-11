@@ -64,10 +64,10 @@ SignPath Foundation 用**基金會名下的憑證**免費幫開源專案簽章�
 | 欄位 | 必填 | 建議內容 |
 | --- | --- | --- |
 | Project Name | ✅ | `TSCC_WASD` |
-| Repository URL | ✅ | `https://github.com/CYRLLC/TSCC_WASD` |
+| Repository URL | ✅ | `https://github.com/ynyrworks/TSCC_WASD` |
 | Homepage URL | ✅ | 同上（repository 首頁可當作首頁） |
-| Download URL |  | `https://github.com/CYRLLC/TSCC_WASD/releases`（表單註明此頁要提到使用 SignPath Foundation 簽章；README 的「Code signing policy」段落已經寫了正在申請） |
-| Privacy Policy URL |  | `https://github.com/CYRLLC/TSCC_WASD/blob/main/docs/CODE-SIGNING-POLICY.md#privacy` |
+| Download URL |  | `https://github.com/ynyrworks/TSCC_WASD/releases`（表單註明此頁要提到使用 SignPath Foundation 簽章；README 的「Code signing policy」段落已經寫了正在申請） |
+| Privacy Policy URL |  | `https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/CODE-SIGNING-POLICY.md#privacy` |
 | Wikipedia URL |  | 留空 |
 | Tagline | ✅ | `Free, open-source Windows tool that makes games see an Xbox or Nintendo Switch 2 Pro controller as a DualShock 4, so they show PlayStation button prompts.` |
 | Category | ✅ | 從選單選最接近的，例如 Gaming／Utilities |
@@ -98,7 +98,7 @@ SignPath Foundation 用**基金會名下的憑證**免費幫開源專案簽章�
 登入 https://app.signpath.io ：
 
 1. **Trusted Build System：** Organization 設定 → Trusted Build Systems → 新增預設的 **GitHub.com**。
-   建議同時安裝 SignPath GitHub App，並授權 `CYRLLC/TSCC_WASD`。
+   建議同時安裝 SignPath GitHub App，並授權 `ynyrworks/TSCC_WASD`。
 2. **Project：** 建立專案，slug 例如 `TSCC_WASD`，連結上面的 GitHub.com 建置系統與 repository。
 3. **Artifact configuration（成品設定）：** GitHub 上傳的成品會被包成 ZIP，裡面只有 `TSCC_WASD.exe`，
    所以設定成：
@@ -126,7 +126,7 @@ SignPath Foundation 用**基金會名下的憑證**免費幫開源專案簽章�
 
 ## 第 4 步：把設定接到 GitHub
 
-GitHub → `CYRLLC/TSCC_WASD` → Settings → Secrets and variables → Actions：
+GitHub → `ynyrworks/TSCC_WASD` → Settings → Secrets and variables → Actions：
 
 | 種類 | 名稱 | 值 |
 | --- | --- | --- |

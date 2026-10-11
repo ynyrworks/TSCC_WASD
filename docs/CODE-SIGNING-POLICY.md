@@ -23,8 +23,8 @@ does not re-sign third-party files.
 
 | Role | Who |
 | --- | --- |
-| Committers and reviewers | [Repository collaborators](https://github.com/CYRLLC/TSCC_WASD/graphs/contributors) — currently [@CYRLLC](https://github.com/CYRLLC) |
-| Approvers | Repository owner — [@CYRLLC](https://github.com/CYRLLC) |
+| Committers and reviewers | [Repository collaborators](https://github.com/ynyrworks/TSCC_WASD/graphs/contributors) — currently [@ynyrworks](https://github.com/ynyrworks) |
+| Approvers | Repository owner — [@ynyrworks](https://github.com/ynyrworks) |
 
 Changes from people outside the team (pull requests) are reviewed by a committer before they are
 merged. Every signing request is approved manually by an approver. All team members use

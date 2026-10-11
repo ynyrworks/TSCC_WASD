@@ -11,7 +11,7 @@ public sealed record UpdateInfo(Version Version, string Tag, string Url, bool Pr
 /// </summary>
 public static class UpdateChecker
 {
-    public const string Repository = "CYRLLC/TSCC_WASD";
+    public const string Repository = "ynyrworks/TSCC_WASD";
     public const string ReleasesPage = "https://github.com/" + Repository + "/releases";
     private const string Api = "https://api.github.com/repos/" + Repository + "/releases?per_page=20";
 
