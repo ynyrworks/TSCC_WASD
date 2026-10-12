@@ -147,10 +147,19 @@ were reverted and Steam was relaunched after the comparison.
 
 ### Other devices and scenarios
 
+The Xbox USB and Bluetooth transports have both been exercised on physical hardware (see
+0.4.1 and 0.3.0 above). The earlier generic Bluetooth "Pending" entry referred to broader
+feature coverage, not a lack of any Bluetooth hardware testing. The distinction matters:
+HidHide isolation and Steam Input PS prompts were verified, but comprehensive button/rumble
+and reconnect coverage was not.
+
 | Check | Result |
 | --- | --- |
-| Xbox USB controller: all buttons/sticks/triggers | Pending |
-| Xbox Bluetooth controller | Pending |
+| Xbox USB: XInput access and HidHide isolation | Passed, 2026-10-09 (0.4.1) |
+| Xbox Bluetooth: HidHide isolation and Steam Input PS prompts after Steam restart | Passed, 2026-10-09 (0.3.0) |
+| Xbox USB: all buttons/sticks/triggers and rumble | Pending |
+| Xbox Bluetooth: complete button/rumble and reconnect coverage | Pending |
+| NS2 Pro Bluetooth | Not supported; Bluetooth input has not been implemented |
 | Third-party XInput controller | Pending |
 | Hot-unplug while holding a button; reconnect | Pending |
 | 50 start/stop cycles with virtual device enumeration | Pending |
