@@ -16,6 +16,18 @@ PlayStation DualShock 4，顯示 PS 按鍵圖示。對應付費軟體 reWASD 最
 主畫面只放每天會用到的：狀態、設定檔、「啟動映射」。設定檔細節與程式設定收在可展開的區塊裡
 （展開後的樣子見[這裡](images/settings.zh-TW.png)）；右上角有「使用說明」「檢查更新」「關於」。
 
+## 手把支援與實機驗證
+
+| 手把 | 連線方式 | 目前狀態 |
+| --- | --- | --- |
+| Xbox Wireless Controller | USB | 已實機測試，驗證 XInput 存取及 HidHide 隱藏 |
+| Xbox Wireless Controller | 藍牙 | 已實機測試，驗證 HidHide 隱藏及透過 Steam Input 顯示 PS 圖示 |
+| Nintendo Switch 2 Pro Controller | USB | 已實機測試，驗證虛擬 DS4 輸入及 USB 自動重新連接 |
+| Nintendo Switch 2 Pro Controller | 藍牙 | 尚未支援（尚未實作） |
+| DualShock 4、DualSense、第一代 Switch Pro | 輸入支援為實驗性 | 尚待實體手把測試 |
+
+以上結果不代表所有按鍵、震動、自動重新連接或遊戲相容性均已通過完整測試。詳細項目見[驗證紀錄](VALIDATION.md)。
+
 ## 功能
 
 - **自動偵測輸入（預設）：** 同時監看 NS2 Pro（USB）、Xbox／XInput，以及（實驗性）DualShock 4、DualSense、
@@ -85,7 +97,7 @@ HidHide 只能阻止程式「打開」手把，不能把已經打開的手把搶
 
 **自動重新連接**會把 TSCC_WASD 複製到 `%ProgramFiles%\TSCC_WASD\Helper`（只有管理員能修改），
 並建立一個只在需要時執行的排程工作 `\TSCC_WASD\ReconnectControllers`，以最高權限讓已連接的 Xbox／NS2 Pro
-手把所在的 USB 埠斷電重新連接。可在「程式設定 → 移除」刪除。Xbox 無線接收器會整個重新連接，上面所有手把都會重連。
+手把所在的 USB 埠斷電重新連接。可在「程式設定 → 移除」刪除。Xbox 無線接收器會整個重新連接，上面所有手把都會重連。USB 埠重新連接輔助程式不會重置藍牙連線；藍牙手把可關閉再重新開啟，或改為重新啟動 Steam。
 
 ## 運作方式
 

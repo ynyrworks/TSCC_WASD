@@ -21,6 +21,18 @@ The main window keeps only what you use every day: status, profile, **Start mapp
 details and app settings sit in collapsible sections (shown expanded
 [here](docs/images/settings.png)); **Help**, **Check for updates** and **About** are in the top right.
 
+## Controller support and validation
+
+| Controller | Connection | Current status |
+| --- | --- | --- |
+| Xbox Wireless Controller | USB | Hardware-tested; XInput access and HidHide isolation verified |
+| Xbox Wireless Controller | Bluetooth | Hardware-tested; HidHide isolation and PS prompts via Steam Input verified |
+| Nintendo Switch 2 Pro Controller | USB | Hardware-tested; virtual DS4 input and USB reconnect verified |
+| Nintendo Switch 2 Pro Controller | Bluetooth | Not supported (not implemented) |
+| DualShock 4, DualSense, original Switch Pro | Input support is experimental | Physical-hardware testing still needed |
+
+These results do **not** imply full button, rumble, automatic-reconnect, or game compatibility testing across every transport. See the [validation record](docs/VALIDATION.md) for exactly what was tested.
+
 ## Features
 
 - **Auto-detect input (default).** Watches a USB Nintendo Switch 2 Pro, Xbox/XInput and
@@ -122,7 +134,9 @@ Steam sees the real controller again.
 administrators can change that folder) and registers an on-demand task,
 `\TSCC_WASD\ReconnectControllers`, that runs it with highest privileges to cycle the ports of
 connected Xbox / NS2 Pro controllers. Remove it with **App settings → Remove**. An Xbox
-Wireless Adapter is cycled as a whole, so every controller paired with it reconnects.
+Wireless Adapter is cycled as a whole, so every controller paired with it reconnects. The USB
+port-cycle helper does not cycle Bluetooth controller connections; turning a Bluetooth
+controller off and on or restarting Steam remains the alternative.
 
 ## How it works
 
