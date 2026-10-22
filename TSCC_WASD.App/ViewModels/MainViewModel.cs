@@ -22,7 +22,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private MappingProfile? _selectedProfile;
     private string _statusMessage = L.T("選擇設定檔後啟動映射。", "Choose a profile and start mapping.");
     private string _inputSummary = L.T("尚未啟動映射", "Mapping not started");
-    private bool _isRunning, _isPaused, _busy, _closing, _loadFailed;
+    private bool _isRunning, _isPaused, _busy, _closing, _loadFailed, _updating;
+    private CancellationTokenSource? _updateCts;
+    private double _updateProgress;
+    private string? _updateProgressText;
     private bool? _reconnectInstalled;
     private DateTime? _hiddenSince;
     private string _dependencyStatus = DependencyChecker.BuildStatusText();
@@ -136,6 +139,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return Task.CompletedTask;
         });
         CheckUpdatesCommand = Command(() => CheckUpdatesAsync(quiet: false));
+        CancelUpdateCommand = new RelayCommand(() => _updateCts?.Cancel());
         OpenHelpCommand = Command(() =>
         {
             OpenUrl(L.T($"https://github.com/{UpdateChecker.Repository}/blob/main/docs/README.zh-TW.md",
@@ -162,7 +166,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private AsyncRelayCommand Command(Func<Task> action, Func<bool>? canExecute = null)
     {
-        var command = new AsyncRelayCommand(() => RunGuardedAsync(action), () => !_closing && !_busy && (canExecute?.Invoke() ?? true));
+        var command = new AsyncRelayCommand(() => RunGuardedAsync(action), () => !_closing && !_busy && !_updating && (canExecute?.Invoke() ?? true));
         _commands.Add(command);
         return command;
     }
@@ -266,7 +270,20 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public string PauseButtonText => IsPaused ? L.T("繼續", "Resume") : L.T("暫停", "Pause");
 
     /// <summary>Profile fields can be edited while mapping; edits apply immediately.</summary>
-    public bool CanEdit => !_busy && !_closing && !_loadFailed;
+    public bool CanEdit => !_busy && !_closing && !_loadFailed && !_updating;
+
+    /// <summary>Download progress (0–1) while an update is being downloaded.</summary>
+    public double UpdateProgress { get => _updateProgress; private set => SetField(ref _updateProgress, value); }
+    /// <summary>Shown under the status line while an update downloads; null hides the progress bar.</summary>
+    public string? UpdateProgressText
+    {
+        get => _updateProgressText;
+        private set
+        {
+            if (SetField(ref _updateProgressText, value)) RaisePropertyChanged(nameof(IsDownloadingUpdate));
+        }
+    }
+    public bool IsDownloadingUpdate => _updateProgressText is not null;
 
     public string ReconnectHelperStatus
     {
@@ -346,6 +363,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand OpenProfilesCommand { get; }
     public ICommand CalibrateCommand { get; }
     public ICommand CheckUpdatesCommand { get; }
+    public ICommand CancelUpdateCommand { get; }
     public ICommand OpenHelpCommand { get; }
     public ICommand AboutCommand { get; }
     public ICommand CopyDiagnosticsCommand { get; }
@@ -451,10 +469,113 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return;
         }
         StatusMessage = L.T($"有新版本 {latest.Tag} 可下載。", $"{latest.Tag} is available.");
+        if (_updating) return;
+        var package = UpdateChecker.SelectPackage(latest);
+        string? problem = package is null
+            ? L.T("這個發行版沒有本程式可用的 Windows ZIP。", "This release has no Windows ZIP TSCC_WASD can install.")
+            : UpdateInstaller.InPlaceProblem();
+        if (package is null || problem is not null)
+        {
+            // Can't install from here; the release page still has the download.
+            var open = MessageBox.Show(
+                L.T($"有新版本 {latest.Tag}（目前 {VersionText}）。{problem}\n\n要開啟下載頁嗎？",
+                    $"{latest.Tag} is available (you have {VersionText}). {problem}\n\nOpen the download page?"),
+                AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (open == MessageBoxResult.Yes) OpenUrl(latest.Url);
+            return;
+        }
+        string size = package.Zip.Size > 0 ? $"{package.Zip.Size / 1048576.0:0.0} MB" : "?";
         var answer = MessageBox.Show(
-            L.T($"有新版本 {latest.Tag}（目前 {VersionText}）。要開啟下載頁嗎？", $"{latest.Tag} is available (you have {VersionText}). Open the download page?"),
+            L.T($"有新版本 {latest.Tag}（目前 {VersionText}）。要下載並安裝嗎？\n\n" +
+                $"將從 TSCC_WASD 的 GitHub 發行版下載 {package.Zip.Name}（{size}），安裝前會核對 SHA-256 與數位簽章。",
+                $"{latest.Tag} is available (you have {VersionText}). Download and install it?\n\n" +
+                $"{package.Zip.Name} ({size}) is downloaded from TSCC_WASD's GitHub release and checked against its SHA-256 and digital signature before installing."),
             AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Information);
-        if (answer == MessageBoxResult.Yes) OpenUrl(latest.Url);
+        if (answer == MessageBoxResult.Yes) await DownloadAndInstallAsync(package);
+    }
+
+    /// <summary>Downloads and verifies the update, then (once the user agrees) stops mapping, installs it and restarts.</summary>
+    private async Task DownloadAndInstallAsync(UpdatePackage package)
+    {
+        string tag = package.Release.Tag;
+        _updating = true;
+        _updateCts = new CancellationTokenSource();
+        NotifyState();
+        try
+        {
+            DownloadedUpdate update;
+            UpdateProgress = 0;
+            UpdateProgressText = L.T($"正在下載 {tag}…", $"Downloading {tag}…");
+            var progress = new Progress<double>(p =>
+            {
+                if (UpdateProgressText is null) return;
+                UpdateProgress = p;
+                UpdateProgressText = p >= 1
+                    ? L.T($"正在驗證 {tag}…", $"Verifying {tag}…")
+                    : L.T($"正在下載 {tag}… {p:P0}", $"Downloading {tag}… {p:P0}");
+            });
+            try { update = await UpdateInstaller.PrepareAsync(package, progress, _updateCts.Token); }
+            catch (OperationCanceledException) when (_updateCts.IsCancellationRequested)
+            {
+                StatusMessage = L.T("已取消下載更新。", "The update download was cancelled.");
+                return;
+            }
+            catch (UpdateVerificationException ex)
+            {
+                StatusMessage = L.T($"更新未通過驗證：{ex.Message}", $"The update failed verification: {ex.Message}");
+                MessageBox.Show(ex.Message, AppPaths.Name, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException
+                                           or IOException or UnauthorizedAccessException)
+            {
+                StatusMessage = L.T($"無法下載更新：{ex.Message}", $"Could not download the update: {ex.Message}");
+                return;
+            }
+            finally { UpdateProgressText = null; }
+
+            var install = MessageBox.Show(
+                L.T($"已下載並驗證 {tag}。要現在安裝並重新啟動 TSCC_WASD 嗎？" +
+                    (IsRunning ? "\n\n會先停止映射並還原 HidHide 設定，再更新程式。" : ""),
+                    $"{tag} is downloaded and verified. Install it and restart TSCC_WASD now?" +
+                    (IsRunning ? "\n\nMapping stops and HidHide's settings are restored before the update is installed." : "")),
+                AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (install != MessageBoxResult.Yes)
+            {
+                StatusMessage = L.T($"{tag} 已下載，之後按「檢查更新」即可安裝。", $"{tag} is downloaded; click Check for updates to install it later.");
+                return;
+            }
+            // Never replace the EXE while controllers are hidden: stop mapping and restore HidHide first.
+            if (IsRunning || _coordinator.IsRunning) await StopAsync();
+            if (_coordinator.IsRunning || _coordinator.HidingSince is not null)
+            {
+                StatusMessage = L.T("無法停止映射，沒有安裝更新。", "Mapping could not be stopped, so the update was not installed.");
+                return;
+            }
+            StatusMessage = L.T($"正在安裝 {tag}…", $"Installing {tag}…");
+            try { UpdateInstaller.Install(update); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                StatusMessage = L.T($"無法安裝更新，已保留目前版本：{ex.Message}", $"Could not install the update; this version was kept: {ex.Message}");
+                return;
+            }
+            try { UpdateInstaller.Restart(); }
+            catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception)
+            {
+                StatusMessage = L.T($"已安裝 {tag}，但無法自動重新啟動，請關閉後再開啟 TSCC_WASD：{ex.Message}",
+                    $"{tag} is installed but TSCC_WASD could not restart itself. Close it and open it again: {ex.Message}");
+                return;
+            }
+            StatusMessage = L.T($"已安裝 {tag}，正在重新啟動…", $"{tag} is installed; restarting…");
+            Application.Current?.MainWindow?.Close();
+        }
+        finally
+        {
+            _updateCts.Dispose();
+            _updateCts = null;
+            _updating = false;
+            NotifyState();
+        }
     }
 
     private void Reload()
@@ -700,6 +821,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         _closing = true;
+        _updateCts?.Cancel();
         _timer.Stop();
         _timer.Tick -= OnTick;
         NotifyState();

@@ -38,7 +38,8 @@ requested by the user or the person installing or operating it.
 Specifically, TSCC_WASD only connects to GitHub when you ask it to:
 
 - **Check for updates** (on click, or at startup if you turn that on) asks the GitHub API for the
-  latest release of this repository.
+  latest release of this repository. If you choose to install a newer release, TSCC_WASD downloads
+  that release's ZIP and `.sha256` file from the repository's GitHub release downloads.
 - **Install drivers** downloads the official ViGEmBus or HidHide installer from its GitHub release,
   only when the installer is not already in the `drivers` folder.
 

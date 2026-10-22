@@ -21,6 +21,8 @@ public partial class App : Application
             Shutdown(exitCode);
             return;
         }
+        // After an in-app update the old version is still closing; wait for it before taking the mutex.
+        bool updated = UpdateInstaller.FinishUpdate(e.Args);
         _instanceMutex = new Mutex(true, @"Local\TSCC_WASD.Desktop", out bool created);
         if (!created)
         {
@@ -58,6 +60,8 @@ public partial class App : Application
         {
             if (args.PropertyName == nameof(MainViewModel.StatusMessage)) AppLog.Info(viewModel.StatusMessage);
         };
+        if (updated)
+            viewModel.ShowNotice(L.T($"已更新到 {viewModel.VersionText}。", $"Updated to {viewModel.VersionText}."));
         if (migrated)
             viewModel.ShowNotice(L.T("已從舊版 YnyrWASD 搬移設定檔、校準與程式設定。", "Profiles, calibration and settings were moved over from YnyrWASD."));
         var window = new MainWindow(viewModel);

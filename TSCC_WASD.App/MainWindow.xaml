@@ -49,6 +49,28 @@
                             <TextBlock Text="{Binding StatusTitle}" FontSize="20" FontWeight="SemiBold"/>
                         </StackPanel>
                         <TextBlock Text="{Binding StatusMessage}" Margin="0,0,0,4" AutomationProperties.LiveSetting="Polite"/>
+                        <!-- Update download progress; only shown while an update downloads. -->
+                        <Grid Margin="0,4,0,8">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDownloadingUpdate}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding UpdateProgressText}" Style="{StaticResource Muted}" Margin="0,0,0,4"/>
+                                <ProgressBar Value="{Binding UpdateProgress, Mode=OneWay}" Minimum="0" Maximum="1" Height="6"
+                                             Foreground="{StaticResource AccentBrush}" Background="{StaticResource RaisedBrush}" BorderThickness="0"
+                                             AutomationProperties.Name="{app:T Zh=更新下載進度, En='Update download progress'}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="{app:T Zh=取消, En=Cancel}" Command="{Binding CancelUpdateCommand}"
+                                    Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
                         <TextBlock Text="{Binding InputSummary}" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition/></Grid.ColumnDefinitions>

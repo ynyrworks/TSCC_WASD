@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- **Update from inside TSCC_WASD:** when *Check for updates* finds a newer release, TSCC_WASD
+  downloads the release ZIP itself (with a progress bar and Cancel) instead of opening the GitHub
+  page, then offers to install it and restart. It only accepts the win-x64 ZIP served over HTTPS
+  from this repository's own release downloads, checks it against the release's `.sha256` file
+  and GitHub's recorded SHA-256 (they must agree, and a release with neither is not installed),
+  and checks that the new `TSCC_WASD.exe` has the release's version and a valid Authenticode
+  signature from the same publisher once releases are signed. If mapping is running it stops and
+  HidHide's settings are restored before any file is replaced; if copying fails, the current
+  version is put back. Copies that can't update themselves (a developer build, or a folder such as
+  Program Files that TSCC_WASD can't write to) still offer the download page.
+
 ## 0.9.1 — preview
 
 - Fixed: with *Hide physical controllers* on, games could lose the controller a moment after

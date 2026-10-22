@@ -18,6 +18,8 @@
 5. Commit the source and push a matching `v0.1.0`-style tag. The tag workflow
    builds/tests and creates a **draft prerelease**, never a public stable release.
 6. Review assets, setup instructions and limitations in the draft before publishing.
+   Keep the asset names `TSCC_WASD-<version>-win-x64.zip` and `.zip.sha256`: the in-app updater
+   only installs a ZIP with that name, and only when its SHA-256 can be checked.
 
 The ZIP is self-contained: `TSCC_WASD.exe` is a single file that includes the .NET 10
 runtime. `drivers/` holds the official ViGEmBus and HidHide installers pinned in

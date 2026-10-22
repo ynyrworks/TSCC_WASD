@@ -71,10 +71,12 @@ These results do **not** imply full button, rumble, automatic-reconnect, or game
   shows a green dot while mapping.
 - Face buttons, D-pad, shoulders, stick clicks, sticks and triggers; dead zone and
   polling-rate settings; profiles with import/export.
-- No telemetry, background service or auto-updater. Network access only happens when you ask:
-  **Check for updates** asks GitHub for the latest release (or at startup, if you turn that on),
-  and **Install drivers** downloads an official installer from GitHub only if it is missing from
-  the `drivers` folder. Updates are never downloaded or installed automatically.
+- No telemetry or background service. Network access only happens when you ask:
+  **Check for updates** asks GitHub for the latest release (or at startup, if you turn that on)
+  and, only if you agree, downloads that release's ZIP from GitHub, checks its SHA-256 (and
+  signature, once releases are signed) and installs it; **Install drivers** downloads an official
+  installer from GitHub only if it is missing from the `drivers` folder. Updates are never
+  downloaded or installed without asking.
 
 **PS prompts still depend on the game.** The game must support DualShock 4 natively or
 through Steam Input. Games that only draw Xbox artwork will keep showing it.
