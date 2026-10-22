@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.1 — preview
 
 - **Update from inside TSCC_WASD:** when *Check for updates* finds a newer release, TSCC_WASD
   downloads the release ZIP itself (with a progress bar and Cancel) instead of opening the GitHub
@@ -11,10 +11,8 @@
   signature from the same publisher once releases are signed. If mapping is running it stops and
   HidHide's settings are restored before any file is replaced; if copying fails, the current
   version is put back. Copies that can't update themselves (a developer build, or a folder such as
-  Program Files that TSCC_WASD can't write to) still offer the download page.
-
-## 0.9.1 — preview
-
+  Program Files that TSCC_WASD can't write to) still offer the download page. This takes effect
+  from the next update: 0.9.1 itself is still installed by hand.
 - Fixed: with *Hide physical controllers* on, games could lose the controller a moment after
   mapping started. HidHide's device list also includes TSCC_WASD's own virtual pad, and since
   0.9.0 auto-detect hides PlayStation controllers, so the virtual DualShock 4 was hidden too (the
