@@ -5,7 +5,7 @@ controller as a PlayStation DualShock 4, so they show PS button prompts.**
 
 It covers one common reWASD use case ("pretend my controller is a DS4") using free,
 open components: ViGEmBus for the virtual DS4 and HidHide to hide the real controller.
-Built with C# / .NET 10 / WPF. **MIT licensed · v0.9.0 preview.** English and Traditional Chinese UI.
+Built with C# / .NET 10 / WPF. **MIT licensed · v0.9.1 preview.** English and Traditional Chinese UI.
 
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-support%20this%20project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
 

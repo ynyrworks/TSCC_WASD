@@ -3,7 +3,7 @@
 免費開源的 Windows 工具：讓遊戲把你的 Xbox 或 Nintendo Switch 2 Pro 手把當成
 PlayStation DualShock 4，顯示 PS 按鍵圖示。對應付費軟體 reWASD 最常用的「偽裝成 DS4」功能，
 改用免費元件 ViGEmBus（虛擬 DS4）與 HidHide（隱藏實體手把）完成。
-目前為 **0.9.0 預覽版**，介面支援繁體中文與英文。
+目前為 **0.9.1 預覽版**，介面支援繁體中文與英文。
 
 [![在 Ko-fi 支持](https://img.shields.io/badge/Ko--fi-支持這個專案-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
 

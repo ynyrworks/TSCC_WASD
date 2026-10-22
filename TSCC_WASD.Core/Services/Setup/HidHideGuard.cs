@@ -18,6 +18,7 @@ public sealed partial class HidHideGuard
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private readonly Func<IReadOnlyList<string>, string> _run;
     private readonly Func<IEnumerable<string>> _extraDevices;
+    private readonly Func<string, bool> _isVirtual;
     private readonly string _recordPath;
     private readonly object _gate = new();
 
@@ -25,11 +26,16 @@ public sealed partial class HidHideGuard
     /// Controller device paths found by Windows enumeration. They are the primary source; the CLI's
     /// --dev-gaming list only supplements them because it can be truncated (see WindowsDevicePaths).
     /// </param>
+    /// <param name="isVirtual">
+    /// True for ViGEm pads. --dev-gaming also lists TSCC_WASD's own virtual DS4 (054C:05C4) and
+    /// Xbox 360 (045E:028E) output, which must stay visible to games.
+    /// </param>
     public HidHideGuard(Func<IReadOnlyList<string>, string> run, string? recordPath = null,
-        Func<IEnumerable<string>>? extraDevices = null)
+        Func<IEnumerable<string>>? extraDevices = null, Func<string, bool>? isVirtual = null)
     {
         _run = run;
         _extraDevices = extraDevices ?? (() => []);
+        _isVirtual = isVirtual ?? (_ => false);
         _recordPath = recordPath ?? AppPaths.File("hidhide-restore.json");
     }
 
@@ -37,7 +43,8 @@ public sealed partial class HidHideGuard
     public static HidHideGuard? TryCreate()
     {
         string? cli = FindCli();
-        return cli is null ? null : new HidHideGuard(args => RunCli(cli, args), extraDevices: PhysicalControllers);
+        return cli is null ? null : new HidHideGuard(args => RunCli(cli, args), extraDevices: PhysicalControllers,
+            isVirtual: Input.WindowsDevicePaths.IsVirtual);
     }
 
     public bool HasPendingRestore => File.Exists(_recordPath);
@@ -63,7 +70,7 @@ public sealed partial class HidHideGuard
             var alreadyHidden = ParseQuoted(_run(["--dev-list"]), "--dev-hide").ToHashSet(StringComparer.OrdinalIgnoreCase);
             alreadyHidden.UnionWith(record.Devices);
             var targets = GamingDevicesFromCli().Concat(_extraDevices())
-                .Where(path => Matches(path, inputType) && !alreadyHidden.Contains(path))
+                .Where(path => Matches(path, inputType) && !alreadyHidden.Contains(path) && !_isVirtual(path))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
             bool firstCall = !HasPendingRestore;

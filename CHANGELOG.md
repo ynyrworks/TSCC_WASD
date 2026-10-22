@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1 — preview
+
+- Fixed: with *Hide physical controllers* on, games could lose the controller a moment after
+  mapping started. HidHide's device list also includes TSCC_WASD's own virtual pad, and since
+  0.9.0 auto-detect hides PlayStation controllers, so the virtual DualShock 4 was hidden too (the
+  virtual Xbox 360 output could be hidden the same way since 0.8.0). Virtual pads are now never
+  hidden.
+
 ## 0.9.0 — preview
 
 - **More controllers (experimental):** DualShock 4 and DualSense (USB and Bluetooth, with

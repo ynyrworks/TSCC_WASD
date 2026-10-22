@@ -83,6 +83,19 @@ public class HidHideGuardTests
     }
 
     [Fact]
+    public void NeverHidesItsOwnVirtualOutput()
+    {
+        // --dev-gaming lists the ViGEm DS4 / Xbox 360 pads too; hiding them left games with no controller.
+        const string virtualDs4 = @"HID\VID_054C&PID_05C4\7&2b3e4f5a&0&0000";
+        const string virtualX360 = @"USB\VID_045E&PID_028E\1&2d595ca7&0&01";
+        const string realDs4 = @"HID\VID_054C&PID_09CC\7&11aa22bb&0&0000";
+        var cli = new FakeCli { Gaming = Gaming(Ns2, virtualDs4, virtualX360, realDs4) };
+        var guard = new HidHideGuard(cli.Run, TempRecord(), isVirtual: path => path is virtualDs4 or virtualX360);
+        guard.Hide(App, InputDeviceType.Auto);
+        Assert.Equal(["--app-reg", App, "--dev-hide", Ns2, "--dev-hide", realDs4, "--cloak-on"], cli.Changes.Single());
+    }
+
+    [Fact]
     public void InverseModeIsLeftAlone()
     {
         var cli = new FakeCli { Gaming = Gaming(Ns2), Inverse = true };

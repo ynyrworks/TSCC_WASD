@@ -95,7 +95,7 @@
       "TSCC_WASD": {
         "type": "Project",
         "dependencies": {
-          "TSCC_WASD.Core": "[0.9.0, )"
+          "TSCC_WASD.Core": "[0.9.1, )"
         }
       },
       "tscc_wasd.core": {
