@@ -1,10 +1,12 @@
 # TSCC_WASD
 
 **A free, open-source Windows tool that makes games see your Xbox or Nintendo Switch 2 Pro
-controller as a PlayStation DualShock 4, so they show PS button prompts.**
+controller as a PlayStation DualShock 4, so they show PS button prompts.** It can also output a
+virtual Xbox 360 controller instead, for example to play a PlayStation or Nintendo controller
+with Xbox prompts (DualShock 4, DualSense and Switch Pro input is experimental).
 
 It covers one common reWASD use case ("pretend my controller is a DS4") using free,
-open components: ViGEmBus for the virtual DS4 and HidHide to hide the real controller.
+open components: ViGEmBus for the virtual controller and HidHide to hide the real one.
 Built with C# / .NET 10 / WPF. **MIT licensed · v0.9.1 preview.** English and Traditional Chinese UI.
 
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-support%20this%20project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
@@ -39,11 +41,12 @@ These results do **not** imply full button, rumble, automatic-reconnect, or game
   (experimental) DualShock 4, DualSense and original Switch Pro controllers together and follows
   whichever one you press. An idle controller never takes over. Single-device modes are still
   available. The experimental ones are not yet confirmed on hardware; reports are welcome.
-- **One persistent virtual DS4.** It stays connected for the whole session. If the
+- **One persistent virtual controller.** It stays connected for the whole session. If the
   controller drops, it sends neutral input; if the driver errors, it reconnects.
 - **Automatic physical-controller hiding.** When HidHide is installed, starting a mapping
-  hides the real controller from games so they only see the DS4. Prompts stop flipping
-  between Xbox and PS. Stopping restores your previous HidHide settings exactly.
+  hides the real controller from games so they only see the virtual one. Prompts stop flipping
+  between Xbox and PS. TSCC_WASD's own virtual pad is never hidden. Stopping restores your
+  previous HidHide settings exactly.
 - **No more Steam restarts.** If Steam grabbed the real controller before hiding started,
   **automatic reconnect** power-cycles the controller's USB port for a second or two, so Steam
   lets go and only sees the DS4. It is set up once (one administrator prompt) and never asks
@@ -56,10 +59,10 @@ These results do **not** imply full button, rumble, automatic-reconnect, or game
   **Xbox 360** (Xbox prompts, the most compatible), and can **swap A/B and X/Y** for Nintendo
   habits. A warning appears when an anti-cheat known to reject virtual controllers (EA Javelin)
   is running.
-- **Rumble, PS button and motion.** Game rumble is forwarded to the Xbox or NS2 Pro. The Xbox
+- **Rumble, PS button and motion.** Game rumble is forwarded to the Xbox, NS2 Pro, DualShock 4 or
+  DualSense (the original Switch Pro has no rumble yet). The Xbox
   Guide and NS2 Home buttons act as the PS button; Xbox View (or Share, if you prefer) and NS2
-  Capture act as the touchpad click. The NS2
-  Pro gyro and accelerometer become DS4 motion.
+  Capture act as the touchpad click. NS2 Pro, DualShock 4 and DualSense motion becomes DS4 motion.
 - **Set and forget.** Optionally start with Windows in the notification area, begin mapping
   automatically, and start or restart Steam after the controllers are hidden, so you never
   restart Steam by hand.
@@ -76,14 +79,15 @@ These results do **not** imply full button, rumble, automatic-reconnect, or game
   and, only if you agree, downloads that release's ZIP from GitHub, checks its SHA-256 (and
   signature, once releases are signed) and installs it; **Install drivers** downloads an official
   installer from GitHub only if it is missing from the `drivers` folder. Updates are never
-  downloaded or installed without asking.
+  downloaded or installed without asking. (In-app updating starts with 0.9.1: older versions
+  still open the release page, so install 0.9.1 by hand once.)
 
 **PS prompts still depend on the game.** The game must support DualShock 4 natively or
 through Steam Input. Games that only draw Xbox artwork will keep showing it.
 
 ### Not implemented (yet)
 
-Arbitrary remapping, macros, touchpad surface, keyboard/mouse input, DualSense output and input,
+Arbitrary remapping, macros, touchpad surface, keyboard/mouse input, DualSense output,
 per-game profile switching and overlays. NS2 Pro works over USB only; its C and GL/GR buttons
 are not mapped. See the [roadmap](PLAN.md).
 
@@ -93,7 +97,8 @@ are not mapped. See the [roadmap](PLAN.md).
 2. Download a release ZIP from [Releases](https://github.com/ynyrworks/TSCC_WASD/releases)
    (or build it, see below), extract it and run `TSCC_WASD.exe`. Preview builds are not
    code-signed yet, so SmartScreen may warn; compare the ZIP with its `.sha256` file first
-   ([details](docs/SIGNING.md)).
+   ([details](docs/SIGNING.md)). Later versions install from **Check for updates**, so you only
+   download the ZIP by hand once.
 3. On first launch TSCC_WASD offers to install **ViGEmBus** (required) and **HidHide**
    (strongly recommended) with the official installers in the `drivers` folder. Choose **Yes**,
    finish both installers and reboot if asked. You do not need to configure HidHide;
@@ -135,7 +140,7 @@ Steam sees the real controller again.
 **Automatic reconnect** copies TSCC_WASD to `%ProgramFiles%\TSCC_WASD\Helper` (only
 administrators can change that folder) and registers an on-demand task,
 `\TSCC_WASD\ReconnectControllers`, that runs it with highest privileges to cycle the ports of
-connected Xbox / NS2 Pro controllers. Remove it with **App settings → Remove**. An Xbox
+connected Xbox, NS2 Pro, DualShock 4 / DualSense and Switch Pro controllers. Remove it with **App settings → Remove**. An Xbox
 Wireless Adapter is cycled as a whole, so every controller paired with it reconnects. The USB
 port-cycle helper does not cycle Bluetooth controller connections; turning a Bluetooth
 controller off and on or restarting Steam remains the alternative.
@@ -143,9 +148,10 @@ controller off and on or restarting Steam remains the alternative.
 ## How it works
 
 ```
-NS2 Pro (USB HID) ─┐
-                   ├─► TSCC_WASD (allowlisted in HidHide) ─► ViGEmBus virtual DS4 ─► game / Steam
-Xbox (XInput)   ───┘
+NS2 Pro (USB HID) ──────────┐
+DualShock 4 / DualSense ────┤                                          ┌─► virtual DS4 ────┐
+Switch Pro (HID) ───────────┼─► TSCC_WASD (allowlisted in HidHide) ─► ViGEmBus           ├─► game / Steam
+Xbox (XInput) ──────────────┘                                          └─► or Xbox 360 ────┘
         ▲
         └── hidden from every other process by HidHide while mapping
 ```
@@ -154,9 +160,10 @@ On start, TSCC_WASD:
 
 1. records your current HidHide state in `%APPDATA%\TSCC_WASD\hidhide-restore.json`;
 2. adds itself to HidHide's application list;
-3. hides NS2 Pro and Xbox controllers: Bluetooth/HID ones and wired ones (XUSB/GIP device
-   classes, which HidHide also filters). Virtual pads created by ViGEm, such as DS4Windows'
-   output, are left alone;
+3. hides the controllers it reads (NS2 Pro, Xbox, DualShock 4 / DualSense, Switch Pro):
+   Bluetooth/HID ones and wired ones (XUSB/GIP device classes, which HidHide also filters).
+   Virtual pads created by ViGEm, including TSCC_WASD's own DS4 or Xbox 360 output and
+   DS4Windows' output, are left alone;
 4. turns cloaking on.
 
 Every 5 seconds it also hides any newly connected controller. On stop it undoes only what
@@ -164,7 +171,7 @@ it changed. If the app is killed, the next launch restores your settings. TSCC_W
 HidHide alone when HidHide is in inverse-list mode.
 
 Hiding is verified on hardware for the NS2 Pro and for an Xbox controller over both
-Bluetooth and USB.
+Bluetooth and USB; the PlayStation and Switch Pro controllers are not yet hardware-tested.
 
 Rumble the game sends to the virtual DS4 goes to whichever controller is active. The
 virtual DS4 is fed full raw reports, so it can carry the PS button, touchpad click and
@@ -197,7 +204,8 @@ pwsh -File scripts/package.ps1
 
 Packaging produces a self-contained, single-file Windows x64 ZIP (with the pinned driver
 installers in `drivers/`) and a SHA-256 checksum under `artifacts/`. The tests cover input math, auto-detect switching, DS4 raw-report layout,
-rumble encoding and routing, motion conversion, HidHide hide/restore logic, error recovery,
+rumble encoding and routing, motion conversion, HidHide hide/restore logic, update download
+and verification, error recovery,
 settings and profile persistence, native layouts and the WPF editor. They do
 not prove compatibility with every controller or game. See [validation](docs/VALIDATION.md).
 

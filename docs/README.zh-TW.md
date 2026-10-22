@@ -1,8 +1,9 @@
 # TSCC_WASD 使用說明
 
 免費開源的 Windows 工具：讓遊戲把你的 Xbox 或 Nintendo Switch 2 Pro 手把當成
-PlayStation DualShock 4，顯示 PS 按鍵圖示。對應付費軟體 reWASD 最常用的「偽裝成 DS4」功能，
-改用免費元件 ViGEmBus（虛擬 DS4）與 HidHide（隱藏實體手把）完成。
+PlayStation DualShock 4，顯示 PS 按鍵圖示。也可以改成輸出虛擬 Xbox 360 手把，例如讓 PlayStation
+或任天堂手把顯示 Xbox 圖示（DualShock 4、DualSense、Switch Pro 輸入為實驗性）。
+對應付費軟體 reWASD 最常用的「偽裝成 DS4」功能，改用免費元件 ViGEmBus（虛擬手把）與 HidHide（隱藏實體手把）完成。
 目前為 **0.9.1 預覽版**，介面支援繁體中文與英文。
 
 [![在 Ko-fi 支持](https://img.shields.io/badge/Ko--fi-支持這個專案-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
@@ -33,9 +34,9 @@ PlayStation DualShock 4，顯示 PS 按鍵圖示。對應付費軟體 reWASD 最
 - **自動偵測輸入（預設）：** 同時監看 NS2 Pro（USB）、Xbox／XInput，以及（實驗性）DualShock 4、DualSense、
   第一代 Switch Pro 手把，按哪一支就用哪一支，閒置的手把不會搶走控制權；也可以指定只用其中一種。
   實驗性的手把尚未經過實機驗證，歡迎回報結果。PS／任天堂手把搭配「輸出成 Xbox 360」就能顯示 Xbox 圖示。
-- **持續存在的虛擬 DS4：** 整段映射期間保持連線；手把斷線時輸出歸零，驅動出錯會自動重連。
-- **自動隱藏實體手把：** 安裝 HidHide 後，啟動映射就會把實體手把藏起來，遊戲只看得到虛擬 DS4，
-  圖示不會在 Xbox／PS 之間跳動。停止映射會完整還原原本的 HidHide 設定。
+- **持續存在的虛擬手把：** 整段映射期間保持連線；手把斷線時輸出歸零，驅動出錯會自動重連。
+- **自動隱藏實體手把：** 安裝 HidHide 後，啟動映射就會把實體手把藏起來，遊戲只看得到虛擬手把，
+  圖示不會在 Xbox／PS 之間跳動。TSCC_WASD 自己的虛擬手把絕不會被隱藏。停止映射會完整還原原本的 HidHide 設定。
 - **不必再重啟 Steam：** Steam 比映射早開、握著實體手把時，「自動重新連接」會讓 USB 手把斷電重新連接一兩秒，
   Steam 就會放開它，只看到虛擬 DS4。只需設定一次（一次管理員權限），之後不再詢問。藍牙手把關開一次即可；
   重啟 Steam 只當備案。
@@ -43,8 +44,8 @@ PlayStation DualShock 4，顯示 PS 按鍵圖示。對應付費軟體 reWASD 最
   實體手把仍保持隱藏，繼續時不必處理 Steam；「停止」則完全釋放手把。
 - **選你習慣的圖示：** 每個設定檔可輸出虛擬 **DualShock 4**（PS 圖示）或 **Xbox 360**（Xbox 圖示，相容性最好），
   也能**對調 A/B 與 X/Y**（任天堂習慣：右邊的鍵確認）。偵測到已知會拒絕虛擬手把的反作弊（EA Javelin）時會提醒。
-- **震動、PS 鍵與體感：** 遊戲的震動會轉給 Xbox 或 NS2 Pro；Xbox 的 Guide 鍵與 NS2 的 Home 鍵當作 PS 鍵，
-  Xbox 的 View 鍵（可改成 Share）與 NS2 的截圖鍵當作觸控板按下；NS2 Pro 的陀螺儀與加速度計會轉成 DS4 體感。
+- **震動、PS 鍵與體感：** 遊戲的震動會轉給 Xbox、NS2 Pro、DualShock 4 或 DualSense（第一代 Switch Pro 尚不支援震動）；Xbox 的 Guide 鍵與 NS2 的 Home 鍵當作 PS 鍵，
+  Xbox 的 View 鍵（可改成 Share）與 NS2 的截圖鍵當作觸控板按下；NS2 Pro、DualShock 4、DualSense 的陀螺儀與加速度計會轉成 DS4 體感。
 - **設定一次就好：** 可選擇登入 Windows 時自動啟動、縮在系統匣直接映射，並在隱藏手把後才啟動或重啟 Steam，
   從此不用手動重啟 Steam。
 - **下載一次就齊全：** Release ZIP 內含 .NET 執行環境，以及 ViGEmBus、HidHide 的官方安裝程式。
@@ -55,11 +56,11 @@ PlayStation DualShock 4，顯示 PS 按鍵圖示。對應付費軟體 reWASD 最
 - 不收集遙測、沒有背景服務。只有你主動要求時才會連網：「檢查更新」向 GitHub 查詢最新版本
   （或在設定中開啟啟動時檢查），你同意後才從 GitHub 下載該版本的 ZIP，核對 SHA-256（發行版簽章後也會核對數位簽章）再安裝；
   「安裝驅動程式」只在 `drivers` 資料夾裡沒有安裝檔時，才從 GitHub 下載官方安裝程式。
-  不會在沒有詢問的情況下下載或安裝更新。
+  不會在沒有詢問的情況下下載或安裝更新。（程式內更新從 0.9.1 開始：舊版仍會打開 Release 頁面，0.9.1 請手動安裝一次。）
 
 **PS 圖示仍取決於遊戲：** 遊戲必須原生支援 DS4，或透過 Steam Input 支援。只內建 Xbox 圖示的遊戲還是會顯示 Xbox。
 
-尚未支援：任意按鍵重排、巨集、觸控板滑動、鍵鼠、DualSense 輸入與輸出、依遊戲切換設定檔、疊圖。
+尚未支援：任意按鍵重排、巨集、觸控板滑動、鍵鼠、DualSense 輸出、依遊戲切換設定檔、疊圖。
 NS2 Pro 僅支援 USB，C 鍵與背面 GL/GR 尚未映射。
 
 ## 安裝與快速開始
@@ -67,6 +68,7 @@ NS2 Pro 僅支援 USB，C 鍵與背面 GL/GR 尚未映射。
 1. Windows 10／11 x64（Windows 11 為主要測試平台）。不需要另外安裝 .NET。
 2. 從 [Releases](https://github.com/ynyrworks/TSCC_WASD/releases) 下載 ZIP，解壓後執行 `TSCC_WASD.exe`。
    預覽版尚未數位簽章，SmartScreen 可能出現警告；請先比對 ZIP 與 `.sha256` 檔（[說明](SIGNING.md)）。
+   之後的新版可以直接用「檢查更新」在程式內安裝，只需要手動下載這一次。
 3. 第一次開啟時，程式會詢問是否用 `drivers` 資料夾內的官方安裝程式安裝 **ViGEmBus**（必要）與
    **HidHide**（強烈建議，不需手動設定）。選「是」，完成兩個安裝程式，依提示重新開機。
    也可以從[官方下載頁](https://docs.nefarius.at/Downloads/)自行安裝。ViGEmBus 已停止維護，
@@ -97,8 +99,8 @@ HidHide 只能阻止程式「打開」手把，不能把已經打開的手把搶
 （沒設定自動重新連接時則詢問是否重啟 Steam），讓 Steam 重新認得實體手把。
 
 **自動重新連接**會把 TSCC_WASD 複製到 `%ProgramFiles%\TSCC_WASD\Helper`（只有管理員能修改），
-並建立一個只在需要時執行的排程工作 `\TSCC_WASD\ReconnectControllers`，以最高權限讓已連接的 Xbox／NS2 Pro
-手把所在的 USB 埠斷電重新連接。可在「程式設定 → 移除」刪除。Xbox 無線接收器會整個重新連接，上面所有手把都會重連。USB 埠重新連接輔助程式不會重置藍牙連線；藍牙手把可關閉再重新開啟，或改為重新啟動 Steam。
+並建立一個只在需要時執行的排程工作 `\TSCC_WASD\ReconnectControllers`，以最高權限讓已連接的 Xbox、NS2 Pro、
+DualShock 4／DualSense、Switch Pro 手把所在的 USB 埠斷電重新連接。可在「程式設定 → 移除」刪除。Xbox 無線接收器會整個重新連接，上面所有手把都會重連。USB 埠重新連接輔助程式不會重置藍牙連線；藍牙手把可關閉再重新開啟，或改為重新啟動 Steam。
 
 ## 運作方式
 
@@ -106,11 +108,12 @@ HidHide 只能阻止程式「打開」手把，不能把已經打開的手把搶
 
 1. 先把目前的 HidHide 狀態記錄到 `%APPDATA%\TSCC_WASD\hidhide-restore.json`；
 2. 把自己加入 HidHide 允許清單；
-3. 隱藏 NS2 Pro 與 Xbox 手把（藍牙／HID 以及有線 XUSB／GIP 類別），但不動 ViGEm 建立的虛擬手把（例如 DS4Windows 的輸出）；
+3. 隱藏它會讀取的手把（NS2 Pro、Xbox、DualShock 4／DualSense、Switch Pro；藍牙／HID 以及有線 XUSB／GIP 類別），
+   但不動 ViGEm 建立的虛擬手把（包括 TSCC_WASD 自己輸出的 DS4／Xbox 360，以及 DS4Windows 的輸出）；
 4. 開啟隱藏功能。
 
 之後每 5 秒會把新接上的手把也隱藏起來；停止時只還原自己改過的部分。程式若被強制結束，下次開啟會自動還原。
-HidHide 為反向清單模式時不會更動。NS2 Pro，以及藍牙和 USB 連接的 Xbox 手把，隱藏功能都已實機驗證。
+HidHide 為反向清單模式時不會更動。NS2 Pro，以及藍牙和 USB 連接的 Xbox 手把，隱藏功能都已實機驗證；PlayStation 與 Switch Pro 手把尚未實機測試。
 
 ## 設定檔與程式設定
 
