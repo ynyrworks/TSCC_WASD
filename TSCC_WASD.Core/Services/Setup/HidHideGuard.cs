@@ -118,6 +118,8 @@ public sealed partial class HidHideGuard
             InputDeviceType.XInput => xbox,
             InputDeviceType.PlayStation => playStation,
             InputDeviceType.SwitchPro => switchPro,
+            // Bluetooth LE: Windows has no HID device for it, so there is nothing to hide.
+            InputDeviceType.Switch2ProBluetooth => false,
             _ => ns2 || xbox || playStation || switchPro
         };
     }

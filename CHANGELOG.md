@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- **NS2 Pro over Bluetooth (experimental):** the Switch 2 Pro Controller now also works
+  wirelessly through the PC's own Bluetooth adapter, with no dongle. Windows does not expose it
+  as a game controller, so TSCC_WASD connects to it over Bluetooth LE itself: hold **Sync** on the
+  controller while mapping (auto-detect watches for it, or choose *NS2 Pro (Bluetooth)*). Buttons,
+  sticks with factory calibration, motion and rumble work; input arrives at about 67 reports/s on
+  Windows 11. Nothing is paired or written to the controller, so it keeps its Switch 2 pairing, and
+  you hold Sync again after it disconnects. Steam can't see it either, so no hiding is needed.
+  Tested on one controller; not yet tested in games.
+- **Original Switch Pro Controller: factory stick calibration.** TSCC_WASD now reads the stick
+  calibration stored in the controller (your own from the Switch's settings, else the factory one)
+  instead of only learning the travel while playing, so a stick whose centre sits away from the
+  nominal value no longer drifts. Bluetooth is now tested on hardware: every button, both sticks,
+  ZL/ZR, full-report mode and HidHide hiding work; USB is still untested.
+- Windows 10 now needs version 2004 or later (for the Bluetooth LE API); Windows 10 22H2 and
+  Windows 11 are unaffected.
+
 ## 0.9.1 — preview
 
 - **Update from inside TSCC_WASD:** when *Check for updates* finds a newer release, TSCC_WASD

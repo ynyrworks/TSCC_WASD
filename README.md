@@ -30,8 +30,10 @@ details and app settings sit in collapsible sections (shown expanded
 | Xbox Wireless Controller | USB | Hardware-tested; XInput access and HidHide isolation verified |
 | Xbox Wireless Controller | Bluetooth | Hardware-tested; HidHide isolation and PS prompts via Steam Input verified |
 | Nintendo Switch 2 Pro Controller | USB | Hardware-tested; virtual DS4 input and USB reconnect verified |
-| Nintendo Switch 2 Pro Controller | Bluetooth | Not supported (not implemented) |
-| DualShock 4, DualSense, original Switch Pro | Input support is experimental | Physical-hardware testing still needed |
+| Nintendo Switch 2 Pro Controller | Bluetooth (PC's own adapter) | **Experimental:** input, calibration, motion, rumble and reconnect hardware-tested; not yet game-tested |
+| Original Switch Pro Controller | Bluetooth | Hardware-tested: all buttons, sticks with the controller's own calibration, HidHide hiding; not yet game-tested |
+| Original Switch Pro Controller | USB | Experimental; physical-hardware testing still needed |
+| DualShock 4, DualSense | USB, Bluetooth | Experimental; physical-hardware testing still needed |
 
 These results do **not** imply full button, rumble, automatic-reconnect, or game compatibility testing across every transport. See the [validation record](docs/VALIDATION.md) for exactly what was tested.
 
@@ -88,12 +90,13 @@ through Steam Input. Games that only draw Xbox artwork will keep showing it.
 ### Not implemented (yet)
 
 Arbitrary remapping, macros, touchpad surface, keyboard/mouse input, DualSense output,
-per-game profile switching and overlays. NS2 Pro works over USB only; its C and GL/GR buttons
+per-game profile switching and overlays. NS2 Pro over Bluetooth is experimental and connects only
+while Sync is held (it is not paired with the PC); its C and GL/GR buttons
 are not mapped. See the [roadmap](PLAN.md).
 
 ## Quick start
 
-1. **Windows 10/11 x64.** Windows 11 is the tested platform. No separate .NET install is needed.
+1. **Windows 10 (version 2004 or later) or 11, x64.** Windows 11 is the tested platform. No separate .NET install is needed.
 2. Download a release ZIP from [Releases](https://github.com/ynyrworks/TSCC_WASD/releases)
    (or build it, see below), extract it and run `TSCC_WASD.exe`. Preview builds are not
    code-signed yet, so SmartScreen may warn; compare the ZIP with its `.sha256` file first
@@ -171,7 +174,7 @@ it changed. If the app is killed, the next launch restores your settings. TSCC_W
 HidHide alone when HidHide is in inverse-list mode.
 
 Hiding is verified on hardware for the NS2 Pro and for an Xbox controller over both
-Bluetooth and USB; the PlayStation and Switch Pro controllers are not yet hardware-tested.
+Bluetooth and USB, and for the original Switch Pro over Bluetooth; the PlayStation controllers are not yet hardware-tested.
 
 Rumble the game sends to the virtual DS4 goes to whichever controller is active. The
 virtual DS4 is fed full raw reports, so it can carry the PS button, touchpad click and
@@ -188,6 +191,11 @@ While Steam holds the controller its factory stick calibration can't be read; us
 **Calibrate NS2 Pro sticks** (release, then circle both sticks at the edge) for exact
 full-push and resting values. Without it TSCC_WASD uses a remembered factory calibration or
 learns the stick travel automatically.
+**Bluetooth (experimental):** unplug the cable, start mapping and hold the controller's **Sync**
+button; TSCC_WASD connects through the PC's own Bluetooth (no dongle, no Windows pairing) and
+reads the same buttons, sticks, motion and rumble at about 67 reports/s on Windows 11. Windows
+and Steam don't see it, so nothing is hidden. The controller keeps its Switch 2 pairing; hold Sync
+again after it turns off.
 See [NS2 Pro details](docs/NS2-PRO.md).
 
 ## Build, test and package

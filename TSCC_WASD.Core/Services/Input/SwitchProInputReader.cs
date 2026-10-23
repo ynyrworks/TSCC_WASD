@@ -6,9 +6,9 @@ namespace TSCC_WASD.Core.Services.Input;
 /// <summary>
 /// The original Nintendo Switch Pro Controller over USB or Bluetooth. If Steam already set it up,
 /// its full reports are simply read; otherwise TSCC_WASD sends the documented USB handshake and the
-/// "full report" subcommand, and falls back to the simple Bluetooth report. Stick travel is learned
-/// while playing (factory calibration is not read yet). No rumble. Experimental: written from public
-/// protocol notes and unit-tested with sample reports, not yet confirmed on hardware.
+/// "full report" subcommand, and falls back to the simple Bluetooth report. Stick calibration is read
+/// from SPI flash (the user's own, else the factory one); until it arrives, or on controllers without
+/// it, stick travel is learned while playing. No rumble. Experimental.
 /// </summary>
 public sealed class SwitchProInputReader : IInputReader
 {
@@ -67,6 +67,11 @@ public sealed class SwitchProInputReader : IInputReader
                     byte counter = 0;
                     bool full = false, setupSent = false;
                     var started = Stopwatch.GetTimestamp();
+                    // Stick calibration read from SPI flash; until it arrives (or if it never does) the travel is learned.
+                    byte[]? factory = null, user = null;
+                    Switch2StickCalibration? calibratedLeft = null, calibratedRight = null;
+                    int calibrationRequests = 0;
+                    long lastRequest = 0;
                     while (!token.IsCancellationRequested)
                     {
                         // Not in full-report mode a moment after opening: ask for it (USB also needs the handshake).
@@ -74,6 +79,14 @@ public sealed class SwitchProInputReader : IInputReader
                         {
                             setupSent = true;
                             TrySetUp(output, outputLength, device.Bluetooth, ref counter);
+                        }
+                        if (full && calibratedLeft is null && output is not null && calibrationRequests < 3
+                            && (calibrationRequests == 0 || Stopwatch.GetElapsedTime(lastRequest) > TimeSpan.FromSeconds(1)))
+                        {
+                            calibrationRequests++;
+                            lastRequest = Stopwatch.GetTimestamp();
+                            TryWrite(output, outputLength, SwitchProReport.SpiRead(counter++, SwitchProReport.FactoryStickCalibration, 18));
+                            TryWrite(output, outputLength, SwitchProReport.SpiRead(counter++, SwitchProReport.UserStickCalibration, 22));
                         }
                         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
                         timeout.CancelAfter(TimeSpan.FromSeconds(device.Bluetooth ? 2 : 1));
@@ -85,13 +98,26 @@ public sealed class SwitchProInputReader : IInputReader
                         }
                         if (length == 0) throw new IOException(L.T($"{name} 已斷線。", $"{name} disconnected."));
                         var data = report.AsSpan(0, length);
+                        if (SwitchProReport.TryParseSpiReply(data, out uint address, out var flash))
+                        {
+                            if (address == SwitchProReport.FactoryStickCalibration) factory = flash.ToArray();
+                            else if (address == SwitchProReport.UserStickCalibration) user = flash.ToArray();
+                            if (factory is not null && user is not null
+                                && SwitchProReport.TryDecodeCalibration(factory, user, out var calLeft, out var calRight))
+                            {
+                                (calibratedLeft, calibratedRight) = (calLeft, calRight);
+                                AppLog.Info($"Switch Pro stick calibration: left {calLeft}, right {calRight}");
+                            }
+                            continue;
+                        }
                         if (data[0] == 0x30 && length >= 12)
                         {
                             full = true;
                             var left = adaptiveLeft.Observe(Switch2StickCalibration.UnpackX(data[6..]), Switch2StickCalibration.UnpackY(data[6..]));
                             var right = adaptiveRight.Observe(Switch2StickCalibration.UnpackX(data[9..]), Switch2StickCalibration.UnpackY(data[9..]));
+                            if (calibratedLeft is { } l && calibratedRight is { } r) (left, right) = (l, r);
                             if (!SwitchProReport.TryParse(data, left, right, out var state, out _)) continue;
-                            Publish(state, name);
+                            Publish(state, calibratedLeft is null ? name : name + L.T("，原廠校準", ", factory calibration"));
                         }
                         else if (SwitchProReport.TryParse(data, Switch2StickCalibration.Nominal, Switch2StickCalibration.Nominal, out var simple, out _))
                             Publish(simple, name + L.T("（簡易模式）", " (simple mode)"));
@@ -129,6 +155,12 @@ public sealed class SwitchProInputReader : IInputReader
                 foreach (var command in SwitchProReport.UsbHandshake) Write(output, command, outputLength);
             Write(output, SwitchProReport.SetFullReportMode(counter++), outputLength);
         }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+
+    private static void TryWrite(FileStream output, int outputLength, byte[] report)
+    {
+        try { Write(output, report, outputLength); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
     }
 

@@ -31,6 +31,37 @@ button input, HidHide setup, game recognition or long-running stability.
 
 ## Manual hardware validation
 
+### Unreleased — original Switch Pro Controller over Bluetooth, 2026-10-23
+
+Windows 11 26100 (zh-TW), Switch Pro Controller (`057E:2009`) paired in Windows Bluetooth
+settings, Steam running, TSCC_WASD's own `SwitchProInputReader` through `tools/Ns2BleProbe --reader switchpro`.
+
+| Check | Result |
+| --- | --- |
+| Found over Bluetooth; switched from the simple report to full report 0x30 within a second | Passed |
+| Every button (ABXY by position, D-pad, L/R, ZL/ZR, −/+, Home, Capture, L3/R3) | Passed |
+| Learned travel only: left stick rested at about (−7000, −7800) because its centre is (1932, 1845), not 2048 | **Failed**, fixed by reading calibration |
+| Stick calibration read from SPI flash (0x603D factory, 0x8010 user) within 75 ms; left stick now rests at about 4 %, both sticks reach full deflection | Passed |
+| HidHide: a running mapping hid the newly paired controller from other programs (the probe got "access denied") | Passed |
+| USB | Not tested yet (the cable at hand only charged) |
+| Disconnect / reconnect, rumble (not implemented), games | Not tested yet |
+
+### Unreleased — NS2 Pro over Bluetooth LE, 2026-10-23
+
+Windows 11 26100 (zh-TW), the PC's built-in Bluetooth adapter, Pro Controller 2 (`057E:2069`)
+unplugged from USB, Release build of `tools/Ns2BleProbe` and of TSCC_WASD's own
+`Switch2BleInputReader`. Verified together with the user.
+
+| Check | Result |
+| --- | --- |
+| Advertisement found while Sync is held (host field zero); a controller paired to a Switch 2 advertises that console's address | Passed |
+| GATT connection without Windows pairing; controller info (serial, VID/PID) and factory stick calibration read | Passed |
+| Input reports: 63 bytes, the USB report 0x05 layout without its report ID; about 67 reports/s with ThroughputOptimized, max gap 45 ms | Passed |
+| Every button (ABXY, D-pad, L/R, ZL/ZR, −/+, Home, Capture, L3/R3; C and GL/GR read but unmapped), both sticks, gyro and accelerometer | Passed |
+| Rumble packet (USB motor blocks, no report ID) | Passed, felt by the user |
+| Controller turned off: disconnect detected, status asks to hold Sync; holding Sync reconnects | Passed |
+| Mapping to a game through the app, long sessions, Windows 10 | Not tested yet |
+
 ### 0.9.0 — experimental controllers, 2026-10-10
 
 DualShock 4, DualSense and the original Switch Pro Controller are **not yet tested on hardware**
@@ -159,7 +190,7 @@ and reconnect coverage was not.
 | Xbox Bluetooth: HidHide isolation and Steam Input PS prompts after Steam restart | Passed, 2026-10-09 (0.3.0) |
 | Xbox USB: all buttons/sticks/triggers and rumble | Pending |
 | Xbox Bluetooth: complete button/rumble and reconnect coverage | Pending |
-| NS2 Pro Bluetooth | Not supported; Bluetooth input has not been implemented |
+| NS2 Pro Bluetooth | Experimental since 2026-10-23; input, calibration, motion, rumble and reconnect verified (see above), game use pending |
 | Third-party XInput controller | Pending |
 | Hot-unplug while holding a button; reconnect | Pending |
 | 50 start/stop cycles with virtual device enumeration | Pending |

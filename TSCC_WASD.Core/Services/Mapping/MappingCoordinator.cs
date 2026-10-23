@@ -85,6 +85,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
             input = snapshot.InputType switch
             {
                 InputDeviceType.Switch2ProUsb => new Switch2InputReader(),
+                InputDeviceType.Switch2ProBluetooth => new Switch2BleInputReader(),
                 InputDeviceType.XInput => new XInputReader(),
                 InputDeviceType.PlayStation => new PlayStationInputReader(),
                 InputDeviceType.SwitchPro => new SwitchProInputReader(),

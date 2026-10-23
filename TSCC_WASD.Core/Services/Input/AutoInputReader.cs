@@ -1,7 +1,7 @@
 namespace TSCC_WASD.Core.Services.Input;
 
 /// <summary>
-/// Reads every supported controller (NS2 Pro, DualShock 4 / DualSense, Switch Pro, Xbox / XInput)
+/// Reads every supported controller (NS2 Pro over USB or Bluetooth, DualShock 4 / DualSense, Switch Pro, Xbox / XInput)
 /// together and follows whichever one the player is using.
 /// The active source only changes when it disconnects or the other one receives deliberate input,
 /// so an idle controller that still streams neutral reports never steals control.
@@ -31,8 +31,8 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
     private bool _disposed;
 
     public AutoInputReader() : this(
-        [new Switch2InputReader(), new PlayStationInputReader(), new SwitchProInputReader(), new XInputReader()],
-        ["NS2 Pro", "DualShock 4／DualSense", "Switch Pro", "Xbox／XInput"]) { }
+        [new Switch2InputReader(), new Switch2BleInputReader(), new PlayStationInputReader(), new SwitchProInputReader(), new XInputReader()],
+        ["NS2 Pro", L.T("NS2 Pro（藍牙）", "NS2 Pro (Bluetooth)"), "DualShock 4／DualSense", "Switch Pro", "Xbox／XInput"]) { }
 
     public AutoInputReader(IInputReader switch2, IInputReader xinput) : this([switch2, xinput], ["NS2 Pro", "Xbox／XInput"]) { }
 

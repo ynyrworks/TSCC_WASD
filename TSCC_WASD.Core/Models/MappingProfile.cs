@@ -73,7 +73,7 @@ public class MappingProfile : INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(Id) || string.IsNullOrWhiteSpace(Name) || Name.Length > 100)
             throw new ArgumentException(L.T("設定檔需要 ID 與名稱（名稱最多 100 字）。", "A profile needs an ID and a name (up to 100 characters)."));
         if (InputType is not (InputDeviceType.Auto or InputDeviceType.XInput or InputDeviceType.Switch2ProUsb
-                or InputDeviceType.PlayStation or InputDeviceType.SwitchPro)
+                or InputDeviceType.PlayStation or InputDeviceType.SwitchPro or InputDeviceType.Switch2ProBluetooth)
             || OutputType is not (OutputControllerType.DualShock4 or OutputControllerType.Xbox360))
             throw new ArgumentException(L.T("目前支援自動偵測／Xbox／NS2 Pro／DualShock 4／DualSense／Switch Pro → DualShock 4 或 Xbox 360。",
                 "Supported: auto-detect / Xbox / NS2 Pro / DualShock 4 / DualSense / Switch Pro → DualShock 4 or Xbox 360."));

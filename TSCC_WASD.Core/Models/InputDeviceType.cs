@@ -9,5 +9,6 @@ public enum InputDeviceType
     // Appended so numeric values in older profiles.json files keep their meaning.
     Auto,
     PlayStation,
-    SwitchPro
+    SwitchPro,
+    Switch2ProBluetooth
 }

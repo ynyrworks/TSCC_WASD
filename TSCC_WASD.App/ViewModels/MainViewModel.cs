@@ -186,6 +186,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         new(InputDeviceType.Auto, L.T("自動偵測（所有支援的手把，建議）", "Auto-detect (every supported controller, recommended)")),
         new(InputDeviceType.XInput, L.T("只用 Xbox／XInput", "Xbox / XInput only")),
         new(InputDeviceType.Switch2ProUsb, L.T("只用 Nintendo Switch 2 Pro（USB）", "Nintendo Switch 2 Pro (USB) only")),
+        new(InputDeviceType.Switch2ProBluetooth, L.T("只用 Nintendo Switch 2 Pro（藍牙，實驗性，按住 Sync 連線）", "Nintendo Switch 2 Pro (Bluetooth, experimental; hold Sync to connect)")),
         new(InputDeviceType.PlayStation, L.T("只用 DualShock 4／DualSense（實驗性）", "DualShock 4 / DualSense only (experimental)")),
         new(InputDeviceType.SwitchPro, L.T("只用 Switch Pro 手把（第一代，實驗性）", "Switch Pro Controller, original (experimental)"))
     ];

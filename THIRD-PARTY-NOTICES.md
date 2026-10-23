@@ -16,6 +16,15 @@ readers were written from public documentation (Sony controller reverse-engineer
 dekuNukem's Nintendo_Switch_Reverse_Engineering) and cross-checked against SDL's hidapi drivers
 (zlib). No SDL source was copied for them.
 
+## NS2 Pro Bluetooth LE protocol
+
+The NS2 Pro Bluetooth reader uses protocol facts (GATT UUIDs, command framing, memory addresses
+of the stick calibration and the advertisement layout) from the community reverse engineering in
+[Nadeflore/switch2-controllers](https://github.com/Nadeflore/switch2-controllers) and
+[CareyScott/switch2controllerpc](https://github.com/CareyScott/switch2controllerpc) (MIT). No code
+was copied; the C# implementation and the report conversion are TSCC_WASD's own and were checked
+against a real controller.
+
 ## Nefarius.ViGEm.Client 1.21.256 (distributed with the application)
 
 Source: https://github.com/nefarius/ViGEm.NET

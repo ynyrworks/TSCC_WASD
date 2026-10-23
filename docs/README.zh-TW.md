@@ -24,8 +24,10 @@ PlayStation DualShock 4，顯示 PS 按鍵圖示。也可以改成輸出虛擬 X
 | Xbox Wireless Controller | USB | 已實機測試，驗證 XInput 存取及 HidHide 隱藏 |
 | Xbox Wireless Controller | 藍牙 | 已實機測試，驗證 HidHide 隱藏及透過 Steam Input 顯示 PS 圖示 |
 | Nintendo Switch 2 Pro Controller | USB | 已實機測試，驗證虛擬 DS4 輸入及 USB 自動重新連接 |
-| Nintendo Switch 2 Pro Controller | 藍牙 | 尚未支援（尚未實作） |
-| DualShock 4、DualSense、第一代 Switch Pro | 輸入支援為實驗性 | 尚待實體手把測試 |
+| Nintendo Switch 2 Pro Controller | 藍牙（電腦內建藍牙） | **實驗性：** 輸入、校準、體感、震動、重新連線已實機測試，尚未在遊戲中實測 |
+| 第一代 Switch Pro 手把 | 藍牙 | 已實機測試：所有按鍵、使用手把內建校準的搖桿、HidHide 隱藏；尚未在遊戲中實測 |
+| 第一代 Switch Pro 手把 | USB | 實驗性，尚待實體手把測試 |
+| DualShock 4、DualSense | USB、藍牙 | 實驗性，尚待實體手把測試 |
 
 以上結果不代表所有按鍵、震動、自動重新連接或遊戲相容性均已通過完整測試。詳細項目見[驗證紀錄](VALIDATION.md)。
 
@@ -61,11 +63,11 @@ PlayStation DualShock 4，顯示 PS 按鍵圖示。也可以改成輸出虛擬 X
 **PS 圖示仍取決於遊戲：** 遊戲必須原生支援 DS4，或透過 Steam Input 支援。只內建 Xbox 圖示的遊戲還是會顯示 Xbox。
 
 尚未支援：任意按鍵重排、巨集、觸控板滑動、鍵鼠、DualSense 輸出、依遊戲切換設定檔、疊圖。
-NS2 Pro 僅支援 USB，C 鍵與背面 GL/GR 尚未映射。
+NS2 Pro 藍牙為實驗性，只在按住 Sync 時連線（不會和電腦配對）；C 鍵與背面 GL/GR 尚未映射。
 
 ## 安裝與快速開始
 
-1. Windows 10／11 x64（Windows 11 為主要測試平台）。不需要另外安裝 .NET。
+1. Windows 10（2004 版以上）／11 x64（Windows 11 為主要測試平台）。不需要另外安裝 .NET。
 2. 從 [Releases](https://github.com/ynyrworks/TSCC_WASD/releases) 下載 ZIP，解壓後執行 `TSCC_WASD.exe`。
    預覽版尚未數位簽章，SmartScreen 可能出現警告；請先比對 ZIP 與 `.sha256` 檔（[說明](SIGNING.md)）。
    之後的新版可以直接用「檢查更新」在程式內安裝，只需要手動下載這一次。
@@ -113,7 +115,7 @@ DualShock 4／DualSense、Switch Pro 手把所在的 USB 埠斷電重新連接�
 4. 開啟隱藏功能。
 
 之後每 5 秒會把新接上的手把也隱藏起來；停止時只還原自己改過的部分。程式若被強制結束，下次開啟會自動還原。
-HidHide 為反向清單模式時不會更動。NS2 Pro，以及藍牙和 USB 連接的 Xbox 手把，隱藏功能都已實機驗證；PlayStation 與 Switch Pro 手把尚未實機測試。
+HidHide 為反向清單模式時不會更動。NS2 Pro、藍牙和 USB 連接的 Xbox 手把，以及藍牙連接的第一代 Switch Pro，隱藏功能都已實機驗證；PlayStation 手把尚未實機測試。
 
 ## 設定檔與程式設定
 
@@ -124,6 +126,10 @@ HidHide 為反向清單模式時不會更動。NS2 Pro，以及藍牙和 USB 連
 - 語言可選「跟隨 Windows／繁體中文／English」，重新開啟程式後套用。
 
 NS2 Pro 若推到底卻像輕推、或放開時飄移，按「校準 NS2 Pro 搖桿」照步驟做一次即可（映射中也可以）。
+**NS2 Pro 藍牙（實驗性）：** 拔掉 USB 線、啟動映射，然後按住手把上的 **Sync** 鍵，程式就會透過電腦內建藍牙連線
+（不需接收器，也不用在 Windows 設定裡配對）。按鍵、搖桿、體感、震動都和 USB 一樣，Windows 11 上約 67 次／秒。
+Windows 與 Steam 都看不到它，所以不需要隱藏。手把仍保留和 Switch 2 主機的配對；手把關機後要再按住 Sync 重新連線。
+
 NS2 Pro 的細節見 [NS2 Pro 設定說明](NS2-PRO.md)，常見問題見[疑難排解](TROUBLESHOOTING.md)。
 
 ## 解除安裝

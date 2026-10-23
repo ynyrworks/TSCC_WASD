@@ -203,6 +203,57 @@ public class ControllerReportTests
         Assert.All(SwitchProReport.UsbHandshake, c => Assert.Equal((byte)0x80, c[0]));
     }
 
+    [Fact]
+    public void SwitchProSpiReadAndReply()
+    {
+        var command = SwitchProReport.SpiRead(2, SwitchProReport.FactoryStickCalibration, 18);
+        Assert.Equal("10" + "3D600000" + "12", Convert.ToHexString(command.AsSpan(10, 6)));
+
+        var reply = new byte[49];
+        reply[0] = 0x21;
+        reply[13] = 0x90;
+        reply[14] = 0x10;
+        new byte[] { 0x3D, 0x60, 0, 0, 3, 0xAA, 0xBB, 0xCC }.CopyTo(reply, 15);
+        Assert.True(SwitchProReport.TryParseSpiReply(reply, out uint address, out var data));
+        Assert.Equal(0x603Du, address);
+        Assert.Equal("AABBCC", Convert.ToHexString(data));
+
+        reply[13] = 0x00; // NACK
+        Assert.False(SwitchProReport.TryParseSpiReply(reply, out _, out _));
+    }
+
+    [Fact]
+    public void SwitchProCalibrationOrderDiffersPerStick()
+    {
+        // Values from a real controller (2026-10-23): left centre 1932/1845, right centre 2054/1917.
+        var factory = new byte[18];
+        WriteSticks(factory, 0, 1459, 1461);  // left: above centre
+        WriteSticks(factory, 3, 1932, 1845);  // left: centre
+        WriteSticks(factory, 6, 1497, 1609);  // left: below centre
+        WriteSticks(factory, 9, 2054, 1917);  // right: centre
+        WriteSticks(factory, 12, 1560, 1448); // right: below centre
+        WriteSticks(factory, 15, 1427, 1562); // right: above centre
+        var unsetUser = Enumerable.Repeat((byte)0xFF, 22).ToArray();
+
+        Assert.True(SwitchProReport.TryDecodeCalibration(factory, unsetUser, out var left, out var right));
+        Assert.Equal(new Switch2AxisCalibration(1932, 1459, 1497), left.X);
+        Assert.Equal(new Switch2AxisCalibration(1845, 1461, 1609), left.Y);
+        Assert.Equal(new Switch2AxisCalibration(2054, 1427, 1560), right.X);
+        Assert.Equal(new Switch2AxisCalibration(1917, 1562, 1448), right.Y);
+
+        // A user calibration (B2 A1 magic) wins for that stick only.
+        var user = (byte[])unsetUser.Clone();
+        user[0] = 0xB2; user[1] = 0xA1;
+        WriteSticks(user, 2, 1400, 1400);
+        WriteSticks(user, 5, 2000, 2000);
+        WriteSticks(user, 8, 1400, 1400);
+        Assert.True(SwitchProReport.TryDecodeCalibration(factory, user, out left, out right));
+        Assert.Equal(2000, left.X.Center);
+        Assert.Equal(2054, right.X.Center);
+
+        Assert.False(SwitchProReport.TryDecodeCalibration(new byte[18], unsetUser, out _, out _));
+    }
+
     private static void WriteSticks(byte[] report, int offset, int x, int y)
     {
         report[offset] = (byte)(x & 0xFF);

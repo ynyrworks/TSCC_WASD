@@ -27,10 +27,12 @@
 
 - **0.8 選你習慣的圖示（已實作）：** 每個設定檔可選輸出 Xbox 360 或 DS4、A/B 與 X/Y 對調、EA Javelin 反作弊提醒。
 - **0.9 更多手把（已實作，實驗性，待社群實機驗證）：** DS4／DualSense 輸入（USB／藍牙，含體感與震動）、
-  第一代 Switch Pro（USB／藍牙，搖桿行程自動學習，尚無震動）。維護者沒有這些手把，依公開規格撰寫並以樣本報告測試。
-- **NS2 Pro 藍牙（延後）：** NS2 Pro 走藍牙 LE（BLE），Windows 不會把它當成 HID 手把，需要用 WinRT 的 BLE GATT API
-  自行配對、訂閱通知並送出初始化指令，協定也與 USB 不同。沒有實機無法安全地盲寫。可參考的開源實作：
-  switch2controllerpc（MIT，https://github.com/CareyScott/switch2controllerpc）。有實機與測試者後再做。
+  第一代 Switch Pro（USB／藍牙，讀取手把內的搖桿校準，尚無震動；藍牙已於 2026-10-23 實機驗證，USB 待測）。
+  DS4／DualSense 依公開規格撰寫並以樣本報告測試，尚無實機。
+- **NS2 Pro 藍牙（原型已完成，實驗性）：** 用 WinRT 的 BLE GATT API 透過電腦內建藍牙連線，不需接收器。
+  輸入報告就是 USB 0x05 報告少了報告 ID，沿用同一個解析器；按鍵、搖桿原廠校準、體感、震動、斷線重連已實機驗證
+  （2026-10-23）。目前不寫入配對資訊，每次都要按住 Sync 連線。下一步：遊戲內實測、選擇性的「與這台電腦配對」
+  （寫入主機位址後按任意鍵即可重連，但手把會改記這台電腦）、C 鍵與 GL/GR 映射、Windows 10 實測。
 - **1.0：** 依前景遊戲自動切換設定檔、程式碼簽章（中文步驟見 docs/SIGNING.md）、穩定版。
 - 持續：宣傳（reWASD 的免費替代）、相容性清單、追蹤 ViGEmBus 後繼方案、winget 上架。
 - **ViGEmBus 停止維護的長期風險：** 虛擬輸出已透過 `IVirtualController` 抽象化；持續追蹤可替代的

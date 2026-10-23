@@ -1,7 +1,8 @@
 # Nintendo Switch 2 Pro (USB)
 
 Supported hardware identity: Nintendo VID `057E`, PID `2069`. This mode targets
-the Switch 2 Pro, not the original Switch Pro, Joy-Con or Bluetooth variants.
+the Switch 2 Pro, not the original Switch Pro or Joy-Con. Bluetooth is a separate, experimental
+reader; see *Bluetooth (experimental)* below.
 Only one NS2 Pro can be connected at a time. Virtual DS4 devices are excluded by
 the VID/PID filter, so the mapper does not feed its own output back as input.
 
@@ -66,3 +67,21 @@ pwsh -File scripts/smoke-ns2.ps1 -AppDirectory TSCC_WASD.App/bin/Release/net8.0-
 The script reports observed buttons and left-stick X range, then disposes all handles.
 Unit tests cover the USB report parser and calibration math without hardware.
 See [validation record](VALIDATION.md) for what was actually exercised.
+
+## Bluetooth（實驗性）
+
+NS2 Pro 的藍牙是藍牙 LE（BLE）。Windows 不會把它當成手把，所以 TSCC_WASD 用 WinRT 的 GATT API 自己連線：
+
+1. 拔掉 USB 線，「輸入手把」選 **自動偵測** 或 **只用 NS2 Pro（藍牙）**，按「啟動映射」。
+2. 按住手把頂端的 **Sync** 鍵，直到燈號開始跑。約 1–2 秒後狀態會顯示「NS2 Pro（藍牙，原廠校準）」。
+3. 手把關機或斷線後，再按住一次 Sync 即可重新連線。
+
+- 不寫入配對資訊：手把仍記得 Switch 2 主機，回主機玩不需要任何動作。代價是每次都要按住 Sync。
+- 輸入報告就是 USB 報告 0x05 少了報告 ID，按鍵、搖桿、體感共用同一個解析器；震動封包與 USB 相同但沒有報告 ID。
+- 回報頻率約 67 次／秒（Windows 11，已要求 ThroughputOptimized 連線參數），低於 USB。
+- Windows 與 Steam 都看不到藍牙連線的 NS2 Pro，因此不需要 HidHide，也不會有 Steam 先握住手把的問題。
+- 「校準 NS2 Pro 搖桿」精靈目前只支援 USB；藍牙會使用手把內的原廠或使用者校準，或你先前用 USB 存下的校準。
+
+偵錯工具：`dotnet run --project tools/Ns2BleProbe -c Release`（加上 `--rumble` 測試震動，`--reader` 改用 TSCC_WASD
+自己的讀取程式）會列出廣播、GATT 服務、校準與每秒報告數。它不會寫入手把；`--pair` 會把這台電腦寫入手把的配對資訊，
+只在你明確要測試配對時使用。
