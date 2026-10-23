@@ -81,20 +81,32 @@ internal static class WindowsDevicePaths
             .Distinct(StringComparer.OrdinalIgnoreCase)];
 
     /// <summary>
-    /// ViGEm pads sit directly on a root-enumerated bus (ROOT\SYSTEM\xxxx); their HID children sit one
-    /// level lower. Physical controllers reach a USB root hub or Bluetooth stack within that distance.
-    /// Unknown parents count as virtual so nothing questionable is hidden.
+    /// Walks up the device tree until it meets the bus the device hangs off. ViGEm pads (ours and
+    /// DS4Windows') sit on a root-enumerated bus (ROOT\SYSTEM\xxxx), the Xbox 360 pad's HID child
+    /// three levels below it; a leftover pad that is no longer present can also report HTREE\ROOT\0.
+    /// Physical controllers reach a USB root hub, PCI or the Bluetooth stack. The last known parent
+    /// is used, so remembered (non-present) devices are classified too. Unknown parents count as
+    /// virtual so nothing questionable is hidden.
     /// </summary>
-    internal static bool IsVirtual(string deviceId)
+    internal static bool IsVirtual(string deviceId) => IsVirtual(deviceId, ParentOf);
+
+    internal static bool IsVirtual(string deviceId, Func<string, string?> parentOf)
     {
         string? current = deviceId;
-        for (int level = 0; level < 2; level++)
+        for (int level = 0; level < 8; level++)
         {
-            current = ParentOf(current);
-            if (current is null || current.StartsWith(@"ROOT\", StringComparison.OrdinalIgnoreCase)) return true;
+            current = parentOf(current);
+            if (current is null || StartsWithAny(current, VirtualBuses)) return true;
+            if (StartsWithAny(current, PhysicalBuses)) return false;
         }
-        return false;
+        return true;
     }
+
+    private static readonly string[] VirtualBuses = [@"ROOT\", @"HTREE\ROOT"];
+    private static readonly string[] PhysicalBuses = [@"USB\ROOT_HUB", @"PCI\", @"ACPI\", @"BTH\", @"BTHENUM\", @"BTHLE\", @"BTHLEDEVICE\"];
+
+    private static bool StartsWithAny(string value, string[] prefixes) =>
+        prefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
 
     private static IEnumerable<string> ListClass(string classGuid)
     {
@@ -109,12 +121,28 @@ internal static class WindowsDevicePaths
         return [];
     }
 
+    /// <summary>DEVPKEY_Device_Parent: unlike CM_Get_Parent, it keeps the last parent of a device that is not present.</summary>
     private static string? ParentOf(string deviceId)
     {
         if (CM_Locate_DevNodeW(out uint node, deviceId, LocatePhantom) != 0) return null;
+        var key = new DevPropKey { FormatId = new Guid("4340a6c5-93fa-4706-972c-7b648008a5a7"), PropertyId = 8 };
+        var property = new byte[800];
+        uint size = (uint)property.Length;
+        if (CM_Get_DevNode_PropertyW(node, ref key, out uint type, property, ref size, 0) == 0 && type == 0x12 /* DEVPROP_TYPE_STRING */)
+            return System.Text.Encoding.Unicode.GetString(property, 0, (int)size).TrimEnd('\0');
         if (CM_Get_Parent(out uint parent, node, 0) != 0) return null;
         var buffer = new char[400];
         return CM_Get_Device_IDW(parent, buffer, (uint)buffer.Length, 0) == 0
             ? new string(buffer).TrimEnd('\0') : null;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct DevPropKey
+    {
+        public Guid FormatId;
+        public uint PropertyId;
+    }
+
+    [DllImport("cfgmgr32.dll", ExactSpelling = true)]
+    private static extern uint CM_Get_DevNode_PropertyW(uint devInst, ref DevPropKey key, out uint type, [Out] byte[] buffer, ref uint size, uint flags);
 }

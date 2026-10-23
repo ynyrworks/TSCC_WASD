@@ -18,6 +18,19 @@ var commandUuid = Guid.Parse("649d4ac9-8eb7-4e6c-af44-1ea54fe5f005");
 var responseUuid = Guid.Parse("c765a961-d9d8-4d36-a20a-5315b111836a");
 var vibrationUuid = Guid.Parse("cc483f51-9258-427d-a939-630c31f72b05");
 
+if (args.Contains("--devices"))
+{
+    // What HidHide would be asked to hide, and how each candidate is classified.
+    var paths = typeof(IInputReader).Assembly.GetType("TSCC_WASD.Core.Services.Input.WindowsDevicePaths")!;
+    var isVirtual = paths.GetMethod("IsVirtual", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, [typeof(string)])!;
+    var physical = (string[])paths.GetMethod("FindPhysicalControllers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.Invoke(null, null)!;
+    Log($"FindPhysicalControllers: {physical.Length}");
+    foreach (var id in physical) Log($"  hide {id}");
+    foreach (var id in args.SkipWhile(a => a != "--devices").Skip(1))
+        Log($"IsVirtual({id}) = {isVirtual.Invoke(null, [id])}");
+    return 0;
+}
+
 if (args.Contains("--reader"))
 {
     // Exercise one of TSCC_WASD's own readers the way the mapping loop polls it.

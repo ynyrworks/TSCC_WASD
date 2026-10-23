@@ -15,6 +15,11 @@
   instead of only learning the travel while playing, so a stick whose centre sits away from the
   nominal value no longer drifts. Bluetooth is now tested on hardware: every button, both sticks,
   ZL/ZR, full-report mode and HidHide hiding work; USB is still untested.
+- Fixed: HidHide could still hide virtual pads that Windows only remembers (an earlier session's
+  DualShock 4 from TSCC_WASD or DS4Windows) and the virtual Xbox 360 pad's HID interface, which
+  sits three levels below the ViGEm bus. A new virtual pad that reused such an ID would have been
+  hidden from games. Virtual pads are now recognised by the bus they hang off, using the last
+  known parent for devices that are not present.
 - Windows 10 now needs version 2004 or later (for the Bluetooth LE API); Windows 10 22H2 and
   Windows 11 are unaffected.
 
