@@ -63,22 +63,85 @@ public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonO
     private volatile int _slot = -1;
     private int _rumble;
 
+    internal delegate uint GetStateFunc(uint index, out State state);
+    internal delegate void SetVibrationFunc(int slot, byte large, byte small);
+
+    private static readonly TimeSpan ScanInterval = TimeSpan.FromSeconds(1);
+    private readonly GetStateFunc _getState;
+    private readonly SetVibrationFunc _setVibration;
+    private readonly Func<long> _clockMs;
+    private long _nextFullScan;   // no pad in use: earliest time to look at all slots again
+    private long _nextLowerScan;  // pad in use: earliest time to look for a lower-numbered pad
+    private int _scannedExcluded = -1;
+
+    public XInputReader() : this(GetState, Apply, () => Environment.TickCount64) { }
+
+    internal XInputReader(GetStateFunc getState, SetVibrationFunc setVibration, Func<long> clockMs)
+    {
+        _getState = getState;
+        _setVibration = setVibration;
+        _clockMs = clockMs;
+    }
+
     public bool TryGetState(out State state)
     {
-        for (uint index = 0; index < 4; index++)
+        long now = _clockMs();
+        int excluded = _excludedSlot;
+        if (excluded != _scannedExcluded)
         {
-            if (index == _excludedSlot) continue;
-            uint result = GetState(index, out state);
-            if (result == 0)
+            // The filter changed: look at every slot again right away.
+            _scannedExcluded = excluded;
+            _nextFullScan = 0;
+            _nextLowerScan = 0;
+            if (_slot == excluded) _slot = -1;
+        }
+
+        int active = _slot;
+        if (active >= 0)
+        {
+            // Lowest usable slot wins, so an occupied slot only needs a periodic look at lower empty ones.
+            if (now >= _nextLowerScan)
+            {
+                _nextLowerScan = now + (long)ScanInterval.TotalMilliseconds;
+                if (ScanSlots(0, active, excluded, now, out state)) return true;
+            }
+            if (_getState((uint)active, out state) == 0)
             {
                 state.Gamepad.Buttons = MapBack(state.Gamepad.Buttons, _backAsTouchpad);
-                if (_slot != index) MoveRumble((int)index);
                 return true;
             }
-            // 1167 = not connected. Other codes are transient driver states; treat the slot as empty
-            // so a long-running mapping keeps going instead of ending on one bad read.
+            // The pad in use is gone: report no input now and look for another one on the next pass.
+            _slot = -1;
+            _nextFullScan = 0;
+            state = default;
+            return false;
+        }
+
+        if (now >= _nextFullScan)
+        {
+            if (ScanSlots(0, 4, excluded, now, out state)) return true;
+            _nextFullScan = now + (long)ScanInterval.TotalMilliseconds;
         }
         _slot = -1;
+        state = default;
+        return false;
+    }
+
+    private bool ScanSlots(int from, int to, int excluded, long now, out State state)
+    {
+        for (int index = from; index < to; index++)
+        {
+            if (index == excluded) continue;
+            // 1167 = not connected. Other codes are transient driver states; treat the slot as empty
+            // so a long-running mapping keeps going instead of ending on one bad read.
+            if (_getState((uint)index, out state) == 0)
+            {
+                state.Gamepad.Buttons = MapBack(state.Gamepad.Buttons, _backAsTouchpad);
+                if (_slot != index) MoveRumble(index);
+                _nextLowerScan = now + (long)ScanInterval.TotalMilliseconds;
+                return true;
+            }
+        }
         state = default;
         return false;
     }
@@ -97,16 +160,16 @@ public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonO
     {
         Interlocked.Exchange(ref _rumble, (large << 8) | small);
         int slot = _slot;
-        if (slot >= 0) Apply(slot, large, small);
+        if (slot >= 0) _setVibration(slot, large, small);
     }
 
     private void MoveRumble(int index)
     {
         int previous = _slot;
         _slot = index;
-        if (previous >= 0) Apply(previous, 0, 0);
+        if (previous >= 0) _setVibration(previous, 0, 0);
         int value = Volatile.Read(ref _rumble);
-        if (value != 0) Apply(index, (byte)(value >> 8), (byte)value);
+        if (value != 0) _setVibration(index, (byte)(value >> 8), (byte)value);
     }
 
     private static void Apply(int slot, byte large, byte small)
@@ -118,6 +181,6 @@ public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonO
     public void Dispose()
     {
         int slot = _slot;
-        if (slot >= 0) Apply(slot, 0, 0);
+        if (slot >= 0) _setVibration(slot, 0, 0);
     }
 }

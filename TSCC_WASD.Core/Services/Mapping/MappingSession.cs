@@ -16,7 +16,10 @@ public sealed class MappingSession : IAsyncDisposable
     private Task? _loopTask;
     private bool _disposed;
     private int _inputReleased;
-    private volatile string _inputSummary = L.T("尚未收到輸入", "No input yet");
+    private volatile InputSnapshot? _lastInput;
+
+    // The loop only stores the latest reading; the text is built when someone reads InputSummary.
+    private sealed record InputSnapshot(bool Paused, bool Available, State State);
 
     public MappingSession(MappingProfile profile, IInputReader input, IVirtualController output,
         Action<string>? statusCallback = null)
@@ -90,7 +93,19 @@ public sealed class MappingSession : IAsyncDisposable
     private static readonly TimeSpan OutputRetryDelay = TimeSpan.FromSeconds(1);
     public bool IsRunning => _loopTask is { IsCompleted: false };
     public string? LastError { get; private set; }
-    public string InputSummary => _inputSummary;
+    public string InputSummary => Describe(_lastInput);
+
+    private static string Describe(InputSnapshot? snapshot)
+    {
+        if (snapshot is null) return L.T("尚未收到輸入", "No input yet");
+        var state = snapshot.State;
+        return snapshot.Paused
+            ? L.T("已暫停：遊戲收到的是放開所有按鍵的虛擬手把", "Paused: games see a virtual controller with nothing pressed")
+            : snapshot.Available
+            ? L.T($"按鍵：{state.Gamepad.Buttons} · 左搖桿 ({state.Gamepad.LeftThumbX}, {state.Gamepad.LeftThumbY}) · 右搖桿 ({state.Gamepad.RightThumbX}, {state.Gamepad.RightThumbY}) · L2/R2 {state.Gamepad.LeftTrigger}/{state.Gamepad.RightTrigger}",
+                $"Buttons: {state.Gamepad.Buttons} · Left stick ({state.Gamepad.LeftThumbX}, {state.Gamepad.LeftThumbY}) · Right stick ({state.Gamepad.RightThumbX}, {state.Gamepad.RightThumbY}) · L2/R2 {state.Gamepad.LeftTrigger}/{state.Gamepad.RightTrigger}")
+            : L.T("尚未收到有效輸入（輸出歸零）", "No valid input (output neutral)");
+    }
 
     public bool TryStart()
     {
@@ -126,12 +141,7 @@ public sealed class MappingSession : IAsyncDisposable
                     state = default;
                 }
                 bool paused = _paused;
-                _inputSummary = paused
-                    ? L.T("已暫停：遊戲收到的是放開所有按鍵的虛擬手把", "Paused: games see a virtual controller with nothing pressed")
-                    : available
-                    ? L.T($"按鍵：{state.Gamepad.Buttons} · 左搖桿 ({state.Gamepad.LeftThumbX}, {state.Gamepad.LeftThumbY}) · 右搖桿 ({state.Gamepad.RightThumbX}, {state.Gamepad.RightThumbY}) · L2/R2 {state.Gamepad.LeftTrigger}/{state.Gamepad.RightTrigger}",
-                        $"Buttons: {state.Gamepad.Buttons} · Left stick ({state.Gamepad.LeftThumbX}, {state.Gamepad.LeftThumbY}) · Right stick ({state.Gamepad.RightThumbX}, {state.Gamepad.RightThumbY}) · L2/R2 {state.Gamepad.LeftTrigger}/{state.Gamepad.RightTrigger}")
-                    : L.T("尚未收到有效輸入（輸出歸零）", "No valid input (output neutral)");
+                _lastInput = new InputSnapshot(paused, available, state);
                 string status;
                 try
                 {
