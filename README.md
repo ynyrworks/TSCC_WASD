@@ -7,7 +7,7 @@ with Xbox prompts (DualShock 4, DualSense and Switch Pro input is experimental).
 
 It covers one common reWASD use case ("pretend my controller is a DS4") using free,
 open components: ViGEmBus for the virtual controller and HidHide to hide the real one.
-Built with C# / .NET 10 / WPF. **MIT licensed · v0.9.1 preview.** English and Traditional Chinese UI.
+Built with C# / .NET 10 / WPF. **MIT licensed · v0.9.2 preview.** English and Traditional Chinese UI.
 
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-support%20this%20project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.2 — preview
 
 - **NS2 Pro over Bluetooth (experimental):** the Switch 2 Pro Controller now also works
   wirelessly through the PC's own Bluetooth adapter, with no dongle. Windows does not expose it
@@ -22,6 +22,20 @@
   known parent for devices that are not present.
 - Windows 10 now needs version 2004 or later (for the Bluetooth LE API); Windows 10 22H2 and
   Windows 11 are unaffected.
+- Fixed: a crash or power cut while saving HidHide's restore record can no longer leave a
+  damaged file that blocks restoring forever. A damaged record is kept as `.corrupt`, supported
+  controllers are unhidden as a best effort (this can include controllers you hid yourself), and
+  a message explains it.
+- New controllers are now hidden when Windows reports them, with a 30-second fallback scan,
+  instead of starting HidHideCLI every 5 seconds while you play. If the notification can't be
+  registered, TSCC_WASD goes back to scanning every 5 seconds.
+- Lower constant load while mapping: empty XInput slots are checked at most once a second (a
+  newly connected Xbox controller can take up to a second to be noticed) and the input summary is
+  only built when shown.
+- Status text says "virtual controller" instead of "virtual DS4" where the output could be
+  Xbox 360, and auto-detect's searching status lists every controller type.
+- Profiles no longer carry the unused `requireDrivers` and `advanced` fields; existing profiles
+  still load.
 
 ## 0.9.1 — preview
 

@@ -4,7 +4,7 @@
 PlayStation DualShock 4，顯示 PS 按鍵圖示。也可以改成輸出虛擬 Xbox 360 手把，例如讓 PlayStation
 或任天堂手把顯示 Xbox 圖示（DualShock 4、DualSense、Switch Pro 輸入為實驗性）。
 對應付費軟體 reWASD 最常用的「偽裝成 DS4」功能，改用免費元件 ViGEmBus（虛擬手把）與 HidHide（隱藏實體手把）完成。
-目前為 **0.9.1 預覽版**，介面支援繁體中文與英文。
+目前為 **0.9.2 預覽版**，介面支援繁體中文與英文。
 
 [![在 Ko-fi 支持](https://img.shields.io/badge/Ko--fi-支持這個專案-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
 
