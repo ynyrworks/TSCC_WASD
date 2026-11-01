@@ -144,6 +144,15 @@
                                              AutomationProperties.Name="{app:T Zh=設定檔說明, En='Profile description'}"/>
                                 </StackPanel>
                             </Grid>
+                            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=遊戲程序名稱, En='Game process name'}"/>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="{app:T Zh=從執行中的程式挑選, En='Pick from running programs'}"
+                                        Command="{Binding PickProcessCommand}"/>
+                                <TextBox Text="{Binding SelectedProfile.MatchProcessName, UpdateSourceTrigger=PropertyChanged}" MaxLength="260"
+                                         AutomationProperties.Name="{app:T Zh=遊戲程序名稱, En='Game process name'}"/>
+                            </DockPanel>
+                            <TextBlock Style="{StaticResource Hint}"
+                                       Text="{app:T Zh='映射中遊戲到前景時自動切換到此設定檔，遊戲結束後切回。名稱不分大小寫，.exe 可有可無；留空則不使用。', En='While mapping, this profile is applied when the game comes to the foreground and switched back when it exits. The name is case-insensitive and .exe is optional; leave empty to disable.'}"/>
                             <TextBlock Style="{StaticResource Label}" Text="{app:T Zh='搖桿死區（0–0.95）', En='Stick dead zone (0–0.95)'}"/>
                             <DockPanel Margin="0,0,0,12">
                                 <TextBlock DockPanel.Dock="Right" Width="48" TextAlignment="Right" Text="{Binding SelectedProfile.DeadZone, StringFormat=F2}"/>

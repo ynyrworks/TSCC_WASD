@@ -62,6 +62,20 @@ public class DesktopTests
                 surface.Arrange(new Rect(0, 0, 980, 780));
                 surface.UpdateLayout();
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                // The game-match text box edits the selected profile immediately, and the picker command exists.
+                foreach (var expander in FindAll<System.Windows.Controls.Expander>(surface)) expander.IsExpanded = true;
+                surface.UpdateLayout();
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                var matchBox = FindAll<System.Windows.Controls.TextBox>(surface)
+                    .Single(t => (string)t.GetValue(System.Windows.Automation.AutomationProperties.NameProperty) == TSCC_WASD.Core.L.T("遊戲程序名稱", "Game process name"));
+                matchBox.Text = "Game.exe";
+                Assert.Equal("Game.exe", vm.SelectedProfile!.MatchProcessName);
+                vm.SelectedProfile.MatchProcessName = "Other";
+                Assert.Equal("Other", matchBox.Text);
+                Assert.True(vm.PickProcessCommand.CanExecute(null));
+                matchBox.Text = "";
+                foreach (var expander in FindAll<System.Windows.Controls.Expander>(surface)) expander.IsExpanded = false;
+                surface.UpdateLayout();
                 string? screenshotDir = Environment.GetEnvironmentVariable("YNYRWASD_SCREENSHOTS");
                 if (!string.IsNullOrEmpty(screenshotDir))
                 {
@@ -140,6 +154,36 @@ public class DesktopTests
             if (child is T match) yield return match;
             foreach (var nested in FindAll<T>(child)) yield return nested;
         }
+    }
+
+    [Fact]
+    public async Task ProcessPickerSortsFiltersAndEnumerates()
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var window = new ProcessPickerWindow(new[]
+                {
+                    new ProcessPickerWindow.ProcessEntry("zeta", "Z"), new ProcessPickerWindow.ProcessEntry("Alpha", "A game")
+                });
+                var list = (System.Windows.Controls.ListBox)window.FindName("ProcessList");
+                var names = list.Items.Cast<ProcessPickerWindow.ProcessEntry>().Select(e => e.Name).ToArray();
+                Assert.Equal(new[] { "Alpha", "zeta" }, names);
+                ((System.Windows.Controls.TextBox)window.FindName("FilterBox")).Text = "ZET";
+                Assert.Single(list.Items);
+                Assert.Null(window.SelectedProcessName);
+                Assert.DoesNotContain(ProcessPickerWindow.EnumerateWindowedProcesses(), e => e.Name.Equals("TSCC_WASD", StringComparison.OrdinalIgnoreCase));
+                window.Close();
+                completion.TrySetResult();
+            }
+            catch (Exception ex) { completion.TrySetException(ex); }
+            finally { Dispatcher.CurrentDispatcher.InvokeShutdown(); }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        await completion.Task.WaitAsync(TimeSpan.FromSeconds(60));
     }
 
     [Fact]
