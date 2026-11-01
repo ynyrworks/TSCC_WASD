@@ -13,7 +13,7 @@ The root JSON value is a non-empty array. See [example](../examples/profiles.jso
 | `deadZone` | Finite 0–0.95; default 0.08. Radial: each stick's X and Y are judged together by distance from centre |
 | `matchProcessName` | Reserved; does not activate automatic switching |
 
-Dead zones are per axis. Values inside the zone map to neutral (128); remaining
+Dead zones are radial, per stick. Values inside the zone map to neutral (128); remaining
 travel is linearly rescaled to 0–255. Y is inverted for DS4 reports.
 Polling uses a rounded millisecond interval and Windows task scheduling, not a
 real-time guarantee. A running session uses a validated snapshot.
