@@ -219,4 +219,15 @@ public class AutoProfileSwitchRuleTests
         Assert.Null(Step("GameA.exe", 10));
         Assert.Equal("home", _current);
     }
+
+    [Theory]
+    [InlineData(OutputControllerType.DualShock4, OutputControllerType.Xbox360, true, true)]
+    [InlineData(OutputControllerType.Xbox360, OutputControllerType.DualShock4, true, true)]
+    [InlineData(OutputControllerType.Xbox360, OutputControllerType.Xbox360, true, false)]
+    [InlineData(OutputControllerType.DualShock4, OutputControllerType.Xbox360, false, false)]
+    [InlineData(OutputControllerType.DualShock4, OutputControllerType.DualShock4, false, false)]
+    public void OutputChangeNoticeOnlyForAutomaticTypeChange(OutputControllerType oldType, OutputControllerType newType, bool automatic, bool expected)
+    {
+        Assert.Equal(expected, AutoProfileSwitchRule.ShouldNotifyOutputChange(oldType, newType, automatic));
+    }
 }

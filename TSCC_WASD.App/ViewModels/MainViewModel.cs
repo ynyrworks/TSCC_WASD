@@ -223,7 +223,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (value is not null) value.PropertyChanged += OnSelectedProfileEdited;
             NotifyState();
             if (!_autoSelecting) _autoSwitch.NotifyManualSelection();
-            if (IsRunning && value is not null) _ = ApplyLiveAsync(value, switched: true, automatic: _autoSelecting);
+            if (IsRunning && value is not null) _ = ApplyLiveAsync(value, switched: true, automatic: _autoSelecting, previousOutput: previous?.OutputType);
         }
     }
 
@@ -233,7 +233,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     }
 
     /// <summary>Edits and profile switches take effect immediately; mapping (and hiding) keeps running.</summary>
-    private async Task ApplyLiveAsync(MappingProfile profile, bool switched, bool automatic = false)
+    private async Task ApplyLiveAsync(MappingProfile profile, bool switched, bool automatic = false, OutputControllerType? previousOutput = null)
     {
         string? message;
         try { message = await _coordinator.ApplyProfileAsync(profile); }
@@ -251,6 +251,12 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
         if (message is not null) StatusMessage = message;
         IsRunning = _coordinator.IsRunning;
+        if (switched && previousOutput is { } oldType && AutoProfileSwitchRule.ShouldNotifyOutputChange(oldType, profile.OutputType, automatic))
+        {
+            BackgroundNotice?.Invoke(L.T(
+                "輸出的手把類型已改變。如果遊戲沒有抓到手把，請重新開啟遊戲。",
+                "The output controller type changed. If the game does not detect the controller, restart the game."));
+        }
     }
     public string StatusMessage { get => _statusMessage; private set => SetField(ref _statusMessage, value); }
     public string InputSummary { get => _inputSummary; private set => SetField(ref _inputSummary, value); }

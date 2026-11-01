@@ -18,7 +18,6 @@ public sealed class AutoProfileSwitchRule
     private readonly HashSet<int> _games = new();
     private string? _originalId;
     private bool _manualOverride;
-    private int? _lastForegroundPid;
 
     public bool IsTracking => _games.Count > 0;
 
@@ -54,7 +53,6 @@ public sealed class AutoProfileSwitchRule
                 {
                     // A game process not tracked yet coming to the foreground; Alt-Tab back to a tracked one is not.
                     bool entered = _games.Add(fg.Pid);
-                    _lastForegroundPid = fg.Pid;
                     if (_games.Count == 1 && entered)
                     {
                         // First tracked game: a manual choice made after the last game ended is the new baseline;
@@ -66,13 +64,15 @@ public sealed class AutoProfileSwitchRule
                     return null;
                 }
             }
-            _lastForegroundPid = fg.Pid;
         }
-        else _lastForegroundPid = null;
 
         if (_games.Count == 0 && (_originalId is not null || _manualOverride)) return Finish(profiles, currentId);
         return null;
     }
+
+    /// <summary>True when an automatic switch changes the virtual pad type, so a game that already scanned for pads may need a restart.</summary>
+    public static bool ShouldNotifyOutputChange(OutputControllerType oldType, OutputControllerType newType, bool automatic)
+        => automatic && oldType != newType;
 
     /// <summary>The user picked a profile; the rule stops fighting it until a game comes to the foreground again.</summary>
     public void NotifyManualSelection()
@@ -93,7 +93,6 @@ public sealed class AutoProfileSwitchRule
         _games.Clear();
         _originalId = null;
         _manualOverride = false;
-        _lastForegroundPid = null;
     }
 
     private string? Finish(IReadOnlyList<MappingProfile> profiles, string? currentId)
