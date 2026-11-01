@@ -41,8 +41,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             IsPaused = !IsPaused;
             StatusMessage = IsPaused
-                ? L.T("已暫停：遊戲看到的是放開所有按鍵的虛擬 DS4，實體手把仍隱藏，Steam 不會重新抓到它。",
-                    "Paused: games see a virtual DS4 with nothing pressed; the controllers stay hidden so Steam can't grab them.")
+                ? L.T("已暫停：遊戲看到的是放開所有按鍵的虛擬手把，實體手把仍隱藏，Steam 不會重新抓到它。",
+                    "Paused: games see a virtual controller with nothing pressed; the controllers stay hidden so Steam can't grab them.")
                 : L.T("已繼續映射。", "Mapping resumed.");
             return Task.CompletedTask;
         }, () => IsRunning);
@@ -405,7 +405,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private static bool ConfirmDriverInstall(IReadOnlyList<DriverPackage> packages)
     {
         var lines = string.Join(Environment.NewLine, packages.Select(p => p.Required
-            ? L.T($"• {p.Name} {p.Version}（必要：建立虛擬 DS4）", $"• {p.Name} {p.Version} (required: creates the virtual DS4)")
+            ? L.T($"• {p.Name} {p.Version}（必要：建立虛擬手把）", $"• {p.Name} {p.Version} (required: creates the virtual controller)")
             : L.T($"• {p.Name} {p.Version}（強烈建議：對遊戲隱藏實體手把）", $"• {p.Name} {p.Version} (strongly recommended: hides the real controller from games)")));
         var source = packages.All(DriverInstaller.IsBundled)
             ? L.T("將執行程式資料夾 drivers 內附的 Nefarius 官方安裝程式", "The official Nefarius installers in the drivers folder will run")
@@ -734,7 +734,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         StatusMessage = L.T("正在重新啟動 Steam...", "Restarting Steam...");
         await SteamHelper.RestartAsync(silent);
-        StatusMessage = L.T("Steam 已重新啟動，現在只看得到虛擬 DS4。", "Steam restarted and now only sees the virtual DS4.");
+        StatusMessage = L.T("Steam 已重新啟動，現在只看得到虛擬手把。", "Steam restarted and now only sees the virtual controller.");
     }
 
     private async Task StopAsync()

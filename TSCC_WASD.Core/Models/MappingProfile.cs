@@ -8,7 +8,7 @@ public class MappingProfile : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
     private string _name = L.T("自動偵測 → DualShock 4", "Auto-detect → DualShock 4");
-    private string? _description = L.T("自動使用 NS2 Pro 或 Xbox 手把，輸出虛擬 DualShock 4。PS 圖示取決於遊戲支援。", "Uses an NS2 Pro or Xbox controller and outputs a virtual DualShock 4. PS prompts depend on the game.");
+    private string? _description = L.T("自動使用 NS2 Pro、DualShock 4／DualSense、Switch Pro 或 Xbox 手把，輸出虛擬 DualShock 4。PS 圖示取決於遊戲支援。", "Uses an NS2 Pro, DualShock 4 / DualSense, Switch Pro or Xbox controller and outputs a virtual DualShock 4. PS prompts depend on the game.");
     private int _pollingRateHz = 125;
     private double _deadZone = 0.08;
     private InputDeviceType _inputType = InputDeviceType.Auto;
