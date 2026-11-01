@@ -150,17 +150,82 @@ public sealed partial class HidHideGuard
 
     private static bool Contains(string text, string value) => text.Contains(value, StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Set when a damaged restore record was found and handled; null otherwise. Callers can show it to the user.
+    /// </summary>
+    public string? RecoveryNotice { get; private set; }
+
+    /// <summary>Returns null when there is no record or it was damaged (it is then quarantined and best-effort undone).</summary>
     private Record? Load()
     {
         if (!File.Exists(_recordPath)) return null;
-        return JsonSerializer.Deserialize<Record>(File.ReadAllText(_recordPath))
-            ?? throw new InvalidDataException(L.T("HidHide 還原紀錄無效。", "The HidHide restore record is invalid."));
+        try
+        {
+            var record = JsonSerializer.Deserialize<Record>(File.ReadAllText(_recordPath));
+            if (record is not null && record.AppPath is not null && record.Devices is not null) return record;
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidDataException) { }
+        RecoverFromCorruptRecord();
+        return null;
+    }
+
+    private void RecoverFromCorruptRecord()
+    {
+        string? kept = null;
+        try
+        {
+            string target = _recordPath + ".corrupt";
+            for (int i = 1; File.Exists(target); i++) target = $"{_recordPath}.corrupt{i}";
+            File.Move(_recordPath, target);
+            kept = target;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Never leave an unreadable record in place: it would fail every later Restore.
+            try { File.Delete(_recordPath); } catch (Exception ex2) when (ex2 is IOException or UnauthorizedAccessException) { }
+        }
+
+        int unhidden = 0;
+        try
+        {
+            var devices = ParseQuoted(_run(["--dev-list"]), "--dev-hide")
+                .Where(path => Matches(path, InputDeviceType.Auto)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (devices.Count > 0)
+            {
+                var args = new List<string>();
+                foreach (var path in devices) args.AddRange(["--dev-unhide", path]);
+                _run(args);
+                unhidden = devices.Count;
+            }
+        }
+        catch (Exception ex) when (ex is IOException or TimeoutException or InvalidOperationException)
+        {
+            AppLog.Warn($"HidHide best-effort unhide after a damaged restore record failed: {ex.Message}");
+        }
+
+        AppLog.Warn($"HidHide restore record was damaged; kept as {kept ?? "(could not keep)"}; unhid {unhidden} controller(s).");
+        RecoveryNotice = L.T(
+            $"HidHide 還原紀錄已損毀，已盡力取消隱藏 {unhidden} 個手把介面；若手把仍無法使用，請開啟 HidHide 設定檢查。",
+            $"The HidHide restore record was damaged; {unhidden} controller interface(s) were unhidden as a best effort. If a controller is still missing, check HidHide's settings.");
     }
 
     private void Save(Record record)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(_recordPath)!);
-        File.WriteAllText(_recordPath, JsonSerializer.Serialize(record, JsonOptions));
+        string temp = _recordPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            using (var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                using var writer = new StreamWriter(stream, leaveOpen: true);
+                writer.Write(JsonSerializer.Serialize(record, JsonOptions));
+                writer.Flush();
+                stream.Flush(flushToDisk: true);
+            }
+            if (File.Exists(_recordPath)) File.Replace(temp, _recordPath, null);
+            else File.Move(temp, _recordPath);
+        }
+        finally { if (File.Exists(temp)) File.Delete(temp); }
     }
 
     private IEnumerable<string> GamingDevicesFromCli()

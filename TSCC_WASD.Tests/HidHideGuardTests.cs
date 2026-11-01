@@ -1,5 +1,6 @@
 using System.IO;
 using Xunit;
+using TSCC_WASD.Core;
 using TSCC_WASD.Core.Models;
 using TSCC_WASD.Core.Services.Setup;
 
@@ -104,6 +105,76 @@ public class HidHideGuardTests
         Assert.Empty(cli.Changes);
         Assert.False(guard.HasPendingRestore);
     }
+
+    [Fact]
+    public void FailedSaveKeepsOldRecordAndLeavesNoTempFile()
+    {
+        string record = TempRecord();
+        var cli = new FakeCli { Gaming = Gaming(Ns2, Xbox) };
+        var guard = new HidHideGuard(cli.Run, record);
+        guard.Hide(App, InputDeviceType.Switch2ProUsb);
+        string before = File.ReadAllText(record);
+
+        // Holding the record open makes the atomic replace fail after the temp file was written.
+        using (new FileStream(record, FileMode.Open, FileAccess.Read, FileShare.None))
+            Assert.ThrowsAny<IOException>(() => guard.Hide(App, InputDeviceType.XInput));
+
+        Assert.Equal(before, File.ReadAllText(record));
+        Assert.Equal([record], Directory.GetFiles(Path.GetDirectoryName(record)!));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("{\"AppPath\":\"C:\\\\Apps\\\\TS")]
+    [InlineData("null")]
+    public void DamagedRecordIsQuarantinedAndRestoreUnhidesMatchingDevices(string content)
+    {
+        using var log = TempLog();
+        string record = TempRecord();
+        Directory.CreateDirectory(Path.GetDirectoryName(record)!);
+        File.WriteAllText(record, content);
+        var cli = new FakeCli { Hidden = [Ns2, Other] };
+        var guard = new HidHideGuard(cli.Run, record);
+
+        guard.Restore();
+
+        Assert.False(guard.HasPendingRestore);
+        Assert.Equal(content, File.ReadAllText(record + ".corrupt"));
+        // Only matching controllers are unhidden; cloak and the application list are untouched.
+        Assert.Equal(["--dev-unhide", Ns2], cli.Changes.Single());
+        Assert.False(string.IsNullOrEmpty(guard.RecoveryNotice));
+        Assert.Contains("damaged", File.ReadAllText(AppLog.CurrentFile));
+    }
+
+    [Fact]
+    public void DamagedRecordDoesNotBlockHideAndRepeatedDamageKeepsEveryCopy()
+    {
+        using var log = TempLog();
+        string record = TempRecord();
+        Directory.CreateDirectory(Path.GetDirectoryName(record)!);
+        File.WriteAllText(record, "first");
+        var cli = new FakeCli { Gaming = Gaming(Ns2), Hidden = [Xbox] };
+        var guard = new HidHideGuard(cli.Run, record);
+
+        guard.Hide(App, InputDeviceType.Switch2ProUsb);
+        Assert.True(guard.HasPendingRestore);
+        Assert.NotNull(guard.RecoveryNotice);
+
+        File.WriteAllText(record, "second");
+        guard.Restore();
+
+        Assert.Equal("first", File.ReadAllText(record + ".corrupt"));
+        Assert.Equal("second", File.ReadAllText(record + ".corrupt1"));
+    }
+
+    private static IDisposable TempLog()
+    {
+        string old = AppLog.Directory;
+        AppLog.Directory = Path.Combine(Path.GetTempPath(), "TSCC_WASD-tests", Guid.NewGuid().ToString("N"));
+        return new Restorer(() => AppLog.Directory = old);
+    }
+
+    private sealed class Restorer(Action undo) : IDisposable { public void Dispose() => undo(); }
 
     private static string TempRecord() =>
         Path.Combine(Path.GetTempPath(), "TSCC_WASD-tests", Guid.NewGuid().ToString("N"), "hidhide-restore.json");
