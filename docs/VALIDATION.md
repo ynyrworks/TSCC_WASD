@@ -49,7 +49,7 @@ check only applied if a second Xbox controller was at hand.
 | No controller: searching status fits and is not cut off | Passed |
 | Existing profiles load; About shows 0.9.2 | Passed |
 | A damaged restore record or a power cut on real hardware | Not tested (automated tests only) |
-| In-app update from 0.9.1 | Not tested yet (needs a published 0.9.2) |
+| In-app update from the published 0.9.1 to the published 0.9.2 | Passed (reported by the maintainer) |
 
 ### Unreleased — virtual pad detection for HidHide, 2026-10-24
 
