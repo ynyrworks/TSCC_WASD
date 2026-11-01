@@ -51,9 +51,10 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
                 return L.T($"自動偵測 → {SourceStatus(active)}", $"Auto-detect → {SourceStatus(active)}");
             // Every source's status stays visible while searching (the NS2 Pro one explains USB setup and Steam sharing).
             var parts = new string[_sources.Length];
+            string colon = L.T("：", ": ");
             for (int i = 0; i < parts.Length; i++)
-                parts[i] = _sources[i] is XInputReader ? $"{_names[i]}：{L.T("未連線", "not connected")}" : $"{_names[i]}：{_sources[i].Status}";
-            string list = string.Join("；", parts);
+                parts[i] = _sources[i] is XInputReader ? $"{_names[i]}{colon}{L.T("未連線", "not connected")}" : $"{_names[i]}{colon}{_sources[i].Status}";
+            string list = string.Join(L.T("；", "; "), parts);
             return L.T($"自動偵測：尋找手把中（{list}{_lastError}）",
                 $"Auto-detect: looking for a controller ({list}{_lastError})");
         }

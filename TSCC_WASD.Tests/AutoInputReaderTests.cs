@@ -1,4 +1,5 @@
 using Xunit;
+using TSCC_WASD.Core;
 using TSCC_WASD.Core.Services.Input;
 
 namespace TSCC_WASD.Tests;
@@ -31,6 +32,25 @@ public class AutoInputReaderTests
         reader.TryGetState(out state);
         Assert.Equal("NS2 Pro", reader.ActiveSource);
         Assert.Equal(GamepadButtonFlags.B, state.Gamepad.Buttons);
+    }
+
+    [Theory]
+    [InlineData("en", "NS2 Pro: a; Xbox／XInput: a")]
+    [InlineData("zh-TW", "NS2 Pro：a；Xbox／XInput：a")]
+    public void SearchingStatusUsesSeparatorsOfTheLanguage(string language, string expectedList)
+    {
+        bool wasChinese = L.Chinese;
+        try
+        {
+            L.Apply(language);
+            var ns2 = new FakeSource { Status = "a" };
+            var xbox = new FakeSource { Status = "a" };
+            using var reader = new AutoInputReader(ns2, xbox);
+            string status = reader.Status;
+            Assert.Contains(expectedList, status);
+            if (language == "en") Assert.DoesNotContain("：", status.Replace("Xbox／XInput", ""));
+        }
+        finally { L.Apply(wasChinese ? "zh-TW" : "en"); }
     }
 
     [Fact]
