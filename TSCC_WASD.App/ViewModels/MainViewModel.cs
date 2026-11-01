@@ -236,8 +236,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private async Task ApplyLiveAsync(MappingProfile profile, bool switched, bool automatic = false, OutputControllerType? previousOutput = null)
     {
         string? message;
+        bool applied = true;
         try { message = await _coordinator.ApplyProfileAsync(profile); }
-        catch (Exception ex) { message = L.T($"無法套用設定：{ex.Message}", $"Could not apply the change: {ex.Message}"); }
+        catch (Exception ex) { applied = false; message = L.T($"無法套用設定：{ex.Message}", $"Could not apply the change: {ex.Message}"); }
         if (switched && automatic)
         {
             // Automatic switches never touch LastProfileId: the next launch returns to the user's own choice.
@@ -251,11 +252,19 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         }
         if (message is not null) StatusMessage = message;
         IsRunning = _coordinator.IsRunning;
-        if (switched && previousOutput is { } oldType && AutoProfileSwitchRule.ShouldNotifyOutputChange(oldType, profile.OutputType, automatic))
+        if (switched && previousOutput is { } oldType)
         {
-            BackgroundNotice?.Invoke(L.T(
-                "輸出的手把類型已改變。如果遊戲沒有抓到手把，請重新開啟遊戲。",
-                "The output controller type changed. If the game does not detect the controller, restart the game."));
+            switch (AutoProfileSwitchRule.DecideNotice(oldType, profile.OutputType, automatic, applied, IsRunning))
+            {
+                case AutoProfileSwitchRule.SwitchNotice.OutputChanged:
+                    BackgroundNotice?.Invoke(L.T(
+                        "輸出的手把類型已改變。如果遊戲沒有抓到手把，請重新開啟遊戲。",
+                        "The output controller type changed. If the game does not detect the controller, restart the game."));
+                    break;
+                case AutoProfileSwitchRule.SwitchNotice.SwitchFailed:
+                    if (message is not null) BackgroundNotice?.Invoke(message);
+                    break;
+            }
         }
     }
     public string StatusMessage { get => _statusMessage; private set => SetField(ref _statusMessage, value); }

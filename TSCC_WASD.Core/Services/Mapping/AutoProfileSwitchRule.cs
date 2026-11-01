@@ -74,6 +74,16 @@ public sealed class AutoProfileSwitchRule
     public static bool ShouldNotifyOutputChange(OutputControllerType oldType, OutputControllerType newType, bool automatic)
         => automatic && oldType != newType;
 
+    public enum SwitchNotice { None, OutputChanged, SwitchFailed }
+
+    /// <summary>Decides the tray notice after an applied switch: only automatic switches notify; a failure that stopped mapping reports the failure instead of the type change.</summary>
+    public static SwitchNotice DecideNotice(OutputControllerType oldType, OutputControllerType newType, bool automatic, bool applySucceeded, bool stillRunning)
+    {
+        if (!automatic) return SwitchNotice.None;
+        if (!applySucceeded || !stillRunning) return SwitchNotice.SwitchFailed;
+        return ShouldNotifyOutputChange(oldType, newType, automatic) ? SwitchNotice.OutputChanged : SwitchNotice.None;
+    }
+
     /// <summary>The user picked a profile; the rule stops fighting it until a game comes to the foreground again.</summary>
     public void NotifyManualSelection()
     {
