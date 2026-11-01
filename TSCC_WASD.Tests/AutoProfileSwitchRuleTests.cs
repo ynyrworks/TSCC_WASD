@@ -143,7 +143,43 @@ public class AutoProfileSwitchRuleTests
         Step("GameA.exe", 10);
         Step("TSCC_WASD", 99);
         Manual("b");
-        Assert.Equal("a", Step("GameA.exe", 10));
+        Assert.Null(Step("GameA.exe", 10));
+        Assert.Equal("b", _current);
+        Assert.Equal("a", Step("GameA.exe", 11));
+    }
+
+    [Fact]
+    public void ManualSelectionSurvivesAltTabBackToSameGame()
+    {
+        Step("GameA.exe", 10);
+        Step("explorer", 1);
+        Manual("b");
+        Assert.Null(Step("explorer", 1));
+        Assert.Null(Step("GameA.exe", 10));
+        Assert.Equal("b", _current);
+        _alive.Remove(10);
+        Assert.Null(Step("explorer", 1));
+        Assert.Equal("b", _current);
+    }
+
+    [Fact]
+    public void ManualSelectionEndsWhenAnotherUntrackedGameComesToForeground()
+    {
+        Step("GameA.exe", 10);
+        Manual("a2");
+        Assert.Equal("b", Step("gameb", 20));
+    }
+
+    [Fact]
+    public void OriginalSurvivesGameEndingWhileNextGameAlreadyInForeground()
+    {
+        Step("GameA.exe", 10);
+        Step("explorer", 1);
+        _alive.Add(20);
+        _alive.Remove(10);
+        Assert.Equal("b", Step("gameb", 20));
+        _alive.Remove(20);
+        Assert.Equal("home", Step("explorer", 1));
     }
 
     [Fact]

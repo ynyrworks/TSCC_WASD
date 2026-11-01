@@ -52,10 +52,15 @@ public sealed class AutoProfileSwitchRule
                 target = profiles.FirstOrDefault(p => Normalize(p.MatchProcessName) == name)?.Id;
                 if (target is not null)
                 {
-                    bool entered = _lastForegroundPid != fg.Pid;
-                    if (_games.Count == 0) { _originalId = currentId; _manualOverride = false; }
-                    _games.Add(fg.Pid);
+                    // A game process not tracked yet coming to the foreground; Alt-Tab back to a tracked one is not.
+                    bool entered = _games.Add(fg.Pid);
                     _lastForegroundPid = fg.Pid;
+                    if (_games.Count == 1 && entered)
+                    {
+                        // First tracked game: a manual choice made after the last game ended is the new baseline;
+                        // otherwise keep a pending original (game A ended while B is already in front).
+                        if (_originalId is null || _manualOverride) _originalId = currentId;
+                    }
                     if (entered) _manualOverride = false;
                     if (!_manualOverride && target != currentId) return target;
                     return null;
