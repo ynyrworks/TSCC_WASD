@@ -19,6 +19,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private readonly AppSettingsStore _settingsStore;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(250) };
     private readonly List<AsyncRelayCommand> _commands = new();
+    private readonly AutoProfileSwitchRule _autoSwitch = new();
+    private readonly ForegroundProcessProbe _foregroundProbe = new();
+    private bool _autoSelecting;
+    private int _autoSwitchTicks;
     private MappingProfile? _selectedProfile;
     private string _statusMessage = L.T("選擇設定檔後啟動映射。", "Choose a profile and start mapping.");
     private string _inputSummary = L.T("尚未啟動映射", "Mapping not started");
@@ -218,7 +222,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (previous is not null) previous.PropertyChanged -= OnSelectedProfileEdited;
             if (value is not null) value.PropertyChanged += OnSelectedProfileEdited;
             NotifyState();
-            if (IsRunning && value is not null) _ = ApplyLiveAsync(value, switched: true);
+            if (!_autoSelecting) _autoSwitch.NotifyManualSelection();
+            if (IsRunning && value is not null) _ = ApplyLiveAsync(value, switched: true, automatic: _autoSelecting);
         }
     }
 
@@ -228,12 +233,17 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     }
 
     /// <summary>Edits and profile switches take effect immediately; mapping (and hiding) keeps running.</summary>
-    private async Task ApplyLiveAsync(MappingProfile profile, bool switched)
+    private async Task ApplyLiveAsync(MappingProfile profile, bool switched, bool automatic = false)
     {
         string? message;
         try { message = await _coordinator.ApplyProfileAsync(profile); }
         catch (Exception ex) { message = L.T($"無法套用設定：{ex.Message}", $"Could not apply the change: {ex.Message}"); }
-        if (switched)
+        if (switched && automatic)
+        {
+            // Automatic switches never touch LastProfileId: the next launch returns to the user's own choice.
+            message ??= L.T($"已依遊戲自動切換到「{profile.Name}」。", $"Automatically switched to \"{profile.Name}\" for the game.");
+        }
+        else if (switched)
         {
             Settings.LastProfileId = profile.Id;
             SaveSettings();
@@ -741,6 +751,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         try { await _coordinator.StopAsync(); }
         finally { IsRunning = false; }
+        RestoreAfterAutoSwitch();
         StatusMessage = L.T("映射已停止。", "Mapping stopped.");
         await OfferSteamRestartAfterHidingAsync();
     }
@@ -788,8 +799,37 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         if (IsRunning && !running)
             StatusMessage = L.T($"映射已結束：{_coordinator.LastError ?? "已停止"}", $"Mapping ended: {_coordinator.LastError ?? "stopped"}");
         IsRunning = running;
+        if (running) { if (++_autoSwitchTicks % 4 == 0) AutoSwitchTick(); } // Once a second.
+        else { _autoSwitchTicks = 0; RestoreAfterAutoSwitch(); }
         if (running && ++_antiCheatTicks % 20 == 0) CheckAntiCheat(); // Every 5 seconds.
         if (!running) _antiCheatWarned = null;
+    }
+
+    /// <summary>Polls the foreground window only while mapping runs and some profile sets MatchProcessName.</summary>
+    private void AutoSwitchTick()
+    {
+        try
+        {
+            if (!AutoProfileSwitchRule.HasAnyMatch(Profiles)) return;
+            var target = _autoSwitch.Evaluate(Profiles, SelectedProfile?.Id, _foregroundProbe.GetForeground(), ForegroundProcessProbe.IsAlive);
+            SelectAutomatically(target);
+        }
+        catch (Exception ex) { AppLog.Warn($"Auto profile switch failed: {ex.Message}"); }
+    }
+
+    /// <summary>Mapping stopped: back to the profile the user had, and the rule starts fresh.</summary>
+    private void RestoreAfterAutoSwitch()
+    {
+        try { SelectAutomatically(_autoSwitch.Stop(Profiles, SelectedProfile?.Id)); }
+        catch (Exception ex) { AppLog.Warn($"Auto profile restore failed: {ex.Message}"); }
+    }
+
+    private void SelectAutomatically(string? profileId)
+    {
+        if (profileId is null || Profiles.FirstOrDefault(p => p.Id == profileId) is not { } profile) return;
+        _autoSelecting = true;
+        try { SelectedProfile = profile; }
+        finally { _autoSelecting = false; }
     }
 
     private int _antiCheatTicks;
