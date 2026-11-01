@@ -144,9 +144,18 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         });
         OpenControllerTestCommand = Command(() =>
         {
-            new ControllerTestWindow(() => _coordinator.LatestInput, () => _coordinator.IsRunning, () => _coordinator.InputStatus,
+            if (_controllerTestWindow is { } existing)
+            {
+                if (existing.WindowState == WindowState.Minimized) existing.WindowState = WindowState.Normal;
+                existing.Activate();
+                return Task.CompletedTask;
+            }
+            var testWindow = new ControllerTestWindow(() => _coordinator.LatestInput, () => _coordinator.IsRunning, () => _coordinator.InputStatus,
                 () => DiagnosticReport.Build(InputSummary, IsRunning) + $"Log: {AppLog.CurrentFile}{Environment.NewLine}")
-                { Owner = Application.Current?.MainWindow }.Show();
+                { Owner = Application.Current?.MainWindow };
+            _controllerTestWindow = testWindow;
+            testWindow.Closed += (_, _) => _controllerTestWindow = null;
+            testWindow.Show();
             return Task.CompletedTask;
         });
         PickProcessCommand = Command(() =>
@@ -403,6 +412,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand InstallDepsCommand { get; }
     public ICommand OpenProfilesCommand { get; }
     public ICommand CalibrateCommand { get; }
+    private ControllerTestWindow? _controllerTestWindow;
     public ICommand OpenControllerTestCommand { get; }
     public ICommand PickProcessCommand { get; }
     public ICommand CheckUpdatesCommand { get; }
