@@ -50,14 +50,19 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
             if (active >= 0)
                 return L.T($"自動偵測 → {SourceStatus(active)}", $"Auto-detect → {SourceStatus(active)}");
             // Every source's status stays visible while searching (the NS2 Pro one explains USB setup and Steam sharing).
-            var parts = new string[_sources.Length];
-            string colon = L.T("：", ": ");
-            for (int i = 0; i < parts.Length; i++)
-                parts[i] = _sources[i] is XInputReader ? $"{_names[i]}{colon}{L.T("未連線", "not connected")}" : $"{_names[i]}{colon}{_sources[i].Status}";
-            string list = string.Join(L.T("；", "; "), parts);
+            string list = SearchingList(_sources, _names, L.Chinese);
             return L.T($"自動偵測：尋找手把中（{list}{_lastError}）",
                 $"Auto-detect: looking for a controller ({list}{_lastError})");
         }
+    }
+
+    internal static string SearchingList(IInputReader[] sources, string[] names, bool chinese)
+    {
+        string colon = chinese ? "：" : ": ";
+        var parts = new string[sources.Length];
+        for (int i = 0; i < parts.Length; i++)
+            parts[i] = sources[i] is XInputReader ? $"{names[i]}{colon}{(chinese ? "未連線" : "not connected")}" : $"{names[i]}{colon}{sources[i].Status}";
+        return string.Join(chinese ? "；" : "; ", parts);
     }
 
     private string SourceStatus(int index) => _sources[index] is XInputReader ? L.T("Xbox／XInput", "Xbox / XInput") : _sources[index].Status;

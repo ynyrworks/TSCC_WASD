@@ -35,22 +35,14 @@ public class AutoInputReaderTests
     }
 
     [Theory]
-    [InlineData("en", "NS2 Pro: a; Xbox／XInput: a")]
-    [InlineData("zh-TW", "NS2 Pro：a；Xbox／XInput：a")]
-    public void SearchingStatusUsesSeparatorsOfTheLanguage(string language, string expectedList)
+    [InlineData(false, "NS2 Pro: a; Xbox／XInput: a")]
+    [InlineData(true, "NS2 Pro：a；Xbox／XInput：a")]
+    public void SearchingStatusUsesSeparatorsOfTheLanguage(bool chinese, string expectedList)
     {
-        bool wasChinese = L.Chinese;
-        try
-        {
-            L.Apply(language);
-            var ns2 = new FakeSource { Status = "a" };
-            var xbox = new FakeSource { Status = "a" };
-            using var reader = new AutoInputReader(ns2, xbox);
-            string status = reader.Status;
-            Assert.Contains(expectedList, status);
-            if (language == "en") Assert.DoesNotContain("：", status.Replace("Xbox／XInput", ""));
-        }
-        finally { L.Apply(wasChinese ? "zh-TW" : "en"); }
+        var ns2 = new FakeSource { Status = "a" };
+        var xbox = new FakeSource { Status = "a" };
+        string list = AutoInputReader.SearchingList([ns2, xbox], ["NS2 Pro", "Xbox／XInput"], chinese);
+        Assert.Equal(expectedList, list);
     }
 
     [Fact]
