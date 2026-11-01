@@ -9,7 +9,6 @@ namespace TSCC_WASD.Core.Services.Mapping;
 [SupportedOSPlatform("windows")]
 public sealed class MappingCoordinator : IAsyncDisposable
 {
-    private static readonly TimeSpan HideRescanInterval = TimeSpan.FromSeconds(5);
     private readonly ProfileStore _profileStore;
     private readonly Func<HidHideGuard?> _hidHideFactory;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -18,8 +17,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
     private Action<string>? _statusCallback;
     private HidHideGuard? _hider;
     private volatile InputDeviceType _hideInputType;
-    private CancellationTokenSource? _rescanCts;
-    private Task? _rescanTask;
+    private HidHideRescanner? _rescanner;
     private bool _disposed;
 
     public MappingCoordinator(ProfileStore? profileStore = null, Func<HidHideGuard?>? hidHideFactory = null)
@@ -36,6 +34,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
             var guard = _hidHideFactory();
             if (guard is null || !guard.HasPendingRestore) return null;
             guard.Restore();
+            if (guard.RecoveryNotice is { } notice) return notice;
             return L.T("已還原上次未正常結束時隱藏的實體手把。", "Restored controllers left hidden by an unexpected exit.");
         }
         catch (Exception ex) { return L.T($"無法還原 HidHide 設定：{ex.Message}", $"Could not restore HidHide settings: {ex.Message}"); }
@@ -155,7 +154,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
                 // Widen hiding to the new controller type; never unhide mid-session.
                 _hideInputType = InputDeviceType.Auto;
                 try { _hider.Hide(Environment.ProcessPath!, InputDeviceType.Auto); }
-                catch { /* The rescan timer retries. */ }
+                catch { /* The fallback scan retries. */ }
             }
             return message;
         }
@@ -196,18 +195,9 @@ public sealed class MappingCoordinator : IAsyncDisposable
             string message = _hider.Hide(appPath, inputType);
             HidingSince = DateTime.Now;
             var hider = _hider;
-            _rescanCts = new CancellationTokenSource();
-            var token = _rescanCts.Token;
-            // Controllers turned on or plugged into a new port after start are hidden too.
-            _rescanTask = Task.Run(async () =>
-            {
-                using var timer = new PeriodicTimer(HideRescanInterval);
-                while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
-                {
-                    try { hider.Hide(appPath, _hideInputType); }
-                    catch { /* Keep mapping; the next tick retries. */ }
-                }
-            }, token);
+            // Controllers turned on or plugged into a new port after start are hidden too: on a device
+            // arrival notification, with a slow fallback scan (a fast one if notifications can't register).
+            _rescanner = new HidHideRescanner(() => hider.Hide(appPath, _hideInputType), onArrival => new DeviceArrivalWatcher(onArrival));
             return message;
         }
         catch (Exception ex) { return L.T($"無法自動隱藏實體手把：{ex.Message}", $"Could not hide physical controllers: {ex.Message}"); }
@@ -215,15 +205,9 @@ public sealed class MappingCoordinator : IAsyncDisposable
 
     private async Task StopHidingAsync()
     {
-        _rescanCts?.Cancel();
-        if (_rescanTask is not null)
-        {
-            try { await _rescanTask.ConfigureAwait(false); }
-            catch (OperationCanceledException) { }
-        }
-        _rescanCts?.Dispose();
-        _rescanCts = null;
-        _rescanTask = null;
+        var rescanner = _rescanner;
+        _rescanner = null;
+        if (rescanner is not null) await Task.Run(rescanner.Dispose).ConfigureAwait(false);
         var hider = _hider;
         _hider = null;
         HidingSince = null;

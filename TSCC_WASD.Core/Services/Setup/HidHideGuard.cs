@@ -198,7 +198,7 @@ public sealed partial class HidHideGuard
                 unhidden = devices.Count;
             }
         }
-        catch (Exception ex) when (ex is IOException or TimeoutException or InvalidOperationException)
+        catch (Exception ex) when (ex is IOException or TimeoutException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             AppLog.Warn($"HidHide best-effort unhide after a damaged restore record failed: {ex.Message}");
         }
