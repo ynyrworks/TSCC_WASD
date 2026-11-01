@@ -140,6 +140,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
                                 else if (cachedCalibration || !sharedMode)
                                     calibration = _calibrationCache.TryLoadFactory(out var fl, out var fr) ? (fl, fr) : calibration;
                             }
+                            ReportCapture.Shared.Record("NS2ProUsb", report.AsSpan(0, length));
                             if (length == 64 && report[0] == 0x05)
                             {
                                 var raw = new RawSticks(

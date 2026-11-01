@@ -170,6 +170,8 @@
                                 HorizontalAlignment="Left" Margin="0,0,0,4"/>
                         <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,16"
                                    Text="{app:T Zh='推到底卻只像輕推、或放開時會飄移時使用；映射中也可以校準，儲存後立即套用。', En='Use this if a full push feels like a light one or the stick drifts at rest. Works while mapping; applies as soon as you save.'}"/>
+                        <Button Content="{app:T Zh='手把測試與報告匯出', En='Controller test and report export'}" Command="{Binding OpenControllerTestCommand}"
+                                HorizontalAlignment="Left" Margin="0,0,0,16"/>
                         <WrapPanel>
                             <Button Style="{StaticResource PrimaryButton}" Content="{app:T Zh=儲存全部, En='Save all'}" Command="{Binding SaveCommand}"/>
                             <Button Content="{app:T Zh=新增, En=New}" Command="{Binding NewCommand}"/>

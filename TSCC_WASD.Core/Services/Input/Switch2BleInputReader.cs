@@ -190,6 +190,7 @@ public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumble
                     calibration = userCalibration ? (userLeft, userRight) : factory;
                 }
                 var data = e.CharacteristicValue.ToArray();
+                ReportCapture.Shared.Record("NS2ProBluetooth", data);
                 lock (_gate)
                 {
                     if (!Switch2BleProtocol.TryConvertReport(data, report)

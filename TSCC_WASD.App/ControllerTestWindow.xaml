@@ -1,0 +1,47 @@
+<Window x:Class="TSCC_WASD.App.ControllerTestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:TSCC_WASD.App"
+        Title="{app:T Zh='手把測試', En='Controller test'}"
+        Icon="Assets/TSCC_WASD.ico" Width="560" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource TextBrush}" FontFamily="Segoe UI">
+    <Window.Resources>
+        <ResourceDictionary Source="Themes/Dark.xaml"/>
+    </Window.Resources>
+    <StackPanel Margin="24">
+        <TextBlock x:Name="SourceText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,4"/>
+        <TextBlock x:Name="ReasonText" Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+        <UniformGrid x:Name="ButtonGrid" Columns="6" Margin="0,0,0,12"/>
+        <Grid Margin="0,0,0,12">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="{app:T Zh=左搖桿, En='Left stick'}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <Canvas x:Name="LeftPad" Width="100" Height="100" Margin="0,4">
+                    <Ellipse Width="100" Height="100" Stroke="{StaticResource BorderBrush}" StrokeThickness="1.5"/>
+                    <Ellipse x:Name="LeftDot" Width="12" Height="12" Fill="{StaticResource AccentBrush}"/>
+                </Canvas>
+                <TextBlock x:Name="LeftValue" Style="{StaticResource Muted}" HorizontalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                <TextBlock Text="{app:T Zh=右搖桿, En='Right stick'}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                <Canvas x:Name="RightPad" Width="100" Height="100" Margin="0,4">
+                    <Ellipse Width="100" Height="100" Stroke="{StaticResource BorderBrush}" StrokeThickness="1.5"/>
+                    <Ellipse x:Name="RightDot" Width="12" Height="12" Fill="{StaticResource AccentBrush}"/>
+                </Canvas>
+                <TextBlock x:Name="RightValue" Style="{StaticResource Muted}" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+        <TextBlock Text="{app:T Zh='左扳機 (L2)', En='Left trigger (L2)'}" FontSize="12"/>
+        <ProgressBar x:Name="LeftTrigger" Minimum="0" Maximum="255" Height="10" Margin="0,2,0,6"/>
+        <TextBlock Text="{app:T Zh='右扳機 (R2)', En='Right trigger (R2)'}" FontSize="12"/>
+        <ProgressBar x:Name="RightTrigger" Minimum="0" Maximum="255" Height="10" Margin="0,2,0,16"/>
+        <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,8"
+                   Text="{app:T Zh='錄製 5 秒會收集手把的原始報告，並存成純文字檔。檔案包含診斷資訊（版本、系統、驅動程式狀態），上傳到 GitHub 前請先打開看過。不會自動上傳任何東西。', En='Recording captures 5 seconds of raw controller reports into a plain text file. The file includes diagnostics (versions, OS, driver status); please read it before uploading it to GitHub. Nothing is uploaded automatically.'}"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock x:Name="RecordStatus" VerticalAlignment="Center" Margin="0,0,12,0" Style="{StaticResource Muted}"/>
+            <Button x:Name="RecordButton" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"
+                    Content="{app:T Zh='錄製 5 秒並儲存', En='Record 5 seconds and save'}" Click="OnRecord"/>
+            <Button Content="{app:T Zh=關閉, En=Close}" IsCancel="True" Click="OnClose"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -98,6 +98,7 @@ public sealed class SwitchProInputReader : IInputReader
                         }
                         if (length == 0) throw new IOException(L.T($"{name} 已斷線。", $"{name} disconnected."));
                         var data = report.AsSpan(0, length);
+                        ReportCapture.Shared.Record("SwitchPro", data);
                         if (SwitchProReport.TryParseSpiReply(data, out uint address, out var flash))
                         {
                             if (address == SwitchProReport.FactoryStickCalibration) factory = flash.ToArray();

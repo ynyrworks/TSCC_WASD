@@ -19,7 +19,7 @@ public sealed class MappingSession : IAsyncDisposable
     private volatile InputSnapshot? _lastInput;
 
     // The loop only stores the latest reading; the text is built when someone reads InputSummary.
-    private sealed record InputSnapshot(bool Paused, bool Available, State State);
+    public sealed record InputSnapshot(bool Paused, bool Available, State State);
 
     public MappingSession(MappingProfile profile, IInputReader input, IVirtualController output,
         Action<string>? statusCallback = null)
@@ -94,6 +94,13 @@ public sealed class MappingSession : IAsyncDisposable
     public bool IsRunning => _loopTask is { IsCompleted: false };
     public string? LastError { get; private set; }
     public string InputSummary => Describe(_lastInput);
+    /// <summary>Latest reading from the loop (read-only), or null before the first one.</summary>
+    public InputSnapshot? LatestInput => _lastInput;
+    /// <summary>The input reader's own status text, e.g. which controller is being read.</summary>
+    public string InputStatus => _input.Status;
+
+    private bool IsXInputSource() =>
+        _input is XInputReader || (_input is AutoInputReader auto && auto.ActiveSource?.Contains("XInput") == true);
 
     private static string Describe(InputSnapshot? snapshot)
     {
@@ -142,6 +149,8 @@ public sealed class MappingSession : IAsyncDisposable
                 }
                 bool paused = _paused;
                 _lastInput = new InputSnapshot(paused, available, state);
+                if (available && ReportCapture.Shared.IsRecording && IsXInputSource())
+                    ReportCapture.Shared.RecordText("XInput", $"parsed buttons={state.Gamepad.Buttons} LT={state.Gamepad.LeftTrigger} RT={state.Gamepad.RightTrigger} L=({state.Gamepad.LeftThumbX},{state.Gamepad.LeftThumbY}) R=({state.Gamepad.RightThumbX},{state.Gamepad.RightThumbY})");
                 string status;
                 try
                 {

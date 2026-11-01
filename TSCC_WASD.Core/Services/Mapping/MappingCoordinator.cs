@@ -43,6 +43,8 @@ public sealed class MappingCoordinator : IAsyncDisposable
     public void SaveProfiles(IEnumerable<MappingProfile> profiles) => _profileStore.SaveProfiles(profiles);
     public bool IsRunning => _session?.IsRunning == true;
     public string? LastError => _session?.LastError;
+    public MappingSession.InputSnapshot? LatestInput => _session?.LatestInput;
+    public string? InputStatus => _session?.InputStatus;
     public string InputSummary => _session?.InputSummary ?? L.T("尚未啟動映射", "Mapping not started");
 
     public async Task<(bool started, string message)> StartAsync(MappingProfile profile, Action<string>? statusCallback = null)

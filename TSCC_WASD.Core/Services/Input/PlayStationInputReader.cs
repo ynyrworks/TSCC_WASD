@@ -85,6 +85,7 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
                             timeout.CancelAfter(TimeSpan.FromSeconds(2));
                             int length = await stream.ReadAsync(report, timeout.Token).ConfigureAwait(false);
                             if (length == 0) throw new IOException(L.T($"{name} 已斷線。", $"{name} disconnected."));
+                            ReportCapture.Shared.Record("PlayStation", report.AsSpan(0, length));
                             if (!PlayStationReport.TryParse(report.AsSpan(0, length), dualSense, out var state, out var motion)) continue;
                             lock (_gate)
                             {

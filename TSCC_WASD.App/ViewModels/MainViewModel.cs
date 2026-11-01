@@ -142,6 +142,13 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 StatusMessage = L.T("已儲存並套用你的搖桿校準。", "Your stick calibration was saved and applied.");
             return Task.CompletedTask;
         });
+        OpenControllerTestCommand = Command(() =>
+        {
+            new ControllerTestWindow(() => _coordinator.LatestInput, () => _coordinator.IsRunning, () => _coordinator.InputStatus,
+                () => DiagnosticReport.Build(InputSummary, IsRunning) + $"Log: {AppLog.CurrentFile}{Environment.NewLine}")
+                { Owner = Application.Current?.MainWindow }.Show();
+            return Task.CompletedTask;
+        });
         PickProcessCommand = Command(() =>
         {
             var window = new ProcessPickerWindow { Owner = Application.Current?.MainWindow };
@@ -396,6 +403,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand InstallDepsCommand { get; }
     public ICommand OpenProfilesCommand { get; }
     public ICommand CalibrateCommand { get; }
+    public ICommand OpenControllerTestCommand { get; }
     public ICommand PickProcessCommand { get; }
     public ICommand CheckUpdatesCommand { get; }
     public ICommand CancelUpdateCommand { get; }
