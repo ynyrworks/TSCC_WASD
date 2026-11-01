@@ -31,6 +31,26 @@ button input, HidHide setup, game recognition or long-running stability.
 
 ## Manual hardware validation
 
+### 0.9.2 — hiding, device notifications and status text, 2026-11-02
+
+Release build of branch `release/0.9.2`, run by the maintainer on their PC. The maintainer reported
+the whole checklist as passed; which controllers were used was not recorded, and the second-controller
+check only applied if a second Xbox controller was at hand.
+
+| Check | Result |
+| --- | --- |
+| Controller connected before mapping: hidden from other programs, input reaches the virtual pad | Passed |
+| Controller connected during mapping: hidden within seconds, not after the 30-second fallback scan | Passed |
+| Log has no `CM_Register_Notification failed` | Passed |
+| Stop: controller visible again | Passed |
+| Unplugged while holding buttons: nothing stays pressed | Passed |
+| Second Xbox controller during mapping: takes over within about a second | Passed, if available |
+| Xbox 360 output: pause and stop messages say "virtual controller" | Passed |
+| No controller: searching status fits and is not cut off | Passed |
+| Existing profiles load; About shows 0.9.2 | Passed |
+| A damaged restore record or a power cut on real hardware | Not tested (automated tests only) |
+| In-app update from 0.9.1 | Not tested yet (needs a published 0.9.2) |
+
 ### Unreleased — virtual pad detection for HidHide, 2026-10-24
 
 Same PC. Before the fix, mapping hid 7 interfaces, including a leftover ViGEm DualShock 4
