@@ -79,9 +79,22 @@ public class ProfileStoreTests : IDisposable
         var original = new MappingProfile();
         var copy = original.Snapshot();
         original.DeadZone = 0.9;
-        original.Advanced["key"] = "value";
         Assert.Equal(0.08, copy.DeadZone);
-        Assert.Empty(copy.Advanced);
+    }
+
+    [Fact]
+    public void RemovedLegacyKeysAreReadableAndDroppedOnSave()
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(FilePath,
+            "[{\"id\":\"old\",\"name\":\"old\",\"requireDrivers\":true,\"advanced\":{\"k\":\"v\"}}]");
+        var store = new ProfileStore(FilePath);
+        var profiles = store.LoadProfiles();
+        Assert.Equal("old", profiles[0].Name);
+        store.SaveProfiles(profiles);
+        string saved = File.ReadAllText(FilePath);
+        Assert.DoesNotContain("requireDrivers", saved, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("advanced", saved, StringComparison.OrdinalIgnoreCase);
     }
 
     public void Dispose()

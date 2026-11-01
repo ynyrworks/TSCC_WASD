@@ -6,8 +6,6 @@
     "inputType": "Switch2ProUsb",
     "outputType": "DualShock4",
     "pollingRateHz": 125,
-    "deadZone": 0.08,
-    "requireDrivers": true,
-    "advanced": {}
+    "deadZone": 0.08
   }
 ]

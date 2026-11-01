@@ -12,8 +12,6 @@ The root JSON value is a non-empty array. See [example](../examples/profiles.jso
 | `pollingRateHz` | Integer 30–500; default 125 |
 | `deadZone` | Finite 0–0.95; default 0.08 |
 | `matchProcessName` | Reserved; does not activate automatic switching |
-| `requireDrivers` | Legacy reserved field; actual driver connection is always required |
-| `advanced` | Reserved string dictionary; no macros/curves are executed |
 
 Dead zones are per axis. Values inside the zone map to neutral (128); remaining
 travel is linearly rescaled to 0–255. Y is inverted for DS4 reports.

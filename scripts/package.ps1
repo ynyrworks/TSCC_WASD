@@ -17,6 +17,11 @@ try {
     $version = [string] $props.Project.PropertyGroup.Version
     if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Expected a three-part version.' }
     $artifactRoot = Join-Path $repoRoot 'artifacts'
+    # Remove stage folders left by earlier runs; this run's stage is kept for the release workflow (signing).
+    if (Test-Path -LiteralPath $artifactRoot) {
+        Get-ChildItem -LiteralPath $artifactRoot -Directory -Filter 'stage-*' |
+            Remove-Item -Recurse -Force
+    }
     $stage = Join-Path $artifactRoot ('stage-' + [guid]::NewGuid().ToString('N'))
     $packageName = "TSCC_WASD-$version-win-x64"
     $packageDir = Join-Path $stage $packageName

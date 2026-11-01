@@ -59,12 +59,6 @@ public class MappingProfile : INotifyPropertyChanged
     /// <summary>類比搖桿死區 (0~1)。</summary>
     public double DeadZone { get => _deadZone; set => Set(ref _deadZone, value); }
 
-    /// <summary>若為 true，沒有驅動或裝置時不要自動啟動。</summary>
-    public bool RequireDrivers { get; set; } = true;
-
-    /// <summary>保留給後續進階設定 (曲線、巨集等)。</summary>
-    public Dictionary<string, string> Advanced { get; set; } = new();
-
     [JsonIgnore]
     public int PollingIntervalMs => Math.Max(2, (int)Math.Round(1000.0 / Math.Max(1, PollingRateHz)));
 
@@ -92,8 +86,7 @@ public class MappingProfile : INotifyPropertyChanged
             InputType = InputType, OutputType = OutputType, HidePhysicalControllers = HidePhysicalControllers, ForwardRumble = ForwardRumble,
             XboxBackAsTouchpad = XboxBackAsTouchpad, SwapFaceButtons = SwapFaceButtons,
             PollingRateHz = PollingRateHz, DeadZone = DeadZone,
-            MatchProcessName = MatchProcessName, RequireDrivers = RequireDrivers,
-            Advanced = Advanced is null ? new() : new(Advanced)
+            MatchProcessName = MatchProcessName
         };
     }
 }
