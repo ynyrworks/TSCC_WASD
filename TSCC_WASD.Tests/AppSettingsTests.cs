@@ -10,6 +10,15 @@ public class AppSettingsTests
         Path.Combine(Path.GetTempPath(), "TSCC_WASD-tests", Guid.NewGuid().ToString("N"), "settings.json");
 
     [Fact]
+    public void HideThirdPartyXInputDefaultsOnWhenKeyIsMissing()
+    {
+        string path = TempPath();
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "{\"language\":\"en\"}");
+        Assert.True(new AppSettingsStore(path).Load().HideThirdPartyXInput);
+    }
+
+    [Fact]
     public void MissingOrCorruptSettingsFallBackToDefaults()
     {
         string path = TempPath();

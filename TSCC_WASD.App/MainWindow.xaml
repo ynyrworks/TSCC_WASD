@@ -196,6 +196,10 @@
                                   Content="{app:T Zh=自動開始映射後啟動 Steam, En='Launch Steam after an automatic start'}"/>
                         <TextBlock Style="{StaticResource Hint}"
                                    Text="{app:T Zh='建議同時在 Steam 設定關閉「電腦開機時執行 Steam」，讓 Steam 一律在隱藏手把之後才啟動。', En='Also turn off Steam’s own “Run Steam when my computer starts” so Steam always starts after the controllers are hidden.'}"/>
+                        <CheckBox IsChecked="{Binding HideThirdPartyXInput}"
+                                  Content="{app:T Zh='（實驗性）映射時也隱藏第三方 XInput 手把', En='(Experimental) Also hide third-party XInput controllers while mapping'}"/>
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="{app:T Zh='不只微軟手把，8BitDo、PowerA 等相容 XInput 的手把也會隱藏；可能連帶包含方向盤或大型搖桿。', En='Hides XInput-compatible pads such as 8BitDo and PowerA, not only Microsoft’s. May also include steering wheels or large joysticks.'}"/>
                         <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=自動重新連接（不必重啟 Steam）, En='Automatic reconnect (no Steam restart)'}"/>
                         <TextBlock Style="{StaticResource Hint}" Text="{Binding ReconnectHelperStatus}"/>
                         <WrapPanel Margin="0,0,0,8">

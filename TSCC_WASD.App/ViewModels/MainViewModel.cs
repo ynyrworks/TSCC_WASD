@@ -36,7 +36,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null)
     {
-        _coordinator = new MappingCoordinator(profileStore);
+        _coordinator = new MappingCoordinator(profileStore, () => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true));
         _settingsStore = settingsStore ?? new AppSettingsStore();
         Settings = _settingsStore.Load();
         StartCommand = Command(() => StartAsync(automatic: false, atSignIn: false), () => !IsRunning && SelectedProfile is not null);
@@ -331,6 +331,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public bool MinimizeToTray { get => Settings.MinimizeToTray; set => SetSetting(() => Settings.MinimizeToTray = value); }
     public bool ManageSteam { get => Settings.ManageSteam; set => SetSetting(() => Settings.ManageSteam = value); }
     public bool LaunchSteamAfterAutoStart { get => Settings.LaunchSteamAfterAutoStart; set => SetSetting(() => Settings.LaunchSteamAfterAutoStart = value); }
+    public bool HideThirdPartyXInput { get => Settings.HideThirdPartyXInput; set => SetSetting(() => Settings.HideThirdPartyXInput = value); }
     public bool CheckUpdatesOnStartup { get => Settings.CheckUpdatesOnStartup; set => SetSetting(() => Settings.CheckUpdatesOnStartup = value); }
     public string Language
     {

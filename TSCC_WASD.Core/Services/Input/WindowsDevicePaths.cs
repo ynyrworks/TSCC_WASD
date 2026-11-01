@@ -81,6 +81,29 @@ internal static class WindowsDevicePaths
             .Distinct(StringComparer.OrdinalIgnoreCase)];
 
     /// <summary>
+    /// Physical XInput-compatible controllers of any vendor (8BitDo, PowerA, ...): wired XUSB / GIP
+    /// devices, and HID interfaces carrying the XInput-compatible <c>IG_</c> marker. Experimental: may
+    /// include wheels and large joysticks that speak XInput. Virtual pads are excluded.
+    /// </summary>
+    internal static string[] FindThirdPartyXInputControllers() =>
+        [.. ListClass(HidClass).Where(id => id.StartsWith(@"HID\", StringComparison.OrdinalIgnoreCase))
+                .Where(id => IsThirdPartyXInput(id, fromXInputClass: false, enabled: true, IsVirtual))
+            .Concat(ListClass(XnaCompositeClass).Concat(ListClass(XboxCompositeClass))
+                .Where(id => IsThirdPartyXInput(id, fromXInputClass: true, enabled: true, IsVirtual)))
+            .Distinct(StringComparer.OrdinalIgnoreCase)];
+
+    /// <summary>
+    /// The third-party XInput rule, free of Windows calls. Virtual pads are rejected first. XUSB / GIP class
+    /// devices match with any VID; HID devices match only when the path has the <c>IG_</c> marker, so
+    /// keyboards, mice and plain HID joysticks never match.
+    /// </summary>
+    internal static bool IsThirdPartyXInput(string id, bool fromXInputClass, bool enabled, Func<string, bool> isVirtual)
+    {
+        if (!enabled || isVirtual(id)) return false;
+        return fromXInputClass || id.Contains("IG_", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// Walks up the device tree until it meets the bus the device hangs off. ViGEm pads (ours and
     /// DS4Windows') sit on a root-enumerated bus (ROOT\SYSTEM\xxxx), the Xbox 360 pad's HID child
     /// three levels below it; a leftover pad that is no longer present can also report HTREE\ROOT\0.

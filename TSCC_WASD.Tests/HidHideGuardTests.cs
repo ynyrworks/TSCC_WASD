@@ -179,6 +179,48 @@ public class HidHideGuardTests
     private static string TempRecord() =>
         Path.Combine(Path.GetTempPath(), "TSCC_WASD-tests", Guid.NewGuid().ToString("N"), "hidhide-restore.json");
 
+    private const string ThirdPartyUsb = @"USB\VID_2DC8&PID_3106\5&1&0&3";
+    private const string ThirdPartyHid = @"HID\{00001812-0000-1000-8000-00805f9b34fb}&Dev&VID_2dc8&PID_6101&REV_0100&aabbccddeeff&IG_00\d&1&0&0000";
+    private const string PlainJoystick = @"HID\VID_046D&PID_C21D\7&1&0&0000";
+
+    [Fact]
+    public void ThirdPartyXInputRuleMatchesClassOrIgMarkerOnly()
+    {
+        Func<string, bool> physical = _ => false;
+        Assert.True(TSCC_WASD.Core.Services.Input.WindowsDevicePaths.IsThirdPartyXInput(ThirdPartyUsb, true, true, physical));
+        Assert.True(TSCC_WASD.Core.Services.Input.WindowsDevicePaths.IsThirdPartyXInput(ThirdPartyHid, false, true, physical));
+        Assert.False(TSCC_WASD.Core.Services.Input.WindowsDevicePaths.IsThirdPartyXInput(PlainJoystick, false, true, physical));
+        Assert.False(TSCC_WASD.Core.Services.Input.WindowsDevicePaths.IsThirdPartyXInput(ThirdPartyUsb, true, true, _ => true));
+        Assert.False(TSCC_WASD.Core.Services.Input.WindowsDevicePaths.IsThirdPartyXInput(ThirdPartyHid, false, true, _ => true));
+        Assert.False(TSCC_WASD.Core.Services.Input.WindowsDevicePaths.IsThirdPartyXInput(ThirdPartyUsb, true, false, physical));
+    }
+
+    [Theory]
+    [InlineData(InputDeviceType.Auto, true)]
+    [InlineData(InputDeviceType.XInput, true)]
+    [InlineData(InputDeviceType.PlayStation, false)]
+    [InlineData(InputDeviceType.SwitchPro, false)]
+    [InlineData(InputDeviceType.Switch2ProUsb, false)]
+    [InlineData(InputDeviceType.Switch2ProBluetooth, false)]
+    public void OnlyAutoAndXInputAllowThirdPartyXInput(InputDeviceType type, bool expected) =>
+        Assert.Equal(expected, HidHideGuard.AllowsThirdPartyXInput(type));
+
+    [Fact]
+    public void HidesThirdPartyOnlyWhenEnabledAndTypeAllows()
+    {
+        string[] Hide(Func<IEnumerable<string>>? third, InputDeviceType type, string[]? hidden = null)
+        {
+            var cli = new FakeCli { Gaming = Gaming(), Hidden = hidden ?? [] };
+            var guard = new HidHideGuard(cli.Run, TempRecord(), isVirtual: p => p == "VIRTUAL", thirdPartyDevices: third);
+            guard.Hide(App, type);
+            return cli.Changes.Count == 0 ? [] : cli.Changes[0];
+        }
+        Func<IEnumerable<string>> list = () => [ThirdPartyUsb, "VIRTUAL"];
+        Assert.Equal(["--app-reg", App, "--dev-hide", ThirdPartyUsb, "--cloak-on"], Hide(list, InputDeviceType.Auto));
+        Assert.DoesNotContain("--dev-hide", Hide(null, InputDeviceType.Auto));
+        Assert.DoesNotContain("--dev-hide", Hide(list, InputDeviceType.PlayStation));
+    }
+
     private sealed class FakeCli
     {
         public string Gaming { get; init; } = "[]";

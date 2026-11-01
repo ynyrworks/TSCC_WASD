@@ -19,6 +19,8 @@ public sealed partial class HidHideGuard
     private readonly Func<IReadOnlyList<string>, string> _run;
     private readonly Func<IEnumerable<string>> _extraDevices;
     private readonly Func<string, bool> _isVirtual;
+    private readonly Func<IEnumerable<string>>? _thirdPartyDevices;
+    private readonly HashSet<string> _loggedThirdParty = new(StringComparer.OrdinalIgnoreCase);
     private readonly string _recordPath;
     private readonly object _gate = new();
 
@@ -31,8 +33,10 @@ public sealed partial class HidHideGuard
     /// Xbox 360 (045E:028E) output, which must stay visible to games.
     /// </param>
     public HidHideGuard(Func<IReadOnlyList<string>, string> run, string? recordPath = null,
-        Func<IEnumerable<string>>? extraDevices = null, Func<string, bool>? isVirtual = null)
+        Func<IEnumerable<string>>? extraDevices = null, Func<string, bool>? isVirtual = null,
+        Func<IEnumerable<string>>? thirdPartyDevices = null)
     {
+        _thirdPartyDevices = thirdPartyDevices;
         _run = run;
         _extraDevices = extraDevices ?? (() => []);
         _isVirtual = isVirtual ?? (_ => false);
@@ -40,11 +44,14 @@ public sealed partial class HidHideGuard
     }
 
     /// <summary>Returns null when HidHide is not installed.</summary>
-    public static HidHideGuard? TryCreate()
+    public static HidHideGuard? TryCreate() => TryCreate(false);
+
+    public static HidHideGuard? TryCreate(bool hideThirdPartyXInput)
     {
         string? cli = FindCli();
         return cli is null ? null : new HidHideGuard(args => RunCli(cli, args), extraDevices: PhysicalControllers,
-            isVirtual: Input.WindowsDevicePaths.IsVirtual);
+            isVirtual: Input.WindowsDevicePaths.IsVirtual,
+            thirdPartyDevices: hideThirdPartyXInput ? ThirdPartyXInputControllers : null);
     }
 
     public bool HasPendingRestore => File.Exists(_recordPath);
@@ -73,6 +80,15 @@ public sealed partial class HidHideGuard
                 .Where(path => Matches(path, inputType) && !alreadyHidden.Contains(path) && !_isVirtual(path))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
+            if (_thirdPartyDevices is not null && AllowsThirdPartyXInput(inputType))
+            {
+                foreach (var path in _thirdPartyDevices().Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    if (alreadyHidden.Contains(path) || _isVirtual(path) || targets.Contains(path, StringComparer.OrdinalIgnoreCase)) continue;
+                    targets.Add(path);
+                    if (_loggedThirdParty.Add(path)) AppLog.Info($"HidHide: hiding third-party XInput controller {path}");
+                }
+            }
             bool firstCall = !HasPendingRestore;
             if (!firstCall && targets.Count == 0) return Summary(record);
 
@@ -123,6 +139,10 @@ public sealed partial class HidHideGuard
             _ => ns2 || xbox || playStation || switchPro
         };
     }
+
+    /// <summary>Only automatic and Xbox/XInput input hide third-party XInput pads; NS2, PlayStation and Switch Pro do not.</summary>
+    internal static bool AllowsThirdPartyXInput(InputDeviceType inputType) =>
+        inputType is InputDeviceType.Auto or InputDeviceType.XInput;
 
     internal static IEnumerable<string> ParseGamingDevices(string json)
     {
@@ -238,6 +258,12 @@ public sealed partial class HidHideGuard
     {
         try { return Input.WindowsDevicePaths.FindPhysicalControllers(); }
         catch { return []; } // Enumeration problems must not block hiding what the CLI reports.
+    }
+
+    private static IEnumerable<string> ThirdPartyXInputControllers()
+    {
+        try { return Input.WindowsDevicePaths.FindThirdPartyXInputControllers(); }
+        catch { return []; }
     }
 
     private static string? FindCli()

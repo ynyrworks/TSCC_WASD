@@ -37,6 +37,12 @@ public sealed class AppSettings
     /// <summary>Offer to install HidHide at launch while it is missing. ViGEmBus is always offered: mapping needs it.</summary>
     public bool OfferHidHideInstall { get; set; } = true;
 
+    /// <summary>
+    /// Experimental: while mapping, also hide third-party XInput controllers (8BitDo, PowerA, ...), not only
+    /// Microsoft's. May include wheels or large joysticks. A settings.json without this key means on.
+    /// </summary>
+    public bool HideThirdPartyXInput { get; set; } = true;
+
     public string? LastProfileId { get; set; }
 }
 
