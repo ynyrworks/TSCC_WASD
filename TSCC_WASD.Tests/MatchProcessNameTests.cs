@@ -34,4 +34,16 @@ public class MatchProcessNameTests
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
         Assert.DoesNotContain("matchProcessName", JsonSerializer.Serialize(new MappingProfile(), options));
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void BlankNameBecomesNullAndIsNotSerialized(string blank)
+    {
+        var profile = new MappingProfile { MatchProcessName = "game" };
+        profile.MatchProcessName = blank;
+        Assert.Null(profile.MatchProcessName);
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
+        Assert.DoesNotContain("matchProcessName", JsonSerializer.Serialize(profile, options));
+    }
 }

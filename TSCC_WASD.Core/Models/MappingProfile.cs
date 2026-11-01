@@ -52,7 +52,7 @@ public class MappingProfile : INotifyPropertyChanged
     public bool XboxBackAsTouchpad { get => _xboxBackAsTouchpad; set => Set(ref _xboxBackAsTouchpad, value); }
 
     /// <summary>前景程式名稱 (不含路徑) 符合時自動套用。</summary>
-    public string? MatchProcessName { get => _matchProcessName; set => Set(ref _matchProcessName, value); }
+    public string? MatchProcessName { get => _matchProcessName; set => Set(ref _matchProcessName, string.IsNullOrWhiteSpace(value) ? null : value); }
 
     /// <summary>輪詢頻率 (Hz)。</summary>
     public int PollingRateHz { get => _pollingRateHz; set => Set(ref _pollingRateHz, value); }
@@ -74,7 +74,7 @@ public class MappingProfile : INotifyPropertyChanged
                 "Supported: auto-detect / Xbox / NS2 Pro / DualShock 4 / DualSense / Switch Pro → DualShock 4 or Xbox 360."));
         if (MatchProcessName is { Length: > 260 })
             throw new ArgumentException(L.T("遊戲程序名稱最多 260 字。", "The game process name can be at most 260 characters."));
-        if (PollingRateHz < 30|| PollingRateHz > 500)
+        if (PollingRateHz < 30 || PollingRateHz > 500)
             throw new ArgumentException(L.T("輪詢頻率必須介於 30–500 Hz。", "Polling rate must be 30–500 Hz."));
         if (!double.IsFinite(DeadZone) || DeadZone < 0 || DeadZone > 0.95)
             throw new ArgumentException(L.T("死區必須介於 0–0.95。", "Dead zone must be 0–0.95."));
