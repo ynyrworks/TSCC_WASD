@@ -27,16 +27,9 @@ public static class Xbox360Report
         return (ushort)result;
     }
 
-    /// <summary>Applies the dead zone to one axis and rescales the rest of the travel.</summary>
-    public static short Axis(short value, double deadZone)
-    {
-        // Same curve as the DS4 path, kept in XInput's signed 16-bit range.
-        byte scaled = AxisConverter.Convert(value, deadZone);
-        if (scaled == 128) return 0;
-        return scaled > 128
-            ? (short)Math.Round((scaled - 128) / 127.0 * short.MaxValue)
-            : (short)Math.Round((scaled - 128) / 128.0 * 32768);
-    }
+    /// <summary>Applies the radial dead zone to one stick, keeping XInput's signed 16-bit precision.</summary>
+    public static (short X, short Y) Stick(short x, short y, double deadZone)
+        => AxisConverter.ApplyRadial(x, y, deadZone);
 }
 
 /// <summary>
@@ -109,10 +102,12 @@ public sealed class Xbox360VirtualPad : IVirtualController, IXInputSlotOwner
         if (!_connected) return;
         var gp = state.Gamepad;
         _controller.SetButtonsFull(Xbox360Report.Buttons(gp.Buttons));
-        _controller.SetAxisValue(Xbox360Axis.LeftThumbX, Xbox360Report.Axis(gp.LeftThumbX, deadZone));
-        _controller.SetAxisValue(Xbox360Axis.LeftThumbY, Xbox360Report.Axis(gp.LeftThumbY, deadZone));
-        _controller.SetAxisValue(Xbox360Axis.RightThumbX, Xbox360Report.Axis(gp.RightThumbX, deadZone));
-        _controller.SetAxisValue(Xbox360Axis.RightThumbY, Xbox360Report.Axis(gp.RightThumbY, deadZone));
+        var left = Xbox360Report.Stick(gp.LeftThumbX, gp.LeftThumbY, deadZone);
+        var right = Xbox360Report.Stick(gp.RightThumbX, gp.RightThumbY, deadZone);
+        _controller.SetAxisValue(Xbox360Axis.LeftThumbX, left.X);
+        _controller.SetAxisValue(Xbox360Axis.LeftThumbY, left.Y);
+        _controller.SetAxisValue(Xbox360Axis.RightThumbX, right.X);
+        _controller.SetAxisValue(Xbox360Axis.RightThumbY, right.Y);
         _controller.SetSliderValue(Xbox360Slider.LeftTrigger, gp.LeftTrigger);
         _controller.SetSliderValue(Xbox360Slider.RightTrigger, gp.RightTrigger);
         _controller.SubmitReport();

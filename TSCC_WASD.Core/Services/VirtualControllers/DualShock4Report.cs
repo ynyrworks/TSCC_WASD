@@ -24,10 +24,12 @@ public static class DualShock4Report
         var gp = state.Gamepad;
         var b = gp.Buttons;
 
-        report[0] = AxisConverter.Convert(gp.LeftThumbX, deadZone);
-        report[1] = AxisConverter.Convert(gp.LeftThumbY, deadZone, invert: true);
-        report[2] = AxisConverter.Convert(gp.RightThumbX, deadZone);
-        report[3] = AxisConverter.Convert(gp.RightThumbY, deadZone, invert: true);
+        var left = AxisConverter.ApplyRadial(gp.LeftThumbX, gp.LeftThumbY, deadZone);
+        var right = AxisConverter.ApplyRadial(gp.RightThumbX, gp.RightThumbY, deadZone);
+        report[0] = AxisConverter.ToByte(left.X);
+        report[1] = AxisConverter.ToByte(left.Y, invert: true);
+        report[2] = AxisConverter.ToByte(right.X);
+        report[3] = AxisConverter.ToByte(right.Y, invert: true);
 
         ushort buttons = DPad(b);
         if (b.HasFlag(GamepadButtonFlags.X)) buttons |= 0x0010; // Square

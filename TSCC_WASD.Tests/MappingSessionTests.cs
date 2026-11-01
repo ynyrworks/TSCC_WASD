@@ -228,11 +228,22 @@ public class MappingSessionTests
         Assert.Equal((ushort)pressed, Xbox360Report.Buttons(pressed));
         Assert.Equal((ushort)(GamepadButtonFlags.Back | GamepadButtonFlags.Y),
             Xbox360Report.Buttons(GamepadButtonFlags.Touchpad | GamepadButtonFlags.Y));
-        Assert.Equal((short)0, Xbox360Report.Axis(1000, 0.1));
-        Assert.Equal(short.MaxValue, Xbox360Report.Axis(short.MaxValue, 0.1));
-        Assert.Equal(short.MinValue, Xbox360Report.Axis(short.MinValue, 0.1));
-        Assert.True(Xbox360Report.Axis(20000, 0.1) is > 0 and < 20000); // Rescaled past the dead zone.
+        Assert.Equal((short)0, Xbox360Report.Stick(1000, 0, 0.1).X);
+        Assert.Equal(short.MaxValue, Xbox360Report.Stick(short.MaxValue, 0, 0.1).X);
+        Assert.Equal(short.MinValue, Xbox360Report.Stick(short.MinValue, 0, 0.1).X);
+        Assert.True(Xbox360Report.Stick(20000, 0, 0.1).X is > 0 and < 20000); // Rescaled past the dead zone.
         new MappingProfile { OutputType = OutputControllerType.Xbox360 }.Validate();
+    }
+
+    [Fact]
+    public void Xbox360SticksAreRadialWithShortPrecision()
+    {
+        Assert.Equal(((short)0, (short)0), Xbox360Report.Stick(3000, 3000, 0.15));
+        var (x, _) = Xbox360Report.Stick(20001, 0, 0.1);
+        Assert.NotEqual(0, x % 256); // More precise than a byte-quantised value.
+        Assert.Equal(AxisConverter.ApplyRadial(20001, 0, 0.1).X, x);
+        var (lx, ly) = Xbox360Report.Stick(short.MinValue, short.MinValue, 0.08);
+        Assert.True(lx < 0 && ly < 0);
     }
 
     [Fact]

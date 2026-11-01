@@ -10,7 +10,7 @@ The root JSON value is a non-empty array. See [example](../examples/profiles.jso
 | `inputType` | `XInput` (legacy `0`) or `Switch2ProUsb` (`3`) |
 | `outputType` | `DualShock4` only (legacy numeric `0` accepted) |
 | `pollingRateHz` | Integer 30–500; default 125 |
-| `deadZone` | Finite 0–0.95; default 0.08 |
+| `deadZone` | Finite 0–0.95; default 0.08. Radial: each stick's X and Y are judged together by distance from centre |
 | `matchProcessName` | Reserved; does not activate automatic switching |
 
 Dead zones are per axis. Values inside the zone map to neutral (128); remaining

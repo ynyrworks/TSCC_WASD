@@ -13,6 +13,15 @@ public class DualShock4ReportTests
             0.08, motion, counter: 5, timestamp: 0x1234);
 
     [Fact]
+    public void SticksAreRadialAndIndependent()
+    {
+        var gp = new Gamepad { LeftThumbX = 3000, LeftThumbY = 3000, RightThumbX = short.MaxValue, RightThumbY = short.MinValue };
+        var r = DualShock4Report.Build(new State { Gamepad = gp }, 0.15, null, 0, 0);
+        Assert.Equal([128, 128], r[0..2]); // Left combined distance is inside the dead zone.
+        Assert.True(r[2] > 128 && r[3] > 128); // Right pushed right and down (Y inverted).
+    }
+
+    [Fact]
     public void NeutralReportHasCenteredSticksNoDPadAndNoTouches()
     {
         var r = Build();
