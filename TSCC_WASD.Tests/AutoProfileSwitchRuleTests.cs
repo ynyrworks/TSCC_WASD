@@ -219,4 +219,34 @@ public class AutoProfileSwitchRuleTests
         Assert.Null(Step("GameA.exe", 10));
         Assert.Equal("home", _current);
     }
+
+    [Theory]
+    [InlineData(OutputControllerType.DualShock4, OutputControllerType.Xbox360, true, true)]
+    [InlineData(OutputControllerType.Xbox360, OutputControllerType.DualShock4, true, true)]
+    [InlineData(OutputControllerType.Xbox360, OutputControllerType.Xbox360, true, false)]
+    [InlineData(OutputControllerType.DualShock4, OutputControllerType.Xbox360, false, false)]
+    [InlineData(OutputControllerType.DualShock4, OutputControllerType.DualShock4, false, false)]
+    public void OutputChangeNoticeOnlyForAutomaticTypeChange(OutputControllerType oldType, OutputControllerType newType, bool automatic, bool expected)
+    {
+        Assert.Equal(expected, AutoProfileSwitchRule.ShouldNotifyOutputChange(oldType, newType, automatic));
+    }
+
+    [Theory]
+    [InlineData(true, true, true, AutoProfileSwitchRule.SwitchNotice.OutputChanged)]
+    [InlineData(true, true, false, AutoProfileSwitchRule.SwitchNotice.SwitchFailed)]
+    [InlineData(true, false, false, AutoProfileSwitchRule.SwitchNotice.SwitchFailed)]
+    [InlineData(true, false, true, AutoProfileSwitchRule.SwitchNotice.SwitchFailed)]
+    [InlineData(false, true, true, AutoProfileSwitchRule.SwitchNotice.None)]
+    [InlineData(false, false, false, AutoProfileSwitchRule.SwitchNotice.None)]
+    public void NoticeDependsOnApplyOutcome(bool automatic, bool applied, bool running, AutoProfileSwitchRule.SwitchNotice expected)
+    {
+        Assert.Equal(expected, AutoProfileSwitchRule.DecideNotice(OutputControllerType.DualShock4, OutputControllerType.Xbox360, automatic, applied, running));
+    }
+
+    [Fact]
+    public void NoTypeChangeGivesNoNoticeWhenApplied()
+    {
+        Assert.Equal(AutoProfileSwitchRule.SwitchNotice.None,
+            AutoProfileSwitchRule.DecideNotice(OutputControllerType.Xbox360, OutputControllerType.Xbox360, true, true, true));
+    }
 }
