@@ -80,11 +80,11 @@
                             <WrapPanel Grid.Column="1">
                                 <Button Style="{StaticResource PrimaryButton}" Content="{app:T Zh=啟動映射, En='Start mapping'}" Command="{Binding StartCommand}"/>
                                 <Button Content="{Binding PauseButtonText}" Command="{Binding PauseCommand}"
-                                        ToolTip="{app:T Zh='遊戲看到放開所有按鍵的虛擬 DS4；實體手把仍隱藏，繼續時不必處理 Steam', En='Games see a virtual DS4 with nothing pressed; controllers stay hidden, so resuming needs nothing from Steam'}"/>
+                                        ToolTip="{app:T Zh='遊戲看到放開所有按鍵的虛擬手把；實體手把仍隱藏，繼續時不必處理 Steam', En='Games see a virtual controller with nothing pressed; controllers stay hidden, so resuming needs nothing from Steam'}"/>
                                 <Button Content="{app:T Zh=停止, En=Stop}" Command="{Binding StopCommand}"
-                                        ToolTip="{app:T Zh='完全釋放：關閉虛擬 DS4，實體手把恢復可見', En='Release everything: remove the virtual DS4 and show the physical controllers again'}"/>
+                                        ToolTip="{app:T Zh='完全釋放：關閉虛擬手把，實體手把恢復可見', En='Release everything: remove the virtual controller and show the physical controllers again'}"/>
                                 <Button Content="{app:T Zh='重新啟動 Steam', En='Restart Steam'}" Command="{Binding RestartSteamCommand}"
-                                        ToolTip="{app:T Zh='讓 Steam 只看到虛擬 DS4（映射中才可使用）', En='Make Steam see only the virtual DS4 (while mapping)'}"/>
+                                        ToolTip="{app:T Zh='讓 Steam 只看到虛擬手把（映射中才可使用）', En='Make Steam see only the virtual controller (while mapping)'}"/>
                             </WrapPanel>
                         </Grid>
                         <DockPanel Margin="0,4,0,0">
@@ -122,7 +122,7 @@
                             <CheckBox IsChecked="{Binding SelectedProfile.HidePhysicalControllers}"
                                       Content="{app:T Zh='映射時自動隱藏實體手把（需 HidHide）', En='Hide physical controllers while mapping (needs HidHide)'}"/>
                             <TextBlock Style="{StaticResource Hint}"
-                                       Text="{app:T Zh='讓遊戲只看到虛擬 DS4，避免按鍵圖示在 Xbox／PS 之間跳動。請先啟動映射再開遊戲；停止映射後自動還原。', En='Games then only see the virtual DS4, so prompts stop flipping between Xbox and PS. Start mapping before the game; stopping restores everything.'}"/>
+                                       Text="{app:T Zh='讓遊戲只看到虛擬手把，避免按鍵圖示在 Xbox／PS 之間跳動。請先啟動映射再開遊戲；停止映射後自動還原。', En='Games then only see the virtual controller, so prompts stop flipping between Xbox and PS. Start mapping before the game; stopping restores everything.'}"/>
                             <CheckBox IsChecked="{Binding SelectedProfile.ForwardRumble}"
                                       Content="{app:T Zh=把遊戲震動轉給實體手把, En='Forward game rumble to the physical controller'}"/>
                             <TextBlock Style="{StaticResource Hint}"

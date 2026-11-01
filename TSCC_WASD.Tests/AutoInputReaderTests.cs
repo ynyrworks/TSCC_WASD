@@ -88,6 +88,23 @@ public class AutoInputReaderTests
     }
 
     [Fact]
+    public void SearchingStatusListsEverySourceInOrder()
+    {
+        var a = new FakeSource { Status = "status-a" };
+        var b = new FakeSource { Status = "status-b" };
+        var c = new FakeSource { Status = "status-c" };
+        using var reader = new AutoInputReader([a, b, c], ["Alpha", "Beta", "Gamma"]);
+
+        string status = reader.Status;
+        int ia = status.IndexOf("Alpha", StringComparison.Ordinal);
+        int ib = status.IndexOf("Beta", StringComparison.Ordinal);
+        int ic = status.IndexOf("Gamma", StringComparison.Ordinal);
+        Assert.True(ia >= 0 && ia < ib && ib < ic, status);
+        Assert.True(status.IndexOf("status-a", StringComparison.Ordinal) < status.IndexOf("status-b", StringComparison.Ordinal), status);
+        Assert.Contains("status-c", status);
+    }
+
+    [Fact]
     public void DisposesBothSources()
     {
         var ns2 = new FakeSource();
@@ -103,6 +120,7 @@ public class AutoInputReaderTests
         public void SetRumble(byte large, byte small) => Rumble = (large, small);
         public bool TryGetMotion(out MotionSample motion) { motion = Motion; return Available; }
         public bool Available { get; set; }
+        public string Status { get; set; } = "XInput";
         public bool Throw { get; set; }
         public State State { get; set; }
         public bool Disposed { get; private set; }

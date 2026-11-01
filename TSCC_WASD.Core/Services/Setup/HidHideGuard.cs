@@ -146,7 +146,7 @@ public sealed partial class HidHideGuard
 
     private static string Summary(Record record) => record.Devices.Count == 0
         ? L.T("HidHide 已啟用；目前沒有需要隱藏的實體手把。", "HidHide is on; no physical controllers needed hiding.")
-        : L.T($"HidHide 已隱藏 {record.Devices.Count} 個實體手把介面，遊戲只會看到虛擬 DS4。", $"HidHide hid {record.Devices.Count} physical controller interface(s); games only see the virtual DS4.");
+        : L.T($"HidHide 已隱藏 {record.Devices.Count} 個實體手把介面，遊戲只會看到虛擬手把。", $"HidHide hid {record.Devices.Count} physical controller interface(s); games only see the virtual controller.");
 
     private static bool Contains(string text, string value) => text.Contains(value, StringComparison.OrdinalIgnoreCase);
 
