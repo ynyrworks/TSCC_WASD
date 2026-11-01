@@ -81,6 +81,37 @@ public class MappingSessionTests
     public void UnsupportedOutputFailsExplicitly(OutputControllerType type)
         => Assert.Throws<NotSupportedException>(() => VirtualControllerFactory.Create(type));
 
+    [Fact]
+    public async Task InputSummaryIsBuiltFromTheLatestReadingWhenRead()
+    {
+        var input = new ConstantInput();
+        var output = new FakeOutput();
+        await using var session = new MappingSession(new MappingProfile(), input, output);
+        var before = session.InputSummary;
+        Assert.True(session.TryStart());
+        await output.Pushed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var summary = session.InputSummary;
+        Assert.Contains("(123, -456)", summary);
+        Assert.Contains("(7, 8)", summary);
+        Assert.Contains("A", summary);
+        Assert.Contains("200/100", summary);
+        Assert.NotEqual(before, summary);
+        session.Paused = true;
+        await Task.Delay(300);
+        Assert.DoesNotContain("(123, -456)", session.InputSummary);
+    }
+
+    private sealed class ConstantInput : IInputReader
+    {
+        public bool TryGetState(out State state)
+        {
+            state = new State { Gamepad = new Gamepad { Buttons = GamepadButtonFlags.A, LeftThumbX = 123, LeftThumbY = -456,
+                RightThumbX = 7, RightThumbY = 8, LeftTrigger = 200, RightTrigger = 100 } };
+            return true;
+        }
+        public void Dispose() { }
+    }
+
     private sealed class FakeInput : IInputReader
     {
         private int _reads;
