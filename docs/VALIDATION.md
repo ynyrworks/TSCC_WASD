@@ -31,6 +31,26 @@ button input, HidHide setup, game recognition or long-running stability.
 
 ## Manual hardware validation
 
+### Unreleased — 1.0 features, 2026-11-02
+
+Release build of `main` at `6625831` (About still showed 0.9.2), run by the maintainer on their PC.
+The maintainer reported the whole checklist as passed. Which controllers and programs were used was
+not recorded. The third-party checks only applied if such a device was at hand, so they do not show
+that one was tested, and the "game" may have been any program with a window.
+
+| Check | Result |
+| --- | --- |
+| Round dead zone, DS4 and Xbox 360 output: diagonals stay diagonal, no jump leaving the dead zone, full push reaches the end | Passed |
+| Third-party XInput pad hidden while mapping and restored on stop | Passed, if available |
+| Plain joystick or wheel not hidden by mistake; the setting turns hiding off | Passed, if available |
+| Process picker: list, filter, cancel changes nothing | Passed |
+| Auto-switch: within about a second of coming to the foreground; Alt-Tab does not switch back; exit does | Passed |
+| A profile chosen by hand survives Alt-Tab back to the game | Passed |
+| Notification only when the output type changes | Passed |
+| After restart, your own profile is selected, not the automatic one | Passed |
+| Controller test: live input, single window, "start mapping first" message, recording saved and read | Passed |
+| Auto-switch in a real game; long sessions | Not recorded; see [RC-CHECKLIST.md](RC-CHECKLIST.md) |
+
 ### 0.9.2 — hiding, device notifications and status text, 2026-11-02
 
 Release build of branch `release/0.9.2`, run by the maintainer on their PC. The maintainer reported
@@ -221,7 +241,7 @@ and reconnect coverage was not.
 | NS2 Pro Bluetooth | Experimental since 2026-10-23; input, calibration, motion, rumble and reconnect verified (see above), game use pending |
 | Third-party XInput controller | Pending |
 | Hot-unplug while holding a button; reconnect | Pending |
-| 50 start/stop cycles with virtual device enumeration | Pending |
+| 20 start/stop cycles with virtual device enumeration | Pending |
 | Close app during active mapping | Pending |
 | HidHide allowlist and physical/virtual access isolation | Passed, 2026-09-11; in-game double-input prevention pending |
 | Native DS4-compatible game's PS icons | Pending |

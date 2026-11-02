@@ -6,7 +6,7 @@
 Windows SmartScreen 可能顯示「Windows 已保護您的電腦」。按「其他資訊 → 仍要執行」即可。
 下載量累積一段時間後，警告通常會減少，但不保證消失。
 
-目前 TSCC_WASD 的預覽版**都沒有簽章**。執行前請先比對 ZIP 的 SHA-256 與 Release 附的 `.sha256` 檔：
+目前 TSCC_WASD 的發行版（包括 1.0）**都沒有簽章**。執行前請先比對 ZIP 的 SHA-256 與 Release 附的 `.sha256` 檔：
 
 ```powershell
 Get-FileHash .\TSCC_WASD-0.7.0-win-x64.zip -Algorithm SHA256

@@ -32,7 +32,19 @@ A source checkout can be archived with `git archive` after reviewing tracked fil
 
 ## Stable-release gate
 
-Complete physical-device and game checks below, including hot unplug while holding
-inputs, repeated start/stop and shutdown during mapping. Resolve failures and
+Complete the physical-device and game checks in [RC-CHECKLIST.md](RC-CHECKLIST.md), including hot
+unplug while holding inputs, repeated start/stop and shutdown during mapping. Resolve failures and
 re-run affected tests before labeling a release stable. Track the migration away
 from end-of-life ViGEmBus as a separate compatibility project.
+
+Release candidates are three-part `0.99.x` pre-releases: `package.ps1` and the in-app updater do not
+accept versions such as `1.0.0-rc.1`.
+
+The release notes are this version's CHANGELOG section, so that section must state what the release
+promises, what stays experimental and that it is not code-signed.
+
+The tag workflow still creates a draft prerelease titled "preview". For a stable release, publish it with:
+
+```powershell
+gh release edit v1.0.0 --draft=false --prerelease=false --latest --title "TSCC_WASD v1.0.0"
+```

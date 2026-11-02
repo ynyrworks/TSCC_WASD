@@ -7,7 +7,7 @@ with Xbox prompts (DualShock 4, DualSense and Switch Pro input is experimental).
 
 It covers one common reWASD use case ("pretend my controller is a DS4") using free,
 open components: ViGEmBus for the virtual controller and HidHide to hide the real one.
-Built with C# / .NET 10 / WPF. **MIT licensed · v0.9.2 preview.** English and Traditional Chinese UI.
+Built with C# / .NET 10 / WPF. **MIT licensed · v0.99.0, release candidate for 1.0.** English and Traditional Chinese UI.
 
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-support%20this%20project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
 
@@ -25,13 +25,18 @@ details and app settings sit in collapsible sections (shown expanded
 
 ## Controller support and validation
 
+**What 1.0 promises:** Xbox controllers (USB, Bluetooth) and the NS2 Pro over USB, output as a
+DualShock 4 or Xbox 360 controller. Everything else, including hiding third-party XInput
+controllers, stays **experimental**: it may work, but 1.0 makes no promise about it. This version
+is a release candidate, and 1.0 needs [these checks](docs/RC-CHECKLIST.md) and outside reports first.
+
 | Controller | Connection | Current status |
 | --- | --- | --- |
-| Xbox Wireless Controller | USB | Hardware-tested; XInput access and HidHide isolation verified |
-| Xbox Wireless Controller | Bluetooth | Hardware-tested; HidHide isolation and PS prompts via Steam Input verified |
-| Nintendo Switch 2 Pro Controller | USB | Hardware-tested; virtual DS4 input and USB reconnect verified |
+| Xbox Wireless Controller | USB | **1.0 stable scope.** Hardware-tested; XInput access and HidHide isolation verified |
+| Xbox Wireless Controller | Bluetooth | **1.0 stable scope.** Hardware-tested; HidHide isolation and PS prompts via Steam Input verified |
+| Nintendo Switch 2 Pro Controller | USB | **1.0 stable scope.** Hardware-tested; virtual DS4 input and USB reconnect verified |
 | Nintendo Switch 2 Pro Controller | Bluetooth (PC's own adapter) | **Experimental:** input, calibration, motion, rumble and reconnect hardware-tested; not yet game-tested |
-| Original Switch Pro Controller | Bluetooth | Hardware-tested: all buttons, sticks with the controller's own calibration, HidHide hiding; not yet game-tested |
+| Original Switch Pro Controller | Bluetooth | **Experimental:** all buttons, sticks with the controller's own calibration and HidHide hiding hardware-tested; not yet game-tested |
 | Original Switch Pro Controller | USB | Experimental; physical-hardware testing still needed |
 | DualShock 4, DualSense | USB, Bluetooth | Experimental; physical-hardware testing still needed |
 
@@ -61,6 +66,13 @@ These results do **not** imply full button, rumble, automatic-reconnect, or game
   **Xbox 360** (Xbox prompts, the most compatible), and can **swap A/B and X/Y** for Nintendo
   habits. A warning appears when an anti-cheat known to reject virtual controllers (EA Javelin)
   is running.
+- **Switches profile per game.** Give a profile a game's process name (or pick it from the running
+  programs). While mapping, that profile applies when the game comes to the foreground, stays when
+  you Alt-Tab away, and the previous profile returns when the game exits. A profile you choose by
+  hand wins until then. If the output type changes, a notification says to restart the game should
+  it lose the controller. This never starts mapping by itself.
+- **Controller test.** Shows live input while mapping and can record raw reports to a file for bug
+  reports. Read the file before you post it.
 - **Rumble, PS button and motion.** Game rumble is forwarded to the Xbox, NS2 Pro, DualShock 4 or
   DualSense (the original Switch Pro has no rumble yet). The Xbox
   Guide and NS2 Home buttons act as the PS button; Xbox View (or Share, if you prefer) and NS2
@@ -74,8 +86,8 @@ These results do **not** imply full button, rumble, automatic-reconnect, or game
 - **Diagnostics for bug reports.** A local log (`%APPDATA%\TSCC_WASD\logs`, last 7 days) and
   **About → Copy diagnostics** (versions, drivers, controller state). The notification-area icon
   shows a green dot while mapping.
-- Face buttons, D-pad, shoulders, stick clicks, sticks and triggers; dead zone and
-  polling-rate settings; profiles with import/export.
+- Face buttons, D-pad, shoulders, stick clicks, sticks and triggers; round (radial) stick dead
+  zone and polling-rate settings; profiles with import/export.
 - No telemetry or background service. Network access only happens when you ask:
   **Check for updates** asks GitHub for the latest release (or at startup, if you turn that on)
   and, only if you agree, downloads that release's ZIP from GitHub, checks its SHA-256 (and
@@ -89,8 +101,8 @@ through Steam Input. Games that only draw Xbox artwork will keep showing it.
 
 ### Not implemented (yet)
 
-Arbitrary remapping, macros, touchpad surface, keyboard/mouse input, DualSense output,
-per-game profile switching and overlays. NS2 Pro over Bluetooth is experimental and connects only
+Arbitrary remapping, macros, touchpad surface, keyboard/mouse input, DualSense output
+and overlays. NS2 Pro over Bluetooth is experimental and connects only
 while Sync is held (it is not paired with the PC); its C and GL/GR buttons
 are not mapped. See the [roadmap](PLAN.md).
 
@@ -98,8 +110,8 @@ are not mapped. See the [roadmap](PLAN.md).
 
 1. **Windows 10 (version 2004 or later) or 11, x64.** Windows 11 is the tested platform. No separate .NET install is needed.
 2. Download a release ZIP from [Releases](https://github.com/ynyrworks/TSCC_WASD/releases)
-   (or build it, see below), extract it and run `TSCC_WASD.exe`. Preview builds are not
-   code-signed yet, so SmartScreen may warn; compare the ZIP with its `.sha256` file first
+   (or build it, see below), extract it and run `TSCC_WASD.exe`. Releases, including 1.0,
+   are **not code-signed**, so SmartScreen may warn; compare the ZIP with its `.sha256` file first
    ([details](docs/SIGNING.md)). Later versions install from **Check for updates**, so you only
    download the ZIP by hand once.
 3. On first launch TSCC_WASD offers to install **ViGEmBus** (required) and **HidHide**
@@ -166,10 +178,14 @@ On start, TSCC_WASD:
 3. hides the controllers it reads (NS2 Pro, Xbox, DualShock 4 / DualSense, Switch Pro):
    Bluetooth/HID ones and wired ones (XUSB/GIP device classes, which HidHide also filters).
    Virtual pads created by ViGEm, including TSCC_WASD's own DS4 or Xbox 360 output and
-   DS4Windows' output, are left alone;
+   DS4Windows' output, are left alone. By default it also hides third-party XInput controllers
+   (8BitDo, PowerA and so on; experimental). This can include wheels and large joysticks that speak
+   XInput: turn off **App settings → Also hide third-party XInput controllers** if one disappears.
+   Every hidden device is written to the log;
 4. turns cloaking on.
 
-Every 5 seconds it also hides any newly connected controller. On stop it undoes only what
+Controllers connected later are hidden as soon as Windows reports them, with a scan every 30
+seconds as a fallback. On stop it undoes only what
 it changed. If the app is killed, the next launch restores your settings. TSCC_WASD leaves
 HidHide alone when HidHide is in inverse-list mode.
 
@@ -269,9 +285,8 @@ game compatibility reports and pull requests help just as much.
 
 ## Code signing policy
 
-Preview releases are not code-signed yet; the project is applying to the free
-[SignPath Foundation](https://signpath.org/) programme. See the
-[code signing policy](docs/CODE-SIGNING-POLICY.md) for who builds, reviews and approves
+Releases, including 1.0, are not code-signed; check each download against its `.sha256` file. See
+the [code signing policy](docs/CODE-SIGNING-POLICY.md) for who builds, reviews and approves
 releases, and the privacy statement.
 
 ## Contributing and license

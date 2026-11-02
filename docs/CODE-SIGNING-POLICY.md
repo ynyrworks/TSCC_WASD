@@ -1,8 +1,8 @@
 # Code signing policy
 
-**Status:** release builds are **not signed yet**. TSCC_WASD has applied for the free code signing
-programme of the [SignPath Foundation](https://signpath.org/). Until then, verify each download
-with the `.sha256` file published next to it ([how](SIGNING.md)).
+**Status:** release builds, including 1.0, are **not signed**. Signing is not part of 1.0; the rules
+below apply if it is added later. Verify each download with the `.sha256` file published next to it
+([how](SIGNING.md)).
 
 <!-- After SignPath approval, replace the status paragraph above with:
 Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by

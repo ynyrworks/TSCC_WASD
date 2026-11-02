@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.99.0 — release candidate for 1.0
+
+**Please test this and tell us how it went:** [what to check and how to report](https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/RC-CHECKLIST.md).
+
+**What 1.0 promises:** Xbox controllers (USB, Bluetooth) and the NS2 Pro over USB, output as a
+DualShock 4 or Xbox 360 controller. DualShock 4, DualSense, the original Switch Pro, NS2 Pro over
+Bluetooth and hiding third-party XInput controllers stay experimental.
+
+**Not code-signed:** SmartScreen may warn. Compare the ZIP with its `.sha256` file first.
+
+- **Per-game profiles:** give a profile a game's process name, or pick it from the running
+  programs. While mapping, that profile applies when the game comes to the foreground, stays when
+  you Alt-Tab away, and the previous profile returns when the game exits. A profile you choose by
+  hand wins until then. The automatic choice is not saved as your profile. This never starts
+  mapping by itself. Reports from real games are welcome.
+- If a switch changes the output type (DS4 or Xbox 360), a notification says to restart the game
+  should it lose the controller.
+- **Round stick dead zone:** the dead zone now applies to the stick's distance from centre, for
+  both outputs, so diagonals are no longer pulled towards the axes. Existing dead-zone values
+  still work, but sticks can feel slightly different.
+- **Hides third-party XInput controllers (experimental, on by default):** 8BitDo, PowerA and
+  similar pads are now hidden while mapping, so games stop seeing two controllers. This can include
+  wheels and large joysticks that speak XInput. Turn it off under *App settings*; every hidden device
+  is written to the log.
+- **Controller test:** a new window shows live input while mapping and can record raw reports to
+  a file for bug reports. Read the file before you post it.
+
 ## 0.9.2 — preview
 
 - **NS2 Pro over Bluetooth (experimental):** the Switch 2 Pro Controller now also works

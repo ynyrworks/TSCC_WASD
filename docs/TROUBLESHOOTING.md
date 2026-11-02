@@ -3,7 +3,7 @@
 | Symptom | Check |
 | --- | --- |
 | App does not launch | Extract the whole ZIP first (do not run it from inside the ZIP); release builds include .NET, source builds need the .NET 10 Desktop Runtime |
-| Windows SmartScreen warns about the EXE | Preview builds are unsigned (see [SIGNING.md](SIGNING.md)); choose "More info → Run anyway" only for a ZIP whose SHA-256 matches the release |
+| Windows SmartScreen warns about the EXE | Releases are unsigned (see [SIGNING.md](SIGNING.md)); choose "More info → Run anyway" only for a ZIP whose SHA-256 matches the release |
 | Nothing appears after sign-in | With "Start with Windows" the app runs in the notification area; open it from the tray icon |
 | No rumble | Check "Forward game rumble"; the game must send rumble to the DS4; NS2 Pro rumble needs USB |
 | Driver connection fails | Click **Install drivers** (or run `drivers\ViGEmBus_*.exe` from the ZIP), reboot if requested; registry status alone does not prove the driver is running |
