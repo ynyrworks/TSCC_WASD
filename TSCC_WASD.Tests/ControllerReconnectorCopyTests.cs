@@ -36,4 +36,32 @@ public class ControllerReconnectorCopyTests
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }
+
+    [Fact]
+    public void UndeletableStaleFileIsSkippedAndDoesNotThrow()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "TSCC_WASD-tests", Guid.NewGuid().ToString("N"));
+        string source = Path.Combine(root, "src"), helper = Path.Combine(root, "Helper");
+        string locked = Path.Combine(helper, "readonly-stale.dll"), other = Path.Combine(helper, "other-stale.dll");
+        try
+        {
+            Directory.CreateDirectory(source);
+            Directory.CreateDirectory(helper);
+            File.WriteAllText(Path.Combine(source, "TSCC_WASD.exe"), "new");
+            File.WriteAllText(locked, "old");
+            File.WriteAllText(other, "old");
+            File.SetAttributes(locked, FileAttributes.ReadOnly);
+
+            ControllerReconnector.CopyApp(source, helper);
+
+            Assert.True(File.Exists(locked));
+            Assert.False(File.Exists(other));
+            Assert.Equal("new", File.ReadAllText(Path.Combine(helper, "TSCC_WASD.exe")));
+        }
+        finally
+        {
+            if (File.Exists(locked)) File.SetAttributes(locked, FileAttributes.Normal);
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
 }

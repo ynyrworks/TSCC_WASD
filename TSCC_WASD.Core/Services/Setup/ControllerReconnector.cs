@@ -222,14 +222,21 @@ public static class ControllerReconnector
     {
         foreach (var entry in new DirectoryInfo(directory).EnumerateFileSystemInfos())
         {
-            bool isLink = entry.Attributes.HasFlag(FileAttributes.ReparsePoint);
-            if (entry is DirectoryInfo dir)
+            try
             {
-                if (isLink) { if (!kept.Contains(dir.FullName)) dir.Delete(false); }
-                else if (!kept.Contains(dir.FullName)) dir.Delete(true);
-                else RemoveStale(dir.FullName, kept);
+                bool isLink = entry.Attributes.HasFlag(FileAttributes.ReparsePoint);
+                if (entry is DirectoryInfo dir)
+                {
+                    if (isLink) { if (!kept.Contains(dir.FullName)) dir.Delete(false); }
+                    else if (!kept.Contains(dir.FullName)) dir.Delete(true);
+                    else RemoveStale(dir.FullName, kept);
+                }
+                else if (!kept.Contains(entry.FullName)) entry.Delete();
             }
-            else if (!kept.Contains(entry.FullName)) entry.Delete();
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+            {
+                AppLog.Warn($"Helper cleanup: cannot remove stale '{entry.FullName}' ({ex.Message}); skipped.");
+            }
         }
     }
 
