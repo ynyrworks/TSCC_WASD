@@ -31,6 +31,31 @@ button input, HidHide setup, game recognition or long-running stability.
 
 ## Manual hardware validation
 
+### 0.99.0 problem and the 0.99.1 fixes, 2026-11-04
+
+Maintainer's PC: Windows 11 26100 (zh-TW), HidHide 1.2.98, ViGEmBus 1.21.442, NS2 Pro over USB, Steam
+running, DS4Windows 3.3.3 running (shared mode, allowlisted in HidHide).
+
+**Problem in 0.99.0** (installed by the in-app update into the folder the 0.9.1 ZIP was extracted to):
+with hiding on, the NS2 Pro stayed at "NS2 Pro USB is in use" every second. The orchestrator checked
+from outside the app: the WinUSB control interface opened and initialized normally and Steam's log
+showed it never opened the NS2 Pro, so the failing step was opening the HID interface. Closing
+DS4Windows, restarting Steam and restarting TSCC_WASD did not help; turning hiding off did. The cause
+inside HidHide is not known.
+
+**Fixes tested** with a Release build of `main` run from the source folder (`dotnet run`, About still
+showed 0.99.0), hiding on:
+
+| Check | Result |
+| --- | --- |
+| NS2 Pro found and mapped; buttons and sticks in the controller test | Passed |
+| Rumble reaches the controller in a game | Passed |
+| Unplug and replug while mapping: recovers by itself | Passed |
+| Other programs do not see the physical controller (Steam lists only the PS4 Controller) | Passed |
+| Searching status is one short line | Passed |
+| After stop with automatic reconnect, Steam detects the NS2 Pro again | **Failed:** Steam logged no arrival after the port cycle; unplugging and replugging made it appear. The status now says so (0.99.1) |
+| HidHide recovery (re-register, then a brief unhide) | Not exercised: the build in the source folder was never refused. Must be checked on 0.99.1 installed by the in-app update into the folder that failed |
+
 ### Unreleased — 1.0 features, 2026-11-02
 
 Release build of `main` at `6625831` (About still showed 0.9.2), run by the maintainer on their PC.

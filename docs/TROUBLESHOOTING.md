@@ -4,6 +4,8 @@
 | --- | --- |
 | App does not launch | Extract the whole ZIP first (do not run it from inside the ZIP); release builds include .NET, source builds need the .NET 10 Desktop Runtime |
 | Windows SmartScreen warns about the EXE | Releases are unsigned (see [SIGNING.md](SIGNING.md)); choose "More info → Run anyway" only for a ZIP whose SHA-256 matches the release |
+| After stopping, Steam does not show the controller again | Unplug and replug it once, or click *Restart Steam*. The automatic reconnect after stop may not be enough for Steam to detect an NS2 Pro |
+| "HidHide denied access to the controller" while mapping | TSCC_WASD already tried to register itself again and to unhide the controller for a moment. Stop mapping, unplug and replug the controller, start mapping again; if it persists, update HidHide with the installer in the `drivers` folder and send the log |
 | Nothing appears after sign-in | With "Start with Windows" the app runs in the notification area; open it from the tray icon |
 | No rumble | Check "Forward game rumble"; the game must send rumble to the DS4; NS2 Pro rumble needs USB |
 | Driver connection fails | Click **Install drivers** (or run `drivers\ViGEmBus_*.exe` from the ZIP), reboot if requested; registry status alone does not prove the driver is running |

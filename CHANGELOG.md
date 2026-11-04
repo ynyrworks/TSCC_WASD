@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.99.1 — second release candidate for 1.0
+
+**Please test this and tell us how it went:** [what to check and how to report](https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/RC-CHECKLIST.md).
+The 1.0 promise is unchanged from 0.99.0. **Not code-signed:** SmartScreen may warn. Compare the ZIP
+with its `.sha256` file first.
+
+- Fixed: with *Hide physical controllers* on, an NS2 Pro over USB could stay unusable ("NS2 Pro USB is
+  in use"), because HidHide refused TSCC_WASD's own access although TSCC_WASD was on its allowlist.
+  TSCC_WASD now registers itself again and, if HidHide still refuses, unhides only that controller
+  for a moment to open it and hides it again at once; rumble is recovered the same way. Each step is
+  written to the log.
+- Fixed: that message told you to exit Steam even when Steam was not involved. Access denied now says
+  HidHide refused access; only "in use by another program" mentions Steam.
+- After stopping, the status no longer claims Steam can see the controller again. With an NS2 Pro on
+  current Steam, the automatic reconnect after stop did not make Steam detect it; unplug and replug it
+  once, or click *Restart Steam*.
+- The auto-detect status is one short line while searching, and only real problems are listed.
+  Status lines that repeat no longer fill the log (one evening had produced about 2 MB).
+- Setting up automatic reconnect removes files that older versions left in the helper folder.
+
 ## 0.99.0 — release candidate for 1.0
 
 **Please test this and tell us how it went:** [what to check and how to report](https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/RC-CHECKLIST.md).
