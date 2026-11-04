@@ -148,7 +148,7 @@ public sealed partial class HidHideGuard : Input.IHidHideRecovery
         }
     }
 
-    public Microsoft.Win32.SafeHandles.SafeFileHandle OpenWhileUnhidden(string hidInterfacePath, Func<Microsoft.Win32.SafeHandles.SafeFileHandle> open)
+    public T OpenWhileUnhidden<T>(string hidInterfacePath, Func<T> open)
     {
         lock (_gate)
         {

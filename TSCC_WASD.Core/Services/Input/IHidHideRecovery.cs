@@ -17,5 +17,5 @@ public interface IHidHideRecovery
     /// Unhides that one device, runs <paramref name="open"/>, and hides it again before returning (also if it throws).
     /// Throws <see cref="InvalidOperationException"/> without any CLI call when TSCC_WASD did not hide the device.
     /// </summary>
-    SafeFileHandle OpenWhileUnhidden(string hidInterfacePath, Func<SafeFileHandle> open);
+    T OpenWhileUnhidden<T>(string hidInterfacePath, Func<T> open);
 }

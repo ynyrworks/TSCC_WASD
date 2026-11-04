@@ -237,8 +237,9 @@ public class HidHideGuardTests
         Assert.Equal(["--app-reg", App], cli.Changes.Single());
         cli.Changes.Clear();
 
-        var handle = guard.OpenWhileUnhidden(Ns2Interface, () => new Microsoft.Win32.SafeHandles.SafeFileHandle());
-        Assert.NotNull(handle);
+        var handles = guard.OpenWhileUnhidden(Ns2Interface, () => (Read: new Microsoft.Win32.SafeHandles.SafeFileHandle(), Write: new Microsoft.Win32.SafeHandles.SafeFileHandle()));
+        Assert.NotNull(handles.Read);
+        Assert.NotNull(handles.Write);
         Assert.Equal([["--dev-unhide", Ns2], ["--dev-hide", Ns2]], cli.Changes);
         Assert.True(guard.HasPendingRestore);
         guard.Restore();
@@ -253,7 +254,7 @@ public class HidHideGuardTests
         guard.Hide(App, InputDeviceType.Switch2ProUsb);
         cli.Changes.Clear();
 
-        Assert.Throws<IOException>(() => guard.OpenWhileUnhidden(Ns2Interface, () => throw new IOException("denied")));
+        Assert.Throws<IOException>(() => guard.OpenWhileUnhidden<int>(Ns2Interface, () => throw new IOException("denied")));
         Assert.Equal([["--dev-unhide", Ns2], ["--dev-hide", Ns2]], cli.Changes);
         // Still in the record, so a later Restore unhides it.
         guard.Restore();
