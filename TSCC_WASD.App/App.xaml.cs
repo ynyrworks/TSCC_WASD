@@ -56,9 +56,11 @@ public partial class App : Application
         var viewModel = new MainViewModel();
         AppLog.Info(TSCC_WASD.Core.Services.Setup.DiagnosticReport.Build(viewModel.InputSummary, mapping: false).TrimEnd());
         // The status line already narrates every start, stop, error and recovery, so it doubles as the log.
+        var statusLog = new TSCC_WASD.Core.Services.Diagnostics.StatusLogFilter();
         viewModel.PropertyChanged += (_, args) =>
         {
-            if (args.PropertyName == nameof(MainViewModel.StatusMessage)) AppLog.Info(viewModel.StatusMessage);
+            if (args.PropertyName == nameof(MainViewModel.StatusMessage) && statusLog.ShouldLog(viewModel.StatusMessage, DateTime.UtcNow))
+                AppLog.Info(viewModel.StatusMessage);
         };
         if (updated)
             viewModel.ShowNotice(L.T($"已更新到 {viewModel.VersionText}。", $"Updated to {viewModel.VersionText}."));

@@ -49,21 +49,56 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
             int active = _active;
             if (active >= 0)
                 return L.T($"自動偵測 → {SourceStatus(active)}", $"Auto-detect → {SourceStatus(active)}");
-            // Every source's status stays visible while searching (the NS2 Pro one explains USB setup and Steam sharing).
-            string list = SearchingList(_sources, _names, L.Chinese);
-            return L.T($"自動偵測：尋找手把中（{list}{_lastError}）",
-                $"Auto-detect: looking for a controller ({list}{_lastError})");
+            return SearchingStatus(_sources, _names, _lastError, L.Chinese);
         }
     }
 
-    internal static string SearchingList(IInputReader[] sources, string[] names, bool chinese)
+    /// <summary>
+    /// One short line while searching: the reader names, plus only the readers that report a real problem
+    /// (plain waiting / not connected texts are left out).
+    /// </summary>
+    internal static string SearchingStatus(IInputReader[] sources, string[] names, string lastError, bool chinese)
     {
-        string colon = chinese ? "：" : ": ";
-        var parts = new string[sources.Length];
-        for (int i = 0; i < parts.Length; i++)
-            parts[i] = sources[i] is XInputReader ? $"{names[i]}{colon}{(chinese ? "未連線" : "not connected")}" : $"{names[i]}{colon}{sources[i].Status}";
-        return string.Join(chinese ? "；" : "; ", parts);
+        var shown = new List<string>();
+        var problems = new List<string>();
+        for (int i = 0; i < sources.Length; i++)
+        {
+            bool xbox = sources[i] is XInputReader || names[i] == XboxName;
+            string label = xbox ? "Xbox" : BaseName(names[i]);
+            if (!shown.Contains(label)) shown.Add(label);
+            if (xbox) continue; // Its status is only ever "not connected" while searching.
+            string text = TrimEnd(sources[i].Status);
+            if (text.Length == 0 || IsWaiting(text)) continue;
+            string baseName = BaseName(names[i]);
+            if (!text.StartsWith(baseName, StringComparison.OrdinalIgnoreCase)) text = $"{names[i]}{(chinese ? "：" : ": ")}{text}";
+            if (!problems.Contains(text)) problems.Add(text);
+        }
+        string error = TrimEnd(lastError);
+        if (error.Length > 0 && !problems.Contains(error)) problems.Add(error);
+
+        string list = string.Join(chinese ? "、" : ", ", shown);
+        string head = chinese ? $"自動偵測：尋找手把中（{list}）" : $"Auto-detect: looking for a controller ({list})";
+        if (problems.Count == 0) return head;
+        return head + (chinese ? "：" : ": ") + string.Join(chinese ? "；" : "; ", problems);
     }
+
+    private const string XboxName = "Xbox／XInput";
+
+    private static readonly string[] WaitingPrefixes =
+    [
+        "尋找", "Looking for", "等待 NS2 Pro 藍牙", "Waiting for an NS2 Pro over Bluetooth",
+    ];
+
+    private static bool IsWaiting(string text) => WaitingPrefixes.Any(p => text.StartsWith(p, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Name up to the first "（", " (" or "／" qualifier, e.g. "NS2 Pro（藍牙）" becomes "NS2 Pro".</summary>
+    private static string BaseName(string name)
+    {
+        int cut = name.IndexOfAny(['（', '／', '(']);
+        return (cut > 0 ? name[..cut] : name).Trim();
+    }
+
+    private static string TrimEnd(string text) => text.Trim().TrimEnd('。', '；', '.', ';', '，', ',', ' ');
 
     private string SourceStatus(int index) => _sources[index] is XInputReader ? L.T("Xbox／XInput", "Xbox / XInput") : _sources[index].Status;
 
@@ -130,7 +165,7 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
         catch (Exception ex)
         {
             // One failing backend must not stop the other from being mapped.
-            _lastError = $"（{ex.Message}）";
+            _lastError = ex.Message;
             state = default;
             return false;
         }

@@ -34,15 +34,52 @@ public class AutoInputReaderTests
         Assert.Equal(GamepadButtonFlags.B, state.Gamepad.Buttons);
     }
 
+    private static readonly string[] Names = ["NS2 Pro", "NS2 Pro（藍牙）", "DualShock 4／DualSense", "Switch Pro", "Xbox／XInput"];
+
+    private static IInputReader[] Waiting(out FakeSource ns2) =>
+        [ns2 = new FakeSource { Status = "尋找 NS2 Pro（USB）..." }, new FakeSource { Status = "Waiting for an NS2 Pro over Bluetooth: hold its Sync button" },
+         new FakeSource { Status = "Looking for a DualShock 4 / DualSense..." }, new FakeSource { Status = "尋找 Switch Pro 手把..." }, new FakeSource { Status = "XInput" }];
+
     [Theory]
-    [InlineData(false, "NS2 Pro: a; Xbox／XInput: a")]
-    [InlineData(true, "NS2 Pro：a；Xbox／XInput：a")]
-    public void SearchingStatusUsesSeparatorsOfTheLanguage(bool chinese, string expectedList)
+    [InlineData(false, "Auto-detect: looking for a controller (NS2 Pro, DualShock 4, Switch Pro, Xbox)")]
+    [InlineData(true, "自動偵測：尋找手把中（NS2 Pro、DualShock 4、Switch Pro、Xbox）")]
+    public void SearchingWithNothingWrongIsOneShortLine(bool chinese, string expected)
     {
-        var ns2 = new FakeSource { Status = "a" };
-        var xbox = new FakeSource { Status = "a" };
-        string list = AutoInputReader.SearchingList([ns2, xbox], ["NS2 Pro", "Xbox／XInput"], chinese);
-        Assert.Equal(expectedList, list);
+        Assert.Equal(expected, AutoInputReader.SearchingStatus(Waiting(out _), Names, "", chinese));
+    }
+
+    [Theory]
+    [InlineData(false, "Auto-detect: looking for a controller (NS2 Pro, DualShock 4, Switch Pro, Xbox): NS2 Pro USB is in use: exit Steam")]
+    [InlineData(true, "自動偵測：尋找手把中（NS2 Pro、DualShock 4、Switch Pro、Xbox）：NS2 Pro USB 被占用：請先退出 Steam")]
+    public void ProblemIsAddedOnceWithoutRepeatingTheReaderName(bool chinese, string expected)
+    {
+        var sources = Waiting(out var ns2);
+        ns2.Status = chinese ? "NS2 Pro USB 被占用：請先退出 Steam。" : "NS2 Pro USB is in use: exit Steam.";
+        string text = AutoInputReader.SearchingStatus(sources, Names, "", chinese);
+        Assert.Equal(expected, text);
+        Assert.DoesNotContain("NS2 Pro：NS2 Pro", text);
+    }
+
+    [Fact]
+    public void ProblemWithoutReaderNameGetsItAndPunctuationStaysClean()
+    {
+        var sources = Waiting(out var ns2);
+        ns2.Status = "gone。";
+        string text = AutoInputReader.SearchingStatus(sources, Names, "boom。", true);
+        Assert.EndsWith("：NS2 Pro：gone；boom", text);
+        Assert.DoesNotContain("。", text);
+        Assert.DoesNotContain("；）", text);
+        Assert.DoesNotContain("。；", text);
+        Assert.DoesNotContain("。）", text);
+    }
+
+    [Fact]
+    public void ActiveControllerStatusStillNamesIt()
+    {
+        var a = new FakeSource { Available = true, Status = "NS2 Pro（USB，原廠校準）" };
+        using var reader = new AutoInputReader([a, new FakeSource()], ["NS2 Pro", "Xbox／XInput"]);
+        reader.TryGetState(out _);
+        Assert.Contains("NS2 Pro（USB，原廠校準）", reader.Status);
     }
 
     [Fact]
