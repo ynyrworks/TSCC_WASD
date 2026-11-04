@@ -190,16 +190,46 @@ public static class ControllerReconnector
     }
 
     /// <summary>Copies the program (single file in releases, several files in builds) without docs or installers.</summary>
-    private static void CopyApp(string source, string target)
+    internal static void CopyApp(string source, string target)
+    {
+        var kept = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { Path.GetFullPath(Path.Combine(target, "last-reconnect.json")) };
+        CopyAppInto(source, target, kept);
+        RemoveStale(target, kept);
+    }
+
+    private static void CopyAppInto(string source, string target, HashSet<string> kept)
     {
         foreach (var file in Directory.GetFiles(source))
-            File.Copy(file, Path.Combine(target, Path.GetFileName(file)), overwrite: true);
+        {
+            string destination = Path.Combine(target, Path.GetFileName(file));
+            File.Copy(file, destination, overwrite: true);
+            kept.Add(Path.GetFullPath(destination));
+        }
         foreach (var dir in Directory.GetDirectories(source))
         {
             string name = Path.GetFileName(dir);
             if (SkippedFolders.Contains(name, StringComparer.OrdinalIgnoreCase)) continue;
-            Directory.CreateDirectory(Path.Combine(target, name));
-            CopyApp(dir, Path.Combine(target, name));
+            string destination = Path.Combine(target, name);
+            Directory.CreateDirectory(destination);
+            kept.Add(Path.GetFullPath(destination));
+            CopyAppInto(dir, destination, kept);
+        }
+    }
+
+    /// <summary>Deletes everything under <paramref name="directory"/> that setup did not just copy (leftovers of older builds).
+    /// Links are removed without following them.</summary>
+    private static void RemoveStale(string directory, HashSet<string> kept)
+    {
+        foreach (var entry in new DirectoryInfo(directory).EnumerateFileSystemInfos())
+        {
+            bool isLink = entry.Attributes.HasFlag(FileAttributes.ReparsePoint);
+            if (entry is DirectoryInfo dir)
+            {
+                if (isLink) { if (!kept.Contains(dir.FullName)) dir.Delete(false); }
+                else if (!kept.Contains(dir.FullName)) dir.Delete(true);
+                else RemoveStale(dir.FullName, kept);
+            }
+            else if (!kept.Contains(entry.FullName)) entry.Delete();
         }
     }
 
