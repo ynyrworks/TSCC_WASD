@@ -76,6 +76,24 @@ public class AutoInputReaderTests
     }
 
     [Theory]
+    [InlineData(false, "NS2 Pro: Initializing NS2 Pro USB and stick calibration")]
+    [InlineData(true, "NS2 Pro：初始化 NS2 Pro USB 與搖桿校準")]
+    [InlineData(false, "NS2 Pro: Connecting...")]
+    [InlineData(true, "NS2 Pro：正在連線...")]
+    [InlineData(false, "NS2 Pro: Device not connected")]
+    [InlineData(true, "NS2 Pro：裝置沒有連線")]
+    [InlineData(false, "Initializing...")]
+    [InlineData(true, "初始化...")]
+    public void TransientTextsWithOrWithoutNamePrefixAreWaiting(bool chinese, string status)
+    {
+        var sources = Waiting(out var ns2);
+        ns2.Status = status;
+        string expected = chinese ? "自動偵測：尋找手把中（NS2 Pro、DualShock 4／DualSense、Switch Pro、Xbox）"
+                                  : "Auto-detect: looking for a controller (NS2 Pro, DualShock 4／DualSense, Switch Pro, Xbox)";
+        Assert.Equal(expected, AutoInputReader.SearchingStatus(sources, Names, "", chinese));
+    }
+
+    [Theory]
     [InlineData(false, "Auto-detect: looking for a controller (NS2 Pro, DualShock 4／DualSense, Switch Pro, Xbox): NS2 Pro USB is in use: exit Steam")]
     [InlineData(true, "自動偵測：尋找手把中（NS2 Pro、DualShock 4／DualSense、Switch Pro、Xbox）：NS2 Pro USB 被占用：請先退出 Steam")]
     public void ProblemIsAddedOnceWithoutRepeatingTheReaderName(bool chinese, string expected)

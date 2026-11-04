@@ -68,8 +68,9 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
             if (!shown.Contains(label)) shown.Add(label);
             if (xbox) continue; // Its status is only ever "not connected" while searching.
             string text = TrimEnd(sources[i].Status);
-            if (text.Length == 0 || IsWaiting(text)) continue;
             string baseName = BaseName(names[i]);
+            string bare = StripNamePrefix(text, names[i], baseName);
+            if (bare.Length == 0 || IsWaiting(bare)) continue;
             if (!text.StartsWith(baseName, StringComparison.OrdinalIgnoreCase)) text = $"{names[i]}{(chinese ? "：" : ": ")}{text}";
             if (!problems.Contains(text)) problems.Add(text);
         }
@@ -87,7 +88,20 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
     private static readonly string[] WaitingPrefixes =
     [
         "尋找", "Looking for", "等待", "Waiting for", "未連線", "not connected", "裝置沒有連線", "device not connected",
+        "初始化", "Initializing", "正在連線", "Connecting",
     ];
+
+    /// <summary>Removes a leading "NS2 Pro：" / "NS2 Pro: " style reader-name prefix (the separator must follow the name directly).</summary>
+    private static string StripNamePrefix(string text, string name, string baseName)
+    {
+        foreach (var candidate in new[] { name, baseName })
+        {
+            if (candidate.Length == 0 || !text.StartsWith(candidate, StringComparison.OrdinalIgnoreCase)) continue;
+            string rest = text[candidate.Length..];
+            if (rest.StartsWith('：') || rest.StartsWith(':')) return rest[1..].Trim();
+        }
+        return text;
+    }
 
     private static bool IsWaiting(string text) => WaitingPrefixes.Any(p => text.StartsWith(p, StringComparison.OrdinalIgnoreCase));
 

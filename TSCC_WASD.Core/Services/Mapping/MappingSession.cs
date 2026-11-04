@@ -166,7 +166,7 @@ public sealed class MappingSession : IAsyncDisposable
                     status = paused
                         ? L.T($"映射已暫停（虛擬 {pad} 保持連線，實體手把仍隱藏）。", $"Mapping paused (virtual {pad} stays connected, physical controllers stay hidden).")
                         : available ? L.T($"映射運作中：{_input.Status} → {pad}", $"Mapping: {_input.Status} → {pad}")
-                        : L.T($"等待輸入（虛擬 {pad} 保持連線，輸出已歸零）：{_input.Status}", $"Waiting for input (virtual {pad} stays connected, output neutral): {_input.Status}");
+                        : L.T($"等待手把（虛擬 {pad} 已連線）：{_input.Status}", $"Waiting for a controller (virtual {pad} connected): {_input.Status}");
                 }
                 catch (Exception ex)
                 {
