@@ -768,7 +768,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         var parts = new List<string>();
         if (result.UsbPorts > 0)
             parts.Add(afterStop
-                ? L.T($"已重新連接 {result.UsbPorts} 個 USB 手把，Steam 可以再看到它們。", $"Reconnected {result.UsbPorts} USB controller(s); Steam can see them again.")
+                ? L.T($"已重新連接 {result.UsbPorts} 個 USB 手把。若 Steam 仍看不到，請拔插一次手把，或按「重新啟動 Steam」。", $"Reconnected {result.UsbPorts} USB controller(s). If Steam still doesn't show one, unplug and replug it once, or click Restart Steam.")
                 : L.T($"已重新連接 {result.UsbPorts} 個 USB 手把，Steam 不再握著實體手把。", $"Reconnected {result.UsbPorts} USB controller(s); Steam no longer holds them."));
         if (result.WirelessAdapter)
             parts.Add(L.T("無線接收器上的手把會一起重新連線，請稍候幾秒。", "Controllers on the wireless adapter reconnect too; give them a few seconds."));
