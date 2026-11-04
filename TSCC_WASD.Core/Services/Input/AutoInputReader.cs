@@ -64,7 +64,7 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
         for (int i = 0; i < sources.Length; i++)
         {
             bool xbox = sources[i] is XInputReader || names[i] == XboxName;
-            string label = xbox ? "Xbox" : BaseName(names[i]);
+            string label = xbox ? "Xbox" : ListName(names[i]);
             if (!shown.Contains(label)) shown.Add(label);
             if (xbox) continue; // Its status is only ever "not connected" while searching.
             string text = TrimEnd(sources[i].Status);
@@ -86,7 +86,7 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
 
     private static readonly string[] WaitingPrefixes =
     [
-        "尋找", "Looking for", "等待 NS2 Pro 藍牙", "Waiting for an NS2 Pro over Bluetooth",
+        "尋找", "Looking for", "等待", "Waiting for", "未連線", "not connected", "裝置沒有連線", "device not connected",
     ];
 
     private static bool IsWaiting(string text) => WaitingPrefixes.Any(p => text.StartsWith(p, StringComparison.OrdinalIgnoreCase));
@@ -95,6 +95,13 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
     private static string BaseName(string name)
     {
         int cut = name.IndexOfAny(['（', '／', '(']);
+        return (cut > 0 ? name[..cut] : name).Trim();
+    }
+
+    /// <summary>Name for the list: cut at "（" or " (" only, so "DualShock 4／DualSense" stays whole.</summary>
+    private static string ListName(string name)
+    {
+        int cut = name.IndexOfAny(['（', '(']);
         return (cut > 0 ? name[..cut] : name).Trim();
     }
 
