@@ -13,7 +13,7 @@ namespace TSCC_WASD.Core.Services.Setup;
 /// Every change is recorded on disk before it is applied, so a crash is undone on next launch.
 /// </summary>
 [SupportedOSPlatform("windows")]
-public sealed partial class HidHideGuard
+public sealed partial class HidHideGuard : Input.IHidHideRecovery
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private readonly Func<IReadOnlyList<string>, string> _run;
@@ -117,6 +117,53 @@ public sealed partial class HidHideGuard
             if (!record.CloakWasOn) args.Add("--cloak-off");
             if (args.Count > 0) _run(args);
             File.Delete(_recordPath);
+        }
+    }
+
+    /// <summary>`\\?\HID#VID_057E&amp;PID_2069&amp;MI_00#a&amp;37d9#{guid}` becomes `HID\VID_057E&amp;PID_2069&amp;MI_00\a&amp;37d9`.</summary>
+    internal static string ToInstancePath(string interfacePath)
+    {
+        string path = interfacePath.StartsWith(@"\\?\", StringComparison.Ordinal) ? interfacePath[4..] : interfacePath;
+        int guid = path.LastIndexOf("#{", StringComparison.Ordinal);
+        if (guid >= 0) path = path[..guid];
+        return path.Replace('#', '\\');
+    }
+
+    private string? RecordedDevice(string interfacePath)
+    {
+        string instance = ToInstancePath(interfacePath);
+        return Load()?.Devices.FirstOrDefault(d => string.Equals(d, instance, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public bool IsHiddenByUs(string hidInterfacePath)
+    {
+        lock (_gate) return RecordedDevice(hidInterfacePath) is not null;
+    }
+
+    public void ReRegisterApp()
+    {
+        lock (_gate)
+        {
+            if (Load() is { } record) _run(["--app-reg", record.AppPath]);
+        }
+    }
+
+    public Microsoft.Win32.SafeHandles.SafeFileHandle OpenWhileUnhidden(string hidInterfacePath, Func<Microsoft.Win32.SafeHandles.SafeFileHandle> open)
+    {
+        lock (_gate)
+        {
+            string device = RecordedDevice(hidInterfacePath)
+                ?? throw new InvalidOperationException("Not a device TSCC_WASD hid; refusing to unhide it.");
+            try
+            {
+                _run(["--dev-unhide", device]);
+                return open();
+            }
+            finally
+            {
+                // The record keeps the device, so Restore still unhides it later.
+                _run(["--dev-hide", device]);
+            }
         }
     }
 

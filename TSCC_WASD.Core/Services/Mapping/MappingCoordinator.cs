@@ -194,6 +194,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
             if (_hider is null) return L.T("未安裝 HidHide：遊戲可能同時看到實體手把，按鍵圖示可能在 Xbox／PS 間跳動。", "HidHide is not installed: games may also see the physical controller and prompts may flip between Xbox and PS.");
             string appPath = Environment.ProcessPath ?? throw new InvalidOperationException(L.T("無法取得程式路徑。", "Could not determine the program path."));
             _hideInputType = inputType;
+            Switch2InputReader.HidHideRecovery = _hider;
             string message = _hider.Hide(appPath, inputType);
             HidingSince = DateTime.Now;
             var hider = _hider;
@@ -212,6 +213,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
         if (rescanner is not null) await Task.Run(rescanner.Dispose).ConfigureAwait(false);
         var hider = _hider;
         _hider = null;
+        if (ReferenceEquals(Switch2InputReader.HidHideRecovery, hider)) Switch2InputReader.HidHideRecovery = null;
         HidingSince = null;
         hider?.Restore();
     }

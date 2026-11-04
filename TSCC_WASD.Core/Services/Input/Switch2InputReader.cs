@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace TSCC_WASD.Core.Services.Input;
 
@@ -107,8 +108,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
 
                     var hidPaths = WindowsDevicePaths.Find(WindowsDevicePaths.Hid);
                     if (hidPaths.Length != 1) throw new IOException(L.T("找不到唯一的 NS2 Pro HID 介面；請檢查 HidHide 允許路徑。", "Could not find exactly one NS2 Pro HID interface; check the HidHide allowed path."));
-                    using var handle = Switch2UsbControl.CreateFileW(hidPaths[0], 0x80000000, 3, IntPtr.Zero, 3, 0x40000000, IntPtr.Zero);
-                    if (handle.IsInvalid) throw new Win32Exception(Marshal.GetLastWin32Error());
+                    using var handle = OpenHidForRead(hidPaths[0]);
                     using var stream = new FileStream(handle, FileAccess.Read, 64, isAsync: true);
                     // The user's own calibration wins; without any real calibration, learn the travel.
                     bool userCalibration = _calibrationCache.TryLoadUser(out var userLeft, out var userRight);
@@ -175,6 +175,8 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
                 }
                 catch (OperationCanceledException) when (!token.IsCancellationRequested)
                 { SetStatus(L.T("NS2 Pro 無輸入回報，正在重新連線...", "NS2 Pro stopped reporting; reconnecting...")); }
+                catch (HidHideDeniedException)
+                { SetStatus(L.T("NS2 Pro：HidHide 拒絕存取手把（已嘗試重新註冊與暫時取消隱藏）", "NS2 Pro: HidHide denied access to the controller (re-register and temporary unhide were tried)")); }
                 catch (Win32Exception ex) when (ex.NativeErrorCode is 5 or 32)
                 { SetStatus(L.T("NS2 Pro USB 被占用：請先完整退出 Steam／其他手把工具，再重新啟動映射。", "NS2 Pro USB is in use: fully exit Steam or other controller tools, then restart mapping.")); }
                 catch (Exception ex) when (ex is IOException or Win32Exception)
@@ -185,6 +187,54 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception ex) { SetStatus(L.T($"NS2 Pro 輸入已停止：{ex.Message}", $"NS2 Pro input stopped: {ex.Message}")); }
         finally { lock (_gate) { _hasState = false; _latest = default; } }
+    }
+
+    /// <summary>Set by the mapping coordinator while it hides controllers; null otherwise.</summary>
+    public static volatile IHidHideRecovery? HidHideRecovery;
+
+    private sealed class HidHideDeniedException() : Win32Exception(5);
+
+    private string? _deniedPath; // HID path whose denial was logged / whose recovery already failed
+
+    private static SafeFileHandle OpenHid(string path) =>
+        Switch2UsbControl.CreateFileW(path, 0x80000000, 3, IntPtr.Zero, 3, 0x40000000, IntPtr.Zero);
+
+    /// <summary>
+    /// Opens the HID interface. If HidHide denies a device we hid ourselves (error 5), register the app again,
+    /// then unhide that one device just long enough to open it; an open handle stays valid once it is hidden again.
+    /// </summary>
+    private SafeFileHandle OpenHidForRead(string path)
+    {
+        var handle = OpenHid(path);
+        if (!handle.IsInvalid) { _deniedPath = null; return handle; }
+        int error = Marshal.GetLastWin32Error();
+        var recovery = HidHideRecovery;
+        if (error != 5 || recovery is null || !recovery.IsHiddenByUs(path)) throw new Win32Exception(error);
+
+        // Recovery already failed for this path: do not hammer the CLI every second.
+        if (string.Equals(_deniedPath, path, StringComparison.OrdinalIgnoreCase)) throw new HidHideDeniedException();
+        AppLog.Warn($"NS2 Pro HID open denied (error {error}) while hidden by HidHide: {path}");
+        try
+        {
+            recovery.ReRegisterApp();
+            handle = OpenHid(path);
+            if (!handle.IsInvalid) { AppLog.Info("NS2 Pro HID open succeeded after re-registering the app with HidHide"); _deniedPath = null; return handle; }
+            handle = recovery.OpenWhileUnhidden(path, () =>
+            {
+                var h = OpenHid(path);
+                if (h.IsInvalid) { int e = Marshal.GetLastWin32Error(); h.Dispose(); throw new Win32Exception(e); }
+                return h;
+            });
+            AppLog.Info("NS2 Pro HID open succeeded after unhiding the device for a moment");
+            _deniedPath = null;
+            return handle;
+        }
+        catch (Exception ex) when (ex is Win32Exception or IOException or TimeoutException or InvalidOperationException)
+        {
+            AppLog.Warn($"NS2 Pro HID open still denied after HidHide recovery: {ex.Message}");
+            _deniedPath = path;
+            throw new HidHideDeniedException();
+        }
     }
 
     /// <summary>Streams rumble packets while a motor is on, then one stop packet. Best-effort.</summary>

@@ -221,6 +221,73 @@ public class HidHideGuardTests
         Assert.DoesNotContain("--dev-hide", Hide(list, InputDeviceType.PlayStation));
     }
 
+    private const string Ns2Interface = @"\\?\HID#VID_057E&PID_2069&MI_00#a&37d9c433&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}";
+
+    [Fact]
+    public void UnhidesOneOwnDeviceForTheOpenAndHidesItAgain()
+    {
+        var cli = new FakeCli { Gaming = Gaming(Ns2) };
+        string record = TempRecord();
+        var guard = new HidHideGuard(cli.Run, record);
+        guard.Hide(App, InputDeviceType.Switch2ProUsb);
+        cli.Changes.Clear();
+
+        Assert.True(guard.IsHiddenByUs(Ns2Interface.ToLowerInvariant()));
+        guard.ReRegisterApp();
+        Assert.Equal(["--app-reg", App], cli.Changes.Single());
+        cli.Changes.Clear();
+
+        var handle = guard.OpenWhileUnhidden(Ns2Interface, () => new Microsoft.Win32.SafeHandles.SafeFileHandle());
+        Assert.NotNull(handle);
+        Assert.Equal([["--dev-unhide", Ns2], ["--dev-hide", Ns2]], cli.Changes);
+        Assert.True(guard.HasPendingRestore);
+        guard.Restore();
+        Assert.Equal(["--dev-unhide", Ns2, "--app-unreg", App, "--cloak-off"], cli.Changes.Last());
+    }
+
+    [Fact]
+    public void HidesAgainWhenTheOpenThrows()
+    {
+        var cli = new FakeCli { Gaming = Gaming(Ns2) };
+        var guard = new HidHideGuard(cli.Run, TempRecord());
+        guard.Hide(App, InputDeviceType.Switch2ProUsb);
+        cli.Changes.Clear();
+
+        Assert.Throws<IOException>(() => guard.OpenWhileUnhidden(Ns2Interface, () => throw new IOException("denied")));
+        Assert.Equal([["--dev-unhide", Ns2], ["--dev-hide", Ns2]], cli.Changes);
+        // Still in the record, so a later Restore unhides it.
+        guard.Restore();
+        Assert.Equal("--dev-unhide", cli.Changes.Last()[0]);
+        Assert.Contains(Ns2, cli.Changes.Last());
+    }
+
+    [Fact]
+    public void RefusesToUnhideADeviceNotInTheRecord()
+    {
+        const string otherInterface = @"\\?\HID#VID_046D&PID_C52B&MI_02#8&1b721325&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}";
+        var cli = new FakeCli { Gaming = Gaming(Ns2), Hidden = [Other] };
+        var guard = new HidHideGuard(cli.Run, TempRecord());
+        guard.Hide(App, InputDeviceType.Switch2ProUsb);
+        cli.Changes.Clear();
+        bool opened = false;
+
+        Assert.False(guard.IsHiddenByUs(otherInterface));
+        Assert.Throws<InvalidOperationException>(() => guard.OpenWhileUnhidden(otherInterface, () => { opened = true; return new Microsoft.Win32.SafeHandles.SafeFileHandle(); }));
+        Assert.False(opened);
+        Assert.Empty(cli.Changes);
+    }
+
+    [Fact]
+    public void NothingToDoWithoutARecord()
+    {
+        var cli = new FakeCli();
+        var guard = new HidHideGuard(cli.Run, TempRecord());
+        Assert.False(guard.IsHiddenByUs(Ns2Interface));
+        guard.ReRegisterApp();
+        Assert.Empty(cli.Changes);
+        Assert.Throws<InvalidOperationException>(() => guard.OpenWhileUnhidden(Ns2Interface, () => new Microsoft.Win32.SafeHandles.SafeFileHandle()));
+    }
+
     private sealed class FakeCli
     {
         public string Gaming { get; init; } = "[]";
