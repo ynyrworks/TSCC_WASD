@@ -70,7 +70,7 @@ public class HidHideRescannerTests
             Assert.False(rescanner.UsesNotifications);
             await WaitFor(() => calls >= 2);
             Assert.True(calls >= 2);
-            Assert.Contains("unavailable", File.ReadAllText(AppLog.CurrentFile));
+            Assert.Contains("unavailable", LogFile.ReadAllText(AppLog.CurrentFile));
         }
         finally { AppLog.Directory = old; }
     }

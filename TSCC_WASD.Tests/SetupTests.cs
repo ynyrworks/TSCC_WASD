@@ -68,7 +68,7 @@ public class SetupTests
         {
             AppLog.Info("first");
             AppLog.Error("second", new InvalidOperationException("boom"));
-            string text = File.ReadAllText(AppLog.CurrentFile);
+            string text = LogFile.ReadAllText(AppLog.CurrentFile);
             Assert.Contains("INFO first", text);
             Assert.Contains("ERROR second", text);
             Assert.Contains("boom", text);

@@ -143,7 +143,7 @@ public class HidHideGuardTests
         // Only matching controllers are unhidden; cloak and the application list are untouched.
         Assert.Equal(["--dev-unhide", Ns2], cli.Changes.Single());
         Assert.False(string.IsNullOrEmpty(guard.RecoveryNotice));
-        Assert.Contains("damaged", File.ReadAllText(AppLog.CurrentFile));
+        Assert.Contains("damaged", LogFile.ReadAllText(AppLog.CurrentFile));
     }
 
     [Fact]
