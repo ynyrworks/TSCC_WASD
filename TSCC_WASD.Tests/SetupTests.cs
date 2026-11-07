@@ -84,7 +84,7 @@ public class SetupTests
         finally
         {
             AppLog.Directory = original;
-            Directory.Delete(dir, recursive: true);
+            TempDir.Delete(dir);
         }
     }
 
