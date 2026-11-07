@@ -61,6 +61,15 @@ public class DesktopTests
                     new TSCC_WASD.App.Pages.HomePage(), new TSCC_WASD.App.Pages.ProfilesPage(),
                     new TSCC_WASD.App.Pages.SettingsPage(), new TSCC_WASD.App.Pages.AboutPage()
                 };
+                // The provider MainWindow really uses: one page instance per type, all bound to the shared view model.
+                var provider = new MainWindow.SharedViewModelPages(vm);
+                foreach (var pageType in nav.MenuItems.Cast<object>().Concat(nav.FooterMenuItems.Cast<object>()).Cast<Wpf.Ui.Controls.NavigationViewItem>().Select(i => i.TargetPageType!))
+                {
+                    var served = Assert.IsAssignableFrom<FrameworkElement>(provider.GetPage(pageType));
+                    Assert.IsType(pageType, served);
+                    Assert.Same(vm, served.DataContext);
+                    Assert.Same(served, provider.GetPage(pageType));
+                }
                 string? screenshotDir = Environment.GetEnvironmentVariable("YNYRWASD_SCREENSHOTS");
                 var surfaces = new List<System.Windows.Controls.Border>();
                 foreach (var page in pages)

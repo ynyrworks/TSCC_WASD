@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:app="clr-namespace:TSCC_WASD.App"
-      Title="程式設定" Background="Transparent">
+      Title="{app:T Zh=程式設定, En='App settings'}" Background="Transparent">
     <Page.Resources>
         <ResourceDictionary Source="../Themes/Shell.xaml"/>
     </Page.Resources>

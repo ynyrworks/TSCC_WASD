@@ -32,7 +32,7 @@ public partial class MainWindow : FluentWindow
     }
 
     /// <summary>Creates each page once and gives all of them the window's view model.</summary>
-    private sealed class SharedViewModelPages(MainViewModel viewModel) : INavigationViewPageProvider
+    internal sealed class SharedViewModelPages(MainViewModel viewModel) : INavigationViewPageProvider
     {
         private readonly Dictionary<Type, object> _pages = [];
 

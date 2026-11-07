@@ -25,6 +25,7 @@
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <Resource Include="Assets\TSCC_WASD.ico" />
+    <InternalsVisibleTo Include="TSCC_WASD.Tests" />
   </ItemGroup>
 
   <ItemGroup>
