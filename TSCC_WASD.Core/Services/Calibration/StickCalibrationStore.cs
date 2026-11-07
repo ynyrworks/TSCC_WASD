@@ -72,6 +72,17 @@ public sealed class StickCalibrationStore
         return true;
     }
 
+    /// <summary>
+    /// The wizard calls this when calibration starts. For an NS2 Pro it clears the old user calibration in
+    /// <c>ns2-calibration.json</c> first, so the reader hands out factory-calibrated samples from then on and the
+    /// samples are measured in the same domain the saved calibration is applied in (Save no longer changes it).
+    /// Other controllers have nothing to prepare.
+    /// </summary>
+    public void BeginCalibration(ControllerId identity)
+    {
+        if (identity.Model == ControllerId.Ns2Pro) ClearOldNs2();
+    }
+
     /// <summary>Removes one controller's calibration. Returns false when there was none or the file cannot be written.</summary>
     public bool Clear(string key)
     {

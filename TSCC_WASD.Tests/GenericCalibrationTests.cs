@@ -223,6 +223,57 @@ public class GenericCalibrationTests
     }
 
     [Fact]
+    public void BeginCalibrationMakesNs2SamplesFactoryCalibratedSoSaveKeepsTheDomain()
+    {
+        var cache = TempCache();
+        var factory = Switch2StickCalibration.Nominal;
+        var user = new Switch2StickCalibration(new(2248, 1500, 1500), new(2248, 1500, 1500));
+        cache.SaveFactory(factory, factory);
+        cache.SaveUser(user, user);
+        var store = new StickCalibrationStore(TempFile(), cache);
+        var id = new ControllerId(ControllerId.Ns2Pro, "x");
+
+        // What the reader hands out: user calibration when present, else factory.
+        short Sample(int raw) => (cache.TryLoadUser(out var u, out _) ? u : factory).X.Normalize(raw);
+
+        short before = Sample(2248);
+        Assert.Equal(0, before); // user domain: rest is raw 2248
+        store.BeginCalibration(id);
+        Assert.False(cache.TryLoadUser(out _, out _));
+        Assert.True(cache.TryLoadFactory(out _, out _));
+
+        // Wizard run in the factory domain: rest at raw 2248, travel +/-1500.
+        short Norm(int raw) => Sample(raw);
+        var calibrator = new GenericStickCalibrator();
+        for (int i = 0; i < GenericStickCalibrator.CenterSamplesNeeded; i++)
+            calibrator.AddCenterSample(Pad(Norm(2248), Norm(2248), Norm(2248), Norm(2248)));
+        calibrator.AddRangeSample(Pad(Norm(2248 + 1500), Norm(2248 + 1500), Norm(2248 + 1500), Norm(2248 + 1500)));
+        calibrator.AddRangeSample(Pad(Norm(2248 - 1500), Norm(2248 - 1500), Norm(2248 - 1500), Norm(2248 - 1500)));
+        var result = calibrator.Result();
+
+        Assert.True(store.Save(id.PreferredKey, result));
+        Assert.False(cache.TryLoadUser(out _, out _));
+        // Save changed nothing about the sampling domain: applying the result to the same samples gives rest 0 and full travel.
+        Assert.Equal(0, result.Left.X.Apply(Norm(2248)));
+        Assert.Equal(short.MaxValue, result.Left.X.Apply(Norm(2248 + 1500)));
+        Assert.Equal(short.MinValue, result.Left.X.Apply(Norm(2248 - 1500)));
+    }
+
+    [Fact]
+    public void BeginCalibrationLeavesOtherModelsAndTheFactoryCalibrationAlone()
+    {
+        var cache = TempCache();
+        var left = Switch2StickCalibration.Nominal;
+        cache.SaveFactory(left, left);
+        cache.SaveUser(left, left);
+        var store = new StickCalibrationStore(TempFile(), cache);
+        store.BeginCalibration(new ControllerId(ControllerId.DualSense, "y"));
+        Assert.True(cache.TryLoadUser(out _, out _));
+        store.BeginCalibration(new ControllerId(ControllerId.Ns2Pro));
+        Assert.True(cache.TryLoadFactory(out _, out _));
+    }
+
+    [Fact]
     public void AutoInputReaderForwardsTheActiveIdentity()
     {
         var ns2 = new FakeIdentitySource { Available = false, Id = new ControllerId(ControllerId.Ns2Pro, "a") };

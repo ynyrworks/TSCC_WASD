@@ -8,7 +8,7 @@ namespace TSCC_WASD.Core.Services.Calibration;
 /// the user circles both sticks at the edge. Same flow as <see cref="StickCalibrator"/> for the NS2 Pro.
 /// </summary>
 /// <remarks>
-/// Wizard use: feed <c>MappingSession.LatestUncalibratedInput</c> samples to <see cref="AddCenterSample"/> while the sticks
+/// Wizard use: call <see cref="StickCalibrationStore.BeginCalibration"/> when calibration starts (clears an old NS2 Pro user calibration so the samples are factory-calibrated), then feed <c>MappingSession.LatestUncalibratedInput</c> samples to <see cref="AddCenterSample"/> while the sticks
 /// are released until <see cref="CenterReady"/>, then to <see cref="AddRangeSample"/> until <see cref="RangeReady"/>
 /// (show <see cref="Progress"/>), then save <see cref="Result"/> in a <see cref="StickCalibrationStore"/>.
 /// </remarks>
