@@ -54,6 +54,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+## WPF-UI 4.3.0 (distributed with the application)
+
+Source: https://github.com/lepoco/wpfui
+
+WPF-UI provides the Fluent window, navigation and theme resources of the main window. NuGet
+identifies its license as MIT (Copyright (c) 2021-2025 Leszek Pomianowski and WPF UI
+Contributors). It also includes Fluent System Icons, VirtualizingWrapPanel and some dotnet/wpf and
+microsoft-ui-xaml resources, each under its own MIT license. See the full notice, including those
+components, in [licenses/WPF-UI.txt](licenses/WPF-UI.txt); the release ZIP carries the same file.
+The transitive package WPF-UI.Abstractions 4.3.0 (same license) is distributed with it.
+
 ## .NET runtime (distributed inside TSCC_WASD.exe)
 
 Release builds are self-contained: the .NET 10 runtime and WPF/Windows Forms libraries are

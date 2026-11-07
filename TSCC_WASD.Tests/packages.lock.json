@@ -52,6 +52,19 @@
         "resolved": "1.21.256",
         "contentHash": "VJMO6hkalOZ7YdXTwcR881aTgPZlN7thEs3x6CWE/kEu7SdE5bY7QuDXkR2eqXfPAee4NrxInIAqa45PorpTsA=="
       },
+      "WPF-UI": {
+        "type": "Transitive",
+        "resolved": "4.3.0",
+        "contentHash": "SIHhc8lIrhEQ/1cLFZN6Dtf8cqsLm4myBULj9obnacd9TyDs2vizhKYzRzTlcPEcnzb3L4EstvPN3M6kcXbJCA==",
+        "dependencies": {
+          "WPF-UI.Abstractions": "4.3.0"
+        }
+      },
+      "WPF-UI.Abstractions": {
+        "type": "Transitive",
+        "resolved": "4.3.0",
+        "contentHash": "7Kj9DmCCo4SOCd1jAiw4+EcMFP2nR8rLLvitAYzVtzbWToTsodkbie24+8x9C4LDLxkopWEUGX62szqqNy7oeg=="
+      },
       "xunit.abstractions": {
         "type": "Transitive",
         "resolved": "2.0.3",
@@ -95,7 +108,8 @@
       "TSCC_WASD": {
         "type": "Project",
         "dependencies": {
-          "TSCC_WASD.Core": "[0.9.1, )"
+          "TSCC_WASD.Core": "[0.99.1, )",
+          "WPF-UI": "[4.3.0, )"
         }
       },
       "tscc_wasd.core": {

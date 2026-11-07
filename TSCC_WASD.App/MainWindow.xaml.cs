@@ -1,11 +1,16 @@
 using System.ComponentModel;
 using System.Windows;
+using TSCC_WASD.App.Pages;
 using TSCC_WASD.App.ViewModels;
 using TSCC_WASD.Core;
+using Wpf.Ui.Abstractions;
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
+using MessageBox = System.Windows.MessageBox;
 
 namespace TSCC_WASD.App;
 
-public partial class MainWindow : Window
+public partial class MainWindow : FluentWindow
 {
     private readonly MainViewModel _viewModel;
     private bool _closing;
@@ -16,10 +21,31 @@ public partial class MainWindow : Window
     public MainWindow(MainViewModel viewModel)
     {
         _viewModel = viewModel;
+        // Follows the Windows light/dark setting, also when it changes while the app runs.
+        SystemThemeWatcher.Watch(this);
         InitializeComponent();
         DataContext = _viewModel;
+        RootNavigation.SetPageProviderService(new SharedViewModelPages(_viewModel));
+        Loaded += (_, _) => RootNavigation.Navigate(typeof(HomePage));
         Closing += OnClosing;
         StateChanged += OnStateChanged;
+    }
+
+    /// <summary>Creates each page once and gives all of them the window's view model.</summary>
+    private sealed class SharedViewModelPages(MainViewModel viewModel) : INavigationViewPageProvider
+    {
+        private readonly Dictionary<Type, object> _pages = [];
+
+        public object? GetPage(Type pageType)
+        {
+            if (!_pages.TryGetValue(pageType, out var page))
+            {
+                var created = (FrameworkElement)Activator.CreateInstance(pageType)!;
+                created.DataContext = viewModel;
+                _pages[pageType] = page = created;
+            }
+            return page;
+        }
     }
 
     /// <summary>Restores the window from the notification area (or brings it forward).</summary>

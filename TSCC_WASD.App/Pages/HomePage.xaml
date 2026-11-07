@@ -1,0 +1,88 @@
+<Page x:Class="TSCC_WASD.App.Pages.HomePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:app="clr-namespace:TSCC_WASD.App"
+      Title="首頁" Background="Transparent">
+    <Page.Resources>
+        <ResourceDictionary Source="../Themes/Shell.xaml"/>
+    </Page.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,8,24,24">
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Image Source="../Assets/TSCC_WASD.ico" Width="40" Height="40" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="TSCC_WASD" FontSize="22" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding VersionText}" Style="{StaticResource Muted}" VerticalAlignment="Bottom" Margin="8,0,0,4"/>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Muted}" FontSize="13"
+                               Text="{app:T Zh='把 Xbox／NS2 Pro 手把變成 DualShock 4，讓遊戲顯示 PS 按鍵', En='Turns an Xbox or NS2 Pro controller into a DualShock 4 so games show PS prompts'}"/>
+                </StackPanel>
+            </Grid>
+            <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <Ellipse Width="12" Height="12" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{DynamicResource TextFillColorDisabledBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                            <Setter Property="Fill" Value="{DynamicResource SystemFillColorSuccessBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="{Binding StatusTitle}" FontSize="20" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Margin="0,0,0,4" AutomationProperties.LiveSetting="Polite"/>
+                    <!-- Update download progress; only shown while an update downloads. -->
+                    <Grid Margin="0,4,0,8">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDownloadingUpdate}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UpdateProgressText}" Style="{StaticResource Muted}" Margin="0,0,0,4"/>
+                            <ProgressBar Value="{Binding UpdateProgress, Mode=OneWay}" Minimum="0" Maximum="1" Height="6"
+                                         AutomationProperties.Name="{app:T Zh=更新下載進度, En='Update download progress'}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="{app:T Zh=取消, En=Cancel}" Command="{Binding CancelUpdateCommand}"
+                                Margin="12,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBlock Text="{Binding InputSummary}" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Name"
+                                  IsEnabled="{Binding CanEdit}" Margin="0,0,12,8" VerticalAlignment="Top"
+                                  AutomationProperties.Name="{app:T Zh=設定檔, En=Profile}"/>
+                        <WrapPanel Grid.Column="1">
+                            <ui:Button Appearance="Primary" Margin="0,0,8,8" Content="{app:T Zh=啟動映射, En='Start mapping'}" Command="{Binding StartCommand}"/>
+                            <Button Margin="0,0,8,8" Content="{Binding PauseButtonText}" Command="{Binding PauseCommand}"
+                                    ToolTip="{app:T Zh='遊戲看到放開所有按鍵的虛擬手把；實體手把仍隱藏，繼續時不必處理 Steam', En='Games see a virtual controller with nothing pressed; controllers stay hidden, so resuming needs nothing from Steam'}"/>
+                            <Button Margin="0,0,8,8" Content="{app:T Zh=停止, En=Stop}" Command="{Binding StopCommand}"
+                                    ToolTip="{app:T Zh='完全釋放：關閉虛擬手把，實體手把恢復可見', En='Release everything: remove the virtual controller and show the physical controllers again'}"/>
+                            <Button Margin="0,0,8,8" Content="{app:T Zh='重新啟動 Steam', En='Restart Steam'}" Command="{Binding RestartSteamCommand}"
+                                    ToolTip="{app:T Zh='讓 Steam 只看到虛擬手把（映射中才可使用）', En='Make Steam see only the virtual controller (while mapping)'}"/>
+                        </WrapPanel>
+                    </Grid>
+                    <DockPanel Margin="0,4,0,0">
+                        <ui:Button Appearance="Transparent" DockPanel.Dock="Right" Content="{app:T Zh=安裝驅動程式, En='Install drivers'}"
+                                Command="{Binding InstallDepsCommand}"/>
+                        <TextBlock Text="{Binding DependencyStatus}" Style="{StaticResource Muted}" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -2,7 +2,17 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:TSCC_WASD.App"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              ShutdownMode="OnMainWindowClose">
-    <!-- Each window merges Themes/Dark.xaml itself, so windows also render in tests without App. -->
-    <Application.Resources/>
+    <!-- WPF-UI theme and controls for the main window; the system theme is applied in App.OnStartup.
+         The other windows still merge Themes/Dark.xaml themselves (restyled in a later step), so they
+         also render in tests without App. -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Dark"/>
+                <ui:ControlsDictionary/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

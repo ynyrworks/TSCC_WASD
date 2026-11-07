@@ -1,0 +1,46 @@
+<Page x:Class="TSCC_WASD.App.Pages.AboutPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:app="clr-namespace:TSCC_WASD.App"
+      Title="關於與說明" Background="Transparent">
+    <Page.Resources>
+        <ResourceDictionary Source="../Themes/Shell.xaml"/>
+    </Page.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,8,24,24">
+            <TextBlock Style="{StaticResource PageTitle}" Text="{app:T Zh=關於與說明, En='About &amp; help'}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock Text="TSCC_WASD" FontSize="18" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding VersionText}" Style="{StaticResource Muted}" VerticalAlignment="Bottom" Margin="8,0,0,2"/>
+            </StackPanel>
+            <WrapPanel>
+                <Button Margin="0,0,8,8" Content="{app:T Zh=使用說明, En=Help}" Command="{Binding OpenHelpCommand}"/>
+                <Button Margin="0,0,8,8" Content="{app:T Zh=檢查更新, En='Check for updates'}" Command="{Binding CheckUpdatesCommand}"/>
+                <Button Margin="0,0,8,8" Content="{app:T Zh=關於, En=About}" Command="{Binding AboutCommand}"/>
+            </WrapPanel>
+            <TextBlock Text="{Binding StatusMessage}" Margin="0,4,0,4" AutomationProperties.LiveSetting="Polite"/>
+            <!-- Update download progress; only shown while an update downloads. -->
+                <Grid Margin="0,4,0,8">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDownloadingUpdate}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding UpdateProgressText}" Style="{StaticResource Muted}" Margin="0,0,0,4"/>
+                        <ProgressBar Value="{Binding UpdateProgress, Mode=OneWay}" Minimum="0" Maximum="1" Height="6"
+                                     AutomationProperties.Name="{app:T Zh=更新下載進度, En='Update download progress'}"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="{app:T Zh=取消, En=Cancel}" Command="{Binding CancelUpdateCommand}"
+                            Margin="12,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

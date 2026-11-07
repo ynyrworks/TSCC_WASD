@@ -22,7 +22,7 @@
             <Button x:Name="OkButton" Style="{StaticResource PrimaryButton}" Margin="0" IsDefault="True" IsEnabled="False"
                     Content="{app:T Zh=選擇, En=Select}" Click="OnOk"/>
         </StackPanel>
-        <ListBox x:Name="ProcessList" SelectionChanged="OnSelectionChanged" MouseDoubleClick="OnDoubleClick"
+        <ListBox x:Name="ProcessList" Foreground="{StaticResource TextBrush}" Background="{StaticResource RaisedBrush}" SelectionChanged="OnSelectionChanged" MouseDoubleClick="OnDoubleClick"
                  AutomationProperties.Name="{app:T Zh=執行中的程式, En='Running programs'}"/>
     </DockPanel>
 </Window>

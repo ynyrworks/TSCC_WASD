@@ -2,6 +2,7 @@ using System.Windows;
 using TSCC_WASD.App.ViewModels;
 using TSCC_WASD.Core;
 using TSCC_WASD.Core.Services;
+using Wpf.Ui.Appearance;
 
 namespace TSCC_WASD.App;
 
@@ -33,6 +34,7 @@ public partial class App : Application
             return;
         }
         base.OnStartup(e);
+        ApplicationThemeManager.ApplySystemTheme(); // MainWindow's SystemThemeWatcher follows later changes.
         RegisterCrashHandlers();
         AppLog.Prune();
         AppLog.Info($"TSCC_WASD {UpdateChecker.CurrentVersion.ToString(3)} starting; args: {string.Join(' ', e.Args)}");

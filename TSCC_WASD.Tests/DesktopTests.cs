@@ -50,23 +50,34 @@ public class DesktopTests
                 Assert.False(vm.StopCommand.CanExecute(null));
 
                 var window = new MainWindow(vm);
-                var content = (FrameworkElement)window.Content;
-                window.Content = null;
-                var surface = new System.Windows.Controls.Border
+                // Four navigation entries, About & help in the footer; every page binds to the same view model.
+                var nav = ((System.Windows.Controls.Grid)window.Content).Children.OfType<Wpf.Ui.Controls.NavigationView>().Single();
+                Assert.Equal(new[] { typeof(TSCC_WASD.App.Pages.HomePage), typeof(TSCC_WASD.App.Pages.ProfilesPage), typeof(TSCC_WASD.App.Pages.SettingsPage) },
+                    nav.MenuItems.Cast<Wpf.Ui.Controls.NavigationViewItem>().Select(i => i.TargetPageType).ToArray());
+                Assert.Equal(typeof(TSCC_WASD.App.Pages.AboutPage),
+                    nav.FooterMenuItems.Cast<Wpf.Ui.Controls.NavigationViewItem>().Single().TargetPageType);
+                var pages = new System.Windows.Controls.Page[]
                 {
-                    Child = content, Background = window.Background,
-                    Resources = window.Resources, DataContext = vm
+                    new TSCC_WASD.App.Pages.HomePage(), new TSCC_WASD.App.Pages.ProfilesPage(),
+                    new TSCC_WASD.App.Pages.SettingsPage(), new TSCC_WASD.App.Pages.AboutPage()
                 };
-                System.Windows.Documents.TextElement.SetForeground(surface, window.Foreground);
-                surface.Measure(new Size(980, 780));
-                surface.Arrange(new Rect(0, 0, 980, 780));
-                surface.UpdateLayout();
-                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                string? screenshotDir = Environment.GetEnvironmentVariable("YNYRWASD_SCREENSHOTS");
+                var surfaces = new List<System.Windows.Controls.Border>();
+                foreach (var page in pages)
+                {
+                    // A Page only lives inside a Window or Frame, so lay out its content on a plain surface.
+                    var content = (UIElement)page.Content!;
+                    page.Content = null;
+                    var surface = new System.Windows.Controls.Border { Child = content, Resources = page.Resources, DataContext = vm };
+                    surface.Measure(new Size(760, 600));
+                    surface.Arrange(new Rect(0, 0, 760, 600));
+                    surface.UpdateLayout();
+                    Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                    surfaces.Add(surface);
+                }
+                var profilesSurface = surfaces[1];
                 // The game-match text box edits the selected profile immediately, and the picker command exists.
-                foreach (var expander in FindAll<System.Windows.Controls.Expander>(surface)) expander.IsExpanded = true;
-                surface.UpdateLayout();
-                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
-                var matchBox = FindAll<System.Windows.Controls.TextBox>(surface)
+                var matchBox = FindAll<System.Windows.Controls.TextBox>(profilesSurface)
                     .Single(t => (string)t.GetValue(System.Windows.Automation.AutomationProperties.NameProperty) == TSCC_WASD.Core.L.T("遊戲程序名稱", "Game process name"));
                 matchBox.Text = "Game.exe";
                 Assert.Equal("Game.exe", vm.SelectedProfile!.MatchProcessName);
@@ -74,31 +85,31 @@ public class DesktopTests
                 Assert.Equal("Other", matchBox.Text);
                 Assert.True(vm.PickProcessCommand.CanExecute(null));
                 matchBox.Text = "";
-                foreach (var expander in FindAll<System.Windows.Controls.Expander>(surface)) expander.IsExpanded = false;
-                surface.UpdateLayout();
-                string? screenshotDir = Environment.GetEnvironmentVariable("YNYRWASD_SCREENSHOTS");
+                // Every command the old single column offered is still bound somewhere in the pages.
+                var bound = surfaces.SelectMany(FindAll<System.Windows.Controls.Primitives.ButtonBase>)
+                    .Select(b => b.Command).Where(c => c is not null).ToHashSet();
+                foreach (var command in new System.Windows.Input.ICommand[]
+                {
+                    vm.StartCommand, vm.PauseCommand, vm.StopCommand, vm.RestartSteamCommand, vm.InstallDepsCommand,
+                    vm.PickProcessCommand, vm.CalibrateCommand, vm.OpenControllerTestCommand, vm.SaveCommand, vm.NewCommand,
+                    vm.DeleteCommand, vm.ImportCommand, vm.ExportCommand, vm.ReloadCommand, vm.OpenProfilesCommand,
+                    vm.SetupReconnectCommand, vm.RemoveReconnectCommand, vm.OpenHelpCommand, vm.CheckUpdatesCommand,
+                    vm.CancelUpdateCommand, vm.AboutCommand
+                })
+                    Assert.Contains(command, bound);
                 if (!string.IsNullOrEmpty(screenshotDir))
                 {
                     Directory.CreateDirectory(screenshotDir);
-                    var bitmap = new RenderTargetBitmap(980, 780, 96, 96, PixelFormats.Pbgra32);
-                    bitmap.Render(surface);
-                    var encoder = new PngBitmapEncoder();
-                    encoder.Frames.Add(BitmapFrame.Create(bitmap));
-                    using (var stream = File.Create(Path.Combine(screenshotDir, "editor.png"))) encoder.Save(stream);
-
-                    // Second shot with every section expanded, to review all controls.
-                    foreach (var expander in FindAll<System.Windows.Controls.Expander>(surface)) expander.IsExpanded = true;
-                    var scroller = FindAll<System.Windows.Controls.ScrollViewer>(surface).First();
-                    scroller.VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Disabled;
-                    surface.Measure(new Size(980, 1600));
-                    surface.Arrange(new Rect(0, 0, 980, 1600));
-                    surface.UpdateLayout();
-                    Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
-                    var expanded = new RenderTargetBitmap(980, 1600, 96, 96, PixelFormats.Pbgra32);
-                    expanded.Render(surface);
-                    var expandedEncoder = new PngBitmapEncoder();
-                    expandedEncoder.Frames.Add(BitmapFrame.Create(expanded));
-                    using (var stream = File.Create(Path.Combine(screenshotDir, "editor-expanded.png"))) expandedEncoder.Save(stream);
+                    string[] names = { "home", "profiles", "settings", "about-page" };
+                    for (int i = 0; i < surfaces.Count; i++)
+                    {
+                        var bitmap = new RenderTargetBitmap(760, 600, 96, 96, PixelFormats.Pbgra32);
+                        bitmap.Render(surfaces[i]);
+                        var encoder = new PngBitmapEncoder();
+                        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                        using var stream = File.Create(Path.Combine(screenshotDir, names[i] + ".png"));
+                        encoder.Save(stream);
+                    }
                 }
                 // About binds the diagnostics, log and Ko-fi commands to the same view model.
                 var about = new AboutWindow { DataContext = vm };
