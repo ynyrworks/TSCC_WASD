@@ -50,6 +50,27 @@ public static class PlayStationReport
         }
     }
 
+    /// <summary>
+    /// Battery from the full reports only (the basic Bluetooth report has none). The status byte sits at
+    /// DS4 USB 30 / BT 0x11 32 and DualSense USB 53 / BT 0x31 54: the same shift the layouts above use.
+    /// </summary>
+    public static bool TryParseBattery(ReadOnlySpan<byte> report, bool dualSense, out BatteryStatus battery)
+    {
+        battery = default;
+        if (report.Length == 0) return false;
+        int offset = (report[0], dualSense) switch
+        {
+            (0x01, false) => 30,
+            (0x11, false) => 32,
+            (0x01, true) => 53,
+            (0x31, true) => 54,
+            _ => -1
+        };
+        if (offset < 0 || report.Length <= offset) return false;
+        battery = dualSense ? BatteryParser.FromDualSense(report[offset]) : BatteryParser.FromDualShock4(report[offset]);
+        return true;
+    }
+
     /// <summary>DS4 layout (also used by both controllers' basic Bluetooth report), starting at the left stick X byte.</summary>
     private static State BasicLayout(ReadOnlySpan<byte> d)
     {
