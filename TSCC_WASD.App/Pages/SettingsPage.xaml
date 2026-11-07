@@ -8,40 +8,128 @@
         <ResourceDictionary Source="../Themes/Shell.xaml"/>
     </Page.Resources>
     <!-- No ScrollViewer here: the navigation view's content presenter already scrolls the page. -->
-        <StackPanel Margin="24,8,24,24">
-            <TextBlock Style="{StaticResource PageTitle}" Text="{app:T Zh=程式設定, En='App settings'}"/>
-            <CheckBox Margin="0,2,0,6" IsChecked="{Binding StartWithWindows}"
-                      Content="{app:T Zh=登入 Windows 時自動啟動並開始映射, En='Start with Windows and begin mapping'}"/>
-            <TextBlock Style="{StaticResource Hint}"
-                       Text="{app:T Zh='開機後縮在系統匣直接映射，搭配下面兩項就不必再手動重啟 Steam。', En='Runs in the notification area right after sign-in. With the two Steam options below you never need to restart Steam by hand.'}"/>
-            <CheckBox Margin="0,2,0,6" IsChecked="{Binding StartMappingOnLaunch}"
-                      Content="{app:T Zh=每次開啟程式就自動開始映射, En='Begin mapping whenever the app opens'}"/>
-            <CheckBox Margin="0,2,0,6" IsChecked="{Binding ManageSteam}"
-                      Content="{app:T Zh=自動開始映射時，若 Steam 已先開啟就自動重啟它, En='On automatic start, restart Steam if it started first'}"/>
-            <CheckBox Margin="0,2,0,6" IsChecked="{Binding LaunchSteamAfterAutoStart}"
-                      Content="{app:T Zh=自動開始映射後啟動 Steam, En='Launch Steam after an automatic start'}"/>
-            <TextBlock Style="{StaticResource Hint}"
-                       Text="{app:T Zh='建議同時在 Steam 設定關閉「電腦開機時執行 Steam」，讓 Steam 一律在隱藏手把之後才啟動。', En='Also turn off Steam’s own “Run Steam when my computer starts” so Steam always starts after the controllers are hidden.'}"/>
-            <CheckBox Margin="0,2,0,6" IsChecked="{Binding HideThirdPartyXInput}"
-                      Content="{app:T Zh='（實驗性）映射時也隱藏第三方 XInput 手把', En='(Experimental) Also hide third-party XInput controllers while mapping'}"/>
-            <TextBlock Style="{StaticResource Hint}"
-                       Text="{app:T Zh='不只微軟手把，8BitDo、PowerA 等相容 XInput 的手把也會隱藏；可能連帶包含方向盤或大型搖桿。', En='Hides XInput-compatible pads such as 8BitDo and PowerA, not only Microsoft’s. May also include steering wheels or large joysticks.'}"/>
-            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=自動重新連接（不必重啟 Steam）, En='Automatic reconnect (no Steam restart)'}"/>
-            <TextBlock Style="{StaticResource Hint}" Text="{Binding ReconnectHelperStatus}"/>
-            <WrapPanel Margin="0,0,0,8">
-                <Button Margin="0,0,8,8" Content="{app:T Zh=設定自動重新連接, En='Set up automatic reconnect'}" Command="{Binding SetupReconnectCommand}"
-                        ToolTip="{app:T Zh='需要一次管理員權限；之後 Steam 握著 USB 手把時會自動重新連接，不必重啟 Steam', En='Needs administrator rights once; afterwards USB controllers held by Steam are reconnected instead of restarting Steam'}"/>
-                <Button Margin="0,0,8,8" Content="{app:T Zh=移除, En=Remove}" Command="{Binding RemoveReconnectCommand}"/>
-            </WrapPanel>
-            <CheckBox Margin="0,2,0,6" IsChecked="{Binding MinimizeToTray}"
-                      Content="{app:T Zh=最小化時縮到系統匣, En='Minimize to the notification area'}"/>
-            <CheckBox Margin="0,2,0,6" IsChecked="{Binding CheckUpdatesOnStartup}"
-                      Content="{app:T Zh=開啟程式時檢查更新, En='Check for updates when the app opens'}"/>
-            <TextBlock Style="{StaticResource Hint}"
-                       Text="{app:T Zh='只會連到 GitHub 查詢最新版本；沒勾選時，只有按「檢查更新」才會連網。', En='Only contacts GitHub for the latest version; otherwise the network is used only when you click Check for updates.'}"/>
-            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh='語言（重新開啟後套用）', En='Language (applies after restart)'}"/>
-            <ComboBox ItemsSource="{Binding LanguageOptions}" DisplayMemberPath="Name" SelectedValuePath="Code"
-                      SelectedValue="{Binding Language}" Width="220" HorizontalAlignment="Left" Margin="0"
-                      AutomationProperties.Name="{app:T Zh=語言, En=Language}"/>
-        </StackPanel>
+    <StackPanel Margin="24,8,24,24">
+        <TextBlock Style="{StaticResource PageTitle}" Text="{app:T Zh=程式設定, En='App settings'}"/>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,8,0,6" Text="{app:T Zh='開機與 Steam', En='Start-up and Steam'}"/>
+        <Border Style="{StaticResource Card}" Padding="16,4" Margin="0,0,0,12">
+            <StackPanel>
+                    <Grid Margin="0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{app:T Zh='登入 Windows 時', En='When signing in to Windows'}" TextWrapping="Wrap"/>
+                                <TextBlock Style="{StaticResource HelpMark}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='登入 Windows 後縮在系統匣直接映射，搭配「開始映射時的 Steam」就不必再手動重啟 Steam。「每次開啟程式就自動開始映射」也在這裡選：手動開啟程式時是否自動開始映射。', En='Runs in the notification area right after sign-in and starts mapping; with the Steam option below you never need to restart Steam by hand. Whether the app also begins mapping whenever you open it by hand (Begin mapping whenever the app opens) is chosen here too.'}"/></ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                            </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='縮在系統匣，直接開始映射', En='In the tray, mapping right away'}"/>
+                        </StackPanel>
+                        <ComboBox Grid.Column="1" Width="260" ItemsSource="{Binding StartupOptions}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding StartupChoice}" AutomationProperties.Name="{app:T Zh='登入 Windows 時', En='When signing in to Windows'}"/>
+                    </Grid>
+                    <Grid Margin="0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{app:T Zh='開始映射時的 Steam', En='Steam when mapping starts'}" TextWrapping="Wrap"/>
+                                <TextBlock Style="{StaticResource HelpMark}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='建議同時在 Steam 設定關閉「電腦開機時執行 Steam」，讓 Steam 一律在隱藏手把之後才啟動。', En='Also turn off Steam’s own “Run Steam when my computer starts” so Steam always starts after the controllers are hidden.'}"/></ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                            </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='讓 Steam 一律在隱藏手把之後才啟動', En='Steam always starts after the controllers are hidden'}"/>
+                        </StackPanel>
+                        <ComboBox Grid.Column="1" Width="260" ItemsSource="{Binding SteamOptions}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SteamChoice}" AutomationProperties.Name="{app:T Zh='開始映射時的 Steam', En='Steam when mapping starts'}"/>
+                    </Grid>
+                    <Grid Margin="0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{app:T Zh='自動重新連接（不必重啟 Steam）', En='Automatic reconnect (no Steam restart)'}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" Text="{Binding ReconnectHelperStatus}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Margin="0,0,8,0" Content="{app:T Zh=設定, En='Set up'}" Command="{Binding SetupReconnectCommand}"
+                                    ToolTip="{app:T Zh='需要一次管理員權限；之後 Steam 握著 USB 手把時會自動重新連接，不必重啟 Steam', En='Needs administrator rights once; afterwards USB controllers held by Steam are reconnected instead of restarting Steam'}"
+                                    AutomationProperties.Name="{app:T Zh=設定自動重新連接, En='Set up automatic reconnect'}"/>
+                            <Button Content="{app:T Zh=移除, En=Remove}" Command="{Binding RemoveReconnectCommand}"
+                                    AutomationProperties.Name="{app:T Zh=移除自動重新連接, En='Remove automatic reconnect'}"/>
+                        </StackPanel>
+                    </Grid>
+            </StackPanel>
+        </Border>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,8,0,6" Text="{app:T Zh='驅動程式與隱藏', En='Drivers and hiding'}"/>
+        <Border Style="{StaticResource Card}" Padding="16,4" Margin="0,0,0,12">
+            <StackPanel>
+                    <Grid Margin="0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{app:T Zh='ViGEmBus 與 HidHide', En='ViGEmBus and HidHide'}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" Text="{Binding DriverSummary}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" VerticalAlignment="Center" Content="{app:T Zh=安裝驅動程式, En='Install drivers'}" Command="{Binding InstallDepsCommand}"/>
+                    </Grid>
+                    <Grid Margin="0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{app:T Zh='也隱藏第三方 XInput 手把', En='Also hide third-party XInput controllers'}" TextWrapping="Wrap"/>
+                                <Border BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="6,0" Margin="8,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh=實驗性, En=Experimental}"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource HelpMark}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='不只微軟手把，8BitDo、PowerA 等相容 XInput 的手把也會隱藏；可能連帶包含方向盤或大型搖桿。', En='Hides XInput-compatible pads such as 8BitDo and PowerA, not only Microsoft’s. May also include steering wheels or large joysticks.'}"/></ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding HideThirdPartyXInput}" AutomationProperties.Name="{app:T Zh='也隱藏第三方 XInput 手把', En='Also hide third-party XInput controllers'}"/>
+                    </Grid>
+            </StackPanel>
+        </Border>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,8,0,6" Text="{app:T Zh='外觀與更新', En='Appearance and updates'}"/>
+        <Border Style="{StaticResource Card}" Padding="16,4" Margin="0,0,0,12">
+            <StackPanel>
+                    <Grid Margin="0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{app:T Zh='最小化時縮到系統匣', En='Minimize to the notification area'}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" AutomationProperties.Name="{app:T Zh='最小化時縮到系統匣', En='Minimize to the notification area'}"/>
+                    </Grid>
+                    <Grid Margin="0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{app:T Zh='開啟程式時檢查更新', En='Check for updates when the app opens'}" TextWrapping="Wrap"/>
+                                <TextBlock Style="{StaticResource HelpMark}">
+                                <TextBlock.ToolTip>
+                                    <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='只會連到 GitHub 查詢最新版本；沒勾選時，只有按「檢查更新」才會連網。', En='Only contacts GitHub for the latest version; otherwise the network is used only when you click Check for updates.'}"/></ToolTip>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding CheckUpdatesOnStartup}" AutomationProperties.Name="{app:T Zh='開啟程式時檢查更新', En='Check for updates when the app opens'}"/>
+                    </Grid>
+                    <Grid Margin="0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{app:T Zh='語言', En='Language'}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='重新開啟後套用', En='Applies after restart'}"/>
+                        </StackPanel>
+                        <ComboBox Grid.Column="1" Width="260" ItemsSource="{Binding LanguageOptions}" DisplayMemberPath="Name" SelectedValuePath="Code" SelectedValue="{Binding Language}" AutomationProperties.Name="{app:T Zh=語言, En=Language}"/>
+                    </Grid>
+            </StackPanel>
+        </Border>
+    </StackPanel>
 </Page>

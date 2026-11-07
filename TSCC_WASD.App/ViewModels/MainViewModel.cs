@@ -326,7 +326,20 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     }
     public string StatusMessage { get => _statusMessage; private set => SetField(ref _statusMessage, value); }
     public string InputSummary { get => _inputSummary; private set => SetField(ref _inputSummary, value); }
-    public string DependencyStatus { get => _dependencyStatus; private set => SetField(ref _dependencyStatus, value); }
+    public string DependencyStatus
+    {
+        get => _dependencyStatus;
+        private set { if (SetField(ref _dependencyStatus, value)) RaisePropertyChanged(nameof(DriverSummary)); }
+    }
+    /// <summary>One line for the settings page, for example "ViGEmBus ✓ 已安裝 · HidHide ✗ 未安裝".</summary>
+    public string DriverSummary
+    {
+        get
+        {
+            string One(string name, bool ok) => $"{name} {(ok ? "✓" : "✗")} {(ok ? L.T("已安裝", "installed") : L.T("未安裝", "not installed"))}";
+            return $"{One("ViGEmBus", DependencyChecker.IsViGEmInstalled())} · {One("HidHide", DependencyChecker.IsHidHideInstalled())}";
+        }
+    }
     public bool IsRunning
     {
         get => _isRunning;
@@ -401,6 +414,33 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             RaisePropertyChanged();
         }
     }
+    public StartupChoice StartupChoice
+    {
+        get => SettingChoices.GetStartup(Settings.StartWithWindows, Settings.StartMappingOnLaunch);
+        set
+        {
+            var (signIn, onOpen) = SettingChoices.Apply(value);
+            StartWithWindows = signIn; // keeps the Run-key side effect; leaves the old value if the key cannot be written
+            StartMappingOnLaunch = onOpen;
+            RaisePropertyChanged();
+        }
+    }
+    public SteamChoice SteamChoice
+    {
+        get => SettingChoices.GetSteam(Settings.ManageSteam, Settings.LaunchSteamAfterAutoStart);
+        set
+        {
+            var (manage, launch) = SettingChoices.Apply(value);
+            ManageSteam = manage;
+            LaunchSteamAfterAutoStart = launch;
+            RaisePropertyChanged();
+        }
+    }
+    public IReadOnlyList<ChoiceOption<StartupChoice>> StartupOptions { get; } =
+        Enum.GetValues<StartupChoice>().Select(c => new ChoiceOption<StartupChoice>(c, SettingChoices.Name(c, L.Chinese))).ToList();
+    public IReadOnlyList<ChoiceOption<SteamChoice>> SteamOptions { get; } =
+        Enum.GetValues<SteamChoice>().Select(c => new ChoiceOption<SteamChoice>(c, SettingChoices.Name(c, L.Chinese))).ToList();
+    public sealed record ChoiceOption<T>(T Value, string Name);
     public bool StartMappingOnLaunch { get => Settings.StartMappingOnLaunch; set => SetSetting(() => Settings.StartMappingOnLaunch = value); }
     public bool MinimizeToTray { get => Settings.MinimizeToTray; set => SetSetting(() => Settings.MinimizeToTray = value); }
     public bool ManageSteam { get => Settings.ManageSteam; set => SetSetting(() => Settings.ManageSteam = value); }
