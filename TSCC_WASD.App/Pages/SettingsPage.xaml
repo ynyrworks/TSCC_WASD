@@ -3,11 +3,11 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:app="clr-namespace:TSCC_WASD.App"
-      Title="{app:T Zh=程式設定, En='App settings'}" Background="Transparent">
+      Title="{app:T Zh=程式設定, En='App settings'}" Background="Transparent" Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Page.Resources>
         <ResourceDictionary Source="../Themes/Shell.xaml"/>
     </Page.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <!-- No ScrollViewer here: the navigation view's content presenter already scrolls the page. -->
         <StackPanel Margin="24,8,24,24">
             <TextBlock Style="{StaticResource PageTitle}" Text="{app:T Zh=程式設定, En='App settings'}"/>
             <CheckBox Margin="0,2,0,6" IsChecked="{Binding StartWithWindows}"
@@ -44,5 +44,4 @@
                       SelectedValue="{Binding Language}" Width="220" HorizontalAlignment="Left" Margin="0"
                       AutomationProperties.Name="{app:T Zh=語言, En=Language}"/>
         </StackPanel>
-    </ScrollViewer>
 </Page>

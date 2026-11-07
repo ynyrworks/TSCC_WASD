@@ -3,11 +3,11 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:app="clr-namespace:TSCC_WASD.App"
-      Title="{app:T Zh=首頁, En='Home'}" Background="Transparent">
+      Title="{app:T Zh=首頁, En='Home'}" Background="Transparent" Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Page.Resources>
         <ResourceDictionary Source="../Themes/Shell.xaml"/>
     </Page.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <!-- No ScrollViewer here: the navigation view's content presenter already scrolls the page. -->
         <StackPanel Margin="24,8,24,24">
             <Grid Margin="0,0,0,16">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
@@ -84,5 +84,4 @@
                 </StackPanel>
             </Border>
         </StackPanel>
-    </ScrollViewer>
 </Page>

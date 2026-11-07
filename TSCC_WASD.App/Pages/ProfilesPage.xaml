@@ -3,11 +3,11 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:app="clr-namespace:TSCC_WASD.App"
-      Title="{app:T Zh=設定檔, En='Profiles'}" Background="Transparent">
+      Title="{app:T Zh=設定檔, En='Profiles'}" Background="Transparent" Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Page.Resources>
         <ResourceDictionary Source="../Themes/Shell.xaml"/>
     </Page.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <!-- No ScrollViewer here: the navigation view's content presenter already scrolls the page. -->
         <StackPanel Margin="24,8,24,24">
             <TextBlock Style="{StaticResource PageTitle}" Text="{app:T Zh=設定檔與手把, En='Profile and controller'}"/>
             <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Name"
@@ -93,5 +93,4 @@
             <TextBlock Style="{StaticResource Muted}"
                        Text="{app:T Zh='映射中的修改與切換設定檔會立即套用，不必停止映射。按「儲存全部」才會寫入磁碟；重新載入或關閉會捨棄未儲存的修改。', En='Edits and profile switches apply immediately while mapping; no need to stop. Click Save all to write them to disk; reloading or closing discards unsaved changes.'}"/>
         </StackPanel>
-    </ScrollViewer>
 </Page>

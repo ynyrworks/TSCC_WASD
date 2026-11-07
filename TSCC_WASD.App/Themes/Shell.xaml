@@ -14,10 +14,12 @@
         <Setter Property="Margin" Value="26,0,0,10"/>
     </Style>
     <Style x:Key="Label" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
         <Setter Property="Margin" Value="0,4,0,4"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
     <Style x:Key="PageTitle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
         <Setter Property="FontSize" Value="24"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Margin" Value="0,0,0,16"/>
