@@ -123,6 +123,37 @@ public class ShellPageTests
         });
     }
 
+    [Fact]
+    public async Task HomePageShowsTheLiveInputSummaryOnlyWhileRunning()
+    {
+        await RunSta(() =>
+        {
+            var vm = new MainViewModel();
+            var host = ThemedHost(ApplicationTheme.Dark);
+            var nav = new NavigationView { PaneDisplayMode = NavigationViewPaneDisplayMode.Left };
+            nav.SetPageProviderService(new MainWindow.SharedViewModelPages(vm));
+            host.Child = nav;
+            Layout(host);
+            try
+            {
+                nav.Navigate(typeof(TSCC_WASD.App.Pages.HomePage));
+                Layout(host);
+                var page = FindAll<Page>(host).Single();
+                var summary = FindAll<TextBlock>(page).Single(t => t.Name == "InputSummaryText");
+                typeof(MainViewModel).GetProperty(nameof(MainViewModel.InputSummary))!.SetValue(vm, "A pressed");
+                Assert.Equal(Visibility.Collapsed, summary.Visibility);
+                typeof(MainViewModel).GetProperty(nameof(MainViewModel.IsRunning))!.SetValue(vm, true);
+                Layout(host);
+                Assert.Equal(Visibility.Visible, summary.Visibility);
+                Assert.Equal("A pressed", summary.Text);
+                Assert.Equal("A pressed", summary.ToolTip);
+                Assert.Equal(TextTrimming.CharacterEllipsis, summary.TextTrimming);
+                Assert.Contains(FindAll<TextBlock>(page), t => t.Text == vm.StatusMessage);
+            }
+            finally { vm.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
+        });
+    }
+
     [Theory]
     [InlineData(ApplicationTheme.Dark)]
     [InlineData(ApplicationTheme.Light)]

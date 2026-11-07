@@ -44,6 +44,20 @@
                         </StackPanel>
                         <TextBlock Text="{Binding ControllerName}" TextWrapping="Wrap" Margin="22,0,0,2"/>
                         <!-- Stick calibration status goes here once the calibration branch lands. -->
+                        <!-- Live input summary (buttons, sticks); only while mapping runs. -->
+                        <TextBlock x:Name="InputSummaryText" Text="{Binding InputSummary}" ToolTip="{Binding InputSummary}"
+                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="22,4,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource Muted}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Muted}" Margin="22,4,0,0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
