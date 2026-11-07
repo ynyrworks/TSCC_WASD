@@ -6,7 +6,7 @@ using Microsoft.Win32.SafeHandles;
 namespace TSCC_WASD.Core.Services.Input;
 
 /// <summary>One NS2 Pro USB device. Background I/O never blocks the mapping poll loop.</summary>
-public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTarget, IBatterySource
+public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTarget, IBatterySource, IControllerIdentity
 {
     private readonly object _gate = new();
     private readonly CancellationTokenSource _stop = new();
@@ -21,6 +21,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
     private long _receivedAt;
     private bool _hasState;
     private BatteryStatus _battery;
+    private volatile ControllerId? _identity;
     private readonly Switch2CalibrationCache _calibrationCache;
     private string _status = L.T("尋找 NS2 Pro（USB）...", "Looking for NS2 Pro (USB)...");
     private bool _disposed;
@@ -34,6 +35,8 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
     public string Status { get { lock (_gate) return _status; } }
 
     public BatteryStatus Battery { get { lock (_gate) return _battery; } }
+
+    public ControllerId? Identity => _identity;
 
     public bool TryGetState(out State state)
     {
@@ -75,7 +78,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
         lock (_gate)
         {
             _status = status;
-            if (clear) { _hasState = false; _latest = default; _hasMotion = false; _battery = default; }
+            if (clear) { _hasState = false; _latest = default; _hasMotion = false; _battery = default; _identity = null; }
         }
     }
 
@@ -112,6 +115,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
                     var hidPaths = WindowsDevicePaths.Find(WindowsDevicePaths.Hid);
                     if (hidPaths.Length != 1) throw new IOException(L.T("找不到唯一的 NS2 Pro HID 介面；請檢查 HidHide 允許路徑。", "Could not find exactly one NS2 Pro HID interface; check the HidHide allowed path."));
                     var (handle, writeHandle) = OpenHidPair(hidPaths[0]);
+                    _identity = new ControllerId(ControllerId.Ns2Pro, HidDevice.InstanceId(hidPaths[0]));
                     using var handleOwner = handle;
                     using var writeOwner = writeHandle;
                     using var stream = new FileStream(handle, FileAccess.Read, 64, isAsync: true);
@@ -196,7 +200,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception ex) { SetStatus(L.T($"NS2 Pro 輸入已停止：{ex.Message}", $"NS2 Pro input stopped: {ex.Message}")); }
-        finally { lock (_gate) { _hasState = false; _latest = default; _battery = default; } }
+        finally { lock (_gate) { _hasState = false; _latest = default; _battery = default; _identity = null; } }
     }
 
     /// <summary>Set by the mapping coordinator while it hides controllers; null otherwise.</summary>

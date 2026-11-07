@@ -1,4 +1,5 @@
 using TSCC_WASD.Core.Models;
+using TSCC_WASD.Core.Services.Calibration;
 using TSCC_WASD.Core.Services.Input;
 using TSCC_WASD.Core.Services.VirtualControllers;
 
@@ -17,13 +18,20 @@ public sealed class MappingSession : IAsyncDisposable
     private bool _disposed;
     private int _inputReleased;
     private volatile InputSnapshot? _lastInput;
+    private volatile InputSnapshot? _lastUncalibrated;
+    private readonly StickCalibrationStore? _calibrations;
+    // Only the loop thread touches these; the store is in memory, so resolving never waits on the disk.
+    private ControllerId? _calibrationId;
+    private int _calibrationVersion = -1;
+    private StickCalibrationSet? _calibration;
 
     // The loop only stores the latest reading; the text is built when someone reads InputSummary.
     public sealed record InputSnapshot(bool Paused, bool Available, State State);
 
     public MappingSession(MappingProfile profile, IInputReader input, IVirtualController output,
-        Action<string>? statusCallback = null)
+        Action<string>? statusCallback = null, StickCalibrationStore? calibrations = null)
     {
+        _calibrations = calibrations ?? (input is IControllerIdentity ? StickCalibrationStore.Shared : null);
         _profile = profile.Snapshot();
         _input = input;
         _output = output;
@@ -96,6 +104,11 @@ public sealed class MappingSession : IAsyncDisposable
     public string InputSummary => Describe(_lastInput);
     /// <summary>Latest reading from the loop (read-only), or null before the first one.</summary>
     public InputSnapshot? LatestInput => _lastInput;
+    /// <summary>
+    /// Latest reading before the generic stick calibration is applied (read-only), or null before the first one.
+    /// The calibration wizard feeds <see cref="GenericStickCalibrator"/> from this.
+    /// </summary>
+    public InputSnapshot? LatestUncalibratedInput => _lastUncalibrated;
     /// <summary>The input reader's own status text, e.g. which controller is being read.</summary>
     public string InputStatus => _input.Status;
 
@@ -148,9 +161,11 @@ public sealed class MappingSession : IAsyncDisposable
                     state = default;
                 }
                 bool paused = _paused;
-                _lastInput = new InputSnapshot(paused, available, state);
+                _lastUncalibrated = new InputSnapshot(paused, available, state);
                 if (available && ReportCapture.Shared.IsRecording && IsXInputSource())
                     ReportCapture.Shared.RecordText("XInput", $"parsed buttons={state.Gamepad.Buttons} LT={state.Gamepad.LeftTrigger} RT={state.Gamepad.RightTrigger} L=({state.Gamepad.LeftThumbX},{state.Gamepad.LeftThumbY}) R=({state.Gamepad.RightThumbX},{state.Gamepad.RightThumbY})");
+                if (available && ResolveCalibration() is { } calibration) state = calibration.Apply(state);
+                _lastInput = new InputSnapshot(paused, available, state);
                 string status;
                 try
                 {
@@ -199,6 +214,23 @@ public sealed class MappingSession : IAsyncDisposable
             try { ReleaseInput(); }
             catch (Exception ex) { LastError ??= ex.Message; }
         }
+    }
+
+    /// <summary>The saved calibration for the controller in use, or null (no identity, none saved, or no store).</summary>
+    private StickCalibrationSet? ResolveCalibration()
+    {
+        if (_calibrations is null || _input is not IControllerIdentity source) return null;
+        try
+        {
+            var id = source.Identity;
+            int version = _calibrations.Version;
+            if (version == _calibrationVersion && Equals(id, _calibrationId)) return _calibration;
+            _calibrationVersion = version;
+            _calibrationId = id;
+            _calibration = id is not null && _calibrations.TryGet(id, out var found) ? found : null;
+            return _calibration;
+        }
+        catch { return null; }
     }
 
     private void Report(string message)

@@ -6,7 +6,7 @@ namespace TSCC_WASD.Core.Services.Input;
 /// The active source only changes when it disconnects or the other one receives deliberate input,
 /// so an idle controller that still streams neutral reports never steals control.
 /// </summary>
-public sealed class AutoInputReader : IInputReader, IMotionSource, IBatterySource, IRumbleTarget, IXboxBackButtonOption, IXInputSlotFilter
+public sealed class AutoInputReader : IInputReader, IMotionSource, IBatterySource, IControllerIdentity, IRumbleTarget, IXboxBackButtonOption, IXInputSlotFilter
 {
     public int? ExcludedSlot
     {
@@ -169,6 +169,18 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IBatterySourc
             if (active < 0 || _sources[active] is not IBatterySource source) return BatteryStatus.Unknown;
             try { return source.Battery; }
             catch { return BatteryStatus.Unknown; }
+        }
+    }
+
+    /// <summary>Identity of the source currently in use; null while none is active or it cannot say.</summary>
+    public ControllerId? Identity
+    {
+        get
+        {
+            int active = _active;
+            if (active < 0 || _sources[active] is not IControllerIdentity source) return null;
+            try { return source.Identity; }
+            catch { return null; }
         }
     }
 
