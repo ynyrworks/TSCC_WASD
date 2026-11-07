@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Wpf.Ui.Abstractions;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Markup;
@@ -20,6 +21,11 @@ public class ShellPageTests
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
         {
+            // WPF-UI's DynamicScrollViewer awaits a delay after a wheel turn and then touches the control. A real app
+            // thread has the dispatcher's synchronization context, so the continuation returns to the UI thread (and
+            // is dropped quietly once the dispatcher is shut down). Without it the continuation runs on a pool
+            // thread, throws, and takes the whole test host down.
+            SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
             try { body(); completion.TrySetResult(); }
             catch (Exception ex) { completion.TrySetException(ex); }
             finally { Dispatcher.CurrentDispatcher.InvokeShutdown(); }
@@ -95,6 +101,45 @@ public class ShellPageTests
         });
     }
 
+    private sealed class FixedPages(double height) : INavigationViewPageProvider
+    {
+        public object? GetPage(Type pageType)
+        {
+            var stack = new StackPanel();
+            stack.Children.Add(new TextBlock { Text = "top" });
+            stack.Children.Add(new Border { Height = height });
+            return new Page { Content = stack };
+        }
+    }
+
+    [Theory]
+    [InlineData(560, false)]   // fits: nothing to scroll
+    [InlineData(610, true)]    // overflows by about 29 px
+    [InlineData(615, true)]    // overflows by about 33 px
+    [InlineData(1200, true)]   // overflows by a lot
+    public async Task AWheelTurnOverPageContentScrollsAPageThatOverflowsEvenSlightly(double contentHeight, bool overflows)
+    {
+        await RunSta(() =>
+        {
+            var host = ThemedHost(ApplicationTheme.Dark);
+            var nav = new NavigationView { PaneDisplayMode = NavigationViewPaneDisplayMode.Left };
+            nav.SetPageProviderService(new FixedPages(contentHeight));
+            host.Child = nav;
+            Layout(host);
+            nav.Navigate(typeof(TSCC_WASD.App.Pages.AboutPage));
+            Layout(host);
+            var page = FindAll<Page>(host).Single();
+            var scroller = FindAll<ScrollViewer>(FindAll<NavigationViewContentPresenter>(host).Single()).First();
+            Assert.Equal(overflows, scroller.ScrollableHeight > 0);
+            var target = (UIElement)FindAll<TextBlock>(page).First();
+            target.RaiseEvent(new MouseWheelEventArgs(Mouse.PrimaryDevice, Environment.TickCount, -240)
+            { RoutedEvent = UIElement.MouseWheelEvent, Source = target });
+            Layout(host);
+            if (overflows) Assert.True(scroller.VerticalOffset > 0, $"a page {scroller.ScrollableHeight:F0} px taller than the window did not scroll with the wheel");
+            else Assert.Equal(0, scroller.VerticalOffset);
+        });
+    }
+
     [Theory]
     [InlineData(ApplicationTheme.Dark)]
     [InlineData(ApplicationTheme.Light)]
@@ -129,6 +174,10 @@ public class ShellPageTests
         await RunSta(() =>
         {
             var vm = new MainViewModel();
+            // The view model's 250 ms poll timer overwrites InputSummary and IsRunning from the (stopped) coordinator
+            // whenever Layout pumps the dispatcher; stop it so the values the test sets are the ones asserted.
+            var timer = (DispatcherTimer)typeof(MainViewModel).GetField("_timer", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(vm)!;
+            timer.Stop();
             var host = ThemedHost(ApplicationTheme.Dark);
             var nav = new NavigationView { PaneDisplayMode = NavigationViewPaneDisplayMode.Left };
             nav.SetPageProviderService(new MainWindow.SharedViewModelPages(vm));
