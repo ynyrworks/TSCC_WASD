@@ -45,6 +45,52 @@ public class HomePageTests
     }
 
     [Fact]
+    public async Task NullReadingWhileMappingClearsControllerAndBatteryButStoppedKeepsThem()
+    {
+        var vm = new MainViewModel();
+        try
+        {
+            var info = new ControllerInfo("NS2 Pro", ControllerConnection.Usb);
+            typeof(MainViewModel).GetProperty(nameof(MainViewModel.IsRunning))!.SetValue(vm, true);
+            typeof(MainViewModel).GetProperty(nameof(MainViewModel.Battery))!.SetValue(vm, BatteryStatus.Of(BatteryLevel.Low, true));
+            vm.ApplyPoll(info, running: true);
+            Assert.Equal(info, vm.Controller);
+            Assert.StartsWith("NS2 Pro", vm.ControllerName);
+            vm.ApplyPoll(null, running: true); // pad unplugged while mapping
+            Assert.Null(vm.Controller);
+            Assert.Equal(BatteryStatus.Unknown, vm.Battery);
+            Assert.DoesNotContain("NS2 Pro", vm.ControllerName);
+
+            vm.ApplyPoll(info, running: true);
+            typeof(MainViewModel).GetProperty(nameof(MainViewModel.Battery))!.SetValue(vm, BatteryStatus.Of(BatteryLevel.Low, true));
+            typeof(MainViewModel).GetProperty(nameof(MainViewModel.IsRunning))!.SetValue(vm, false);
+            vm.ApplyPoll(null, running: false); // stopped: last values stay
+            Assert.Equal(info, vm.Controller);
+            Assert.True(vm.Battery.IsKnown);
+            vm.ClearLastKnown(); // new mapping starts
+            Assert.Null(vm.Controller);
+            Assert.Equal(BatteryStatus.Unknown, vm.Battery);
+        }
+        finally { await vm.DisposeAsync(); }
+    }
+
+    [Fact]
+    public async Task ChangingInputTypeWhileStoppedClearsLastKnown()
+    {
+        var vm = new MainViewModel();
+        try
+        {
+            var profile = new MappingProfile { InputType = InputDeviceType.Auto };
+            vm.SelectedProfile = profile;
+            vm.ApplyPoll(new ControllerInfo("NS2 Pro", ControllerConnection.Usb), running: false);
+            Assert.NotNull(vm.Controller);
+            profile.InputType = InputDeviceType.XInput;
+            Assert.Null(vm.Controller);
+        }
+        finally { await vm.DisposeAsync(); }
+    }
+
+    [Fact]
     public void ControllerTextShowsNameAndConnection()
     {
         Assert.Equal("NS2 Pro · USB", HomeText.Controller(new ControllerInfo("NS2 Pro", ControllerConnection.Usb), true));

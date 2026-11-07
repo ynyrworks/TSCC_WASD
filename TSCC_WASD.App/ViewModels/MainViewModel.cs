@@ -248,6 +248,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (!SetField(ref _selectedProfile, value)) return;
             if (previous is not null) previous.PropertyChanged -= OnSelectedProfileEdited;
             if (value is not null) value.PropertyChanged += OnSelectedProfileEdited;
+            if (!IsRunning && previous?.InputType != value?.InputType) { _controller = null; Battery = BatteryStatus.Unknown; }
             NotifyState();
             RaiseHomeState();
             if (!_autoSelecting) _autoSwitch.NotifyManualSelection();
@@ -257,6 +258,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private void OnSelectedProfileEdited(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (!IsRunning && e.PropertyName == nameof(MappingProfile.InputType)) { _controller = null; Battery = BatteryStatus.Unknown; }
         RaiseHomeState();
         if (IsRunning && sender is MappingProfile profile) _ = ApplyLiveAsync(profile, switched: false);
     }
@@ -486,8 +488,27 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             var (status, info, count) = task.Result;
             Battery = status;
             _hiddenCount = count;
-            if (info is not null) { _controller = info; RaiseHomeState(); }
+            ApplyPoll(info, IsRunning);
         }, context);
+    }
+
+    /// <summary>
+    /// While mapping, no controller (pad disconnected) clears the card's controller and battery reading;
+    /// once mapping stops the last values stay. UI thread only.
+    /// </summary>
+    /// <summary>Forgets the last known controller and battery (a new mapping starts, or the input type changed while stopped).</summary>
+    internal void ClearLastKnown()
+    {
+        _controller = null;
+        Battery = BatteryStatus.Unknown;
+        RaiseHomeState();
+    }
+
+    internal void ApplyPoll(ControllerInfo? info, bool running)
+    {
+        if (info is not null) _controller = info;
+        else if (running) { _controller = null; Battery = BatteryStatus.Unknown; }
+        RaiseHomeState();
     }
 
     public string BatteryText => HomeText.Battery(Battery, IsRunning, L.Chinese);
@@ -773,6 +794,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private async Task StartAsync(bool automatic, bool atSignIn)
     {
         if (SelectedProfile is null) return;
+        ClearLastKnown();
         var result = await _coordinator.StartAsync(SelectedProfile, UpdateStatusFromWorker);
         IsRunning = _coordinator.IsRunning;
         StatusMessage = result.message;

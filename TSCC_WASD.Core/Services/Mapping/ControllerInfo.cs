@@ -24,18 +24,25 @@ public sealed record ControllerInfo(string Name, ControllerConnection Connection
         {
             case null: return null;
             case IControllerInfoSource own: return own.Controller;
-            case Switch2InputReader: return new("NS2 Pro", ControllerConnection.Usb);
-            case Switch2BleInputReader: return new("NS2 Pro", ControllerConnection.Bluetooth);
-            case XInputReader: return new(L.T("Xbox 手把", "Xbox controller"), ControllerConnection.Unknown);
-            case PlayStationInputReader:
-                string status = reader.Status;
-                bool sense = status.Contains("DualSense", StringComparison.OrdinalIgnoreCase);
-                bool shock = status.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
-                string name = sense == shock ? "DualShock 4／DualSense" : sense ? "DualSense" : "DualShock 4";
-                return new(name, ConnectionFromStatus(status));
-            case SwitchProInputReader: return new("Switch Pro", ConnectionFromStatus(reader.Status));
-            default: return null;
+            default: return Describe(reader.GetType(), reader.Status);
         }
+    }
+
+    /// <summary>The mapping itself, by reader type and status text, so it can be tested without opening hardware.</summary>
+    internal static ControllerInfo? Describe(Type readerType, string status)
+    {
+        if (readerType == typeof(Switch2InputReader)) return new("NS2 Pro", ControllerConnection.Usb);
+        if (readerType == typeof(Switch2BleInputReader)) return new("NS2 Pro", ControllerConnection.Bluetooth);
+        if (readerType == typeof(XInputReader)) return new(L.T("Xbox 手把", "Xbox controller"), ControllerConnection.Unknown);
+        if (readerType == typeof(SwitchProInputReader)) return new("Switch Pro", ConnectionFromStatus(status));
+        if (readerType == typeof(PlayStationInputReader))
+        {
+            bool sense = status.Contains("DualSense", StringComparison.OrdinalIgnoreCase);
+            bool shock = status.Contains("DualShock", StringComparison.OrdinalIgnoreCase);
+            string name = sense == shock ? "DualShock 4／DualSense" : sense ? "DualSense" : "DualShock 4";
+            return new(name, ConnectionFromStatus(status));
+        }
+        return null;
     }
 
     /// <summary>Unknown when the text names neither or both (the waiting text mentions both).</summary>

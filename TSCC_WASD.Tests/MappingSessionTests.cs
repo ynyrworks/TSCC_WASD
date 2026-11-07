@@ -1,3 +1,4 @@
+using TSCC_WASD.Core;
 using System.IO;
 using TSCC_WASD.Core.Services;
 using Xunit;
@@ -183,6 +184,42 @@ public class MappingSessionTests
     [InlineData("Looking for a Switch Pro Controller...", ControllerConnection.Unknown)]
     public void ConnectionIsReadFromTheReaderStatus(string status, ControllerConnection expected) =>
         Assert.Equal(expected, ControllerInfo.ConnectionFromStatus(status));
+
+    [Theory]
+    [InlineData(typeof(Switch2InputReader), "", "NS2 Pro", ControllerConnection.Usb)]
+    [InlineData(typeof(Switch2BleInputReader), "", "NS2 Pro", ControllerConnection.Bluetooth)]
+    [InlineData(typeof(PlayStationInputReader), "DualShock 4 (USB)", "DualShock 4", ControllerConnection.Usb)]
+    [InlineData(typeof(PlayStationInputReader), "DualSense (Bluetooth)", "DualSense", ControllerConnection.Bluetooth)]
+    [InlineData(typeof(PlayStationInputReader), "DualSense（藍牙）", "DualSense", ControllerConnection.Bluetooth)]
+    [InlineData(typeof(PlayStationInputReader), "Looking for a DualShock 4 / DualSense...", "DualShock 4／DualSense", ControllerConnection.Unknown)]
+    [InlineData(typeof(SwitchProInputReader), "Switch Pro Controller (USB)", "Switch Pro", ControllerConnection.Usb)]
+    [InlineData(typeof(SwitchProInputReader), "Switch Pro 手把（藍牙）", "Switch Pro", ControllerConnection.Bluetooth)]
+    public void DescribeMapsReaderTypesToNameAndConnection(Type type, string status, string name, ControllerConnection connection) =>
+        Assert.Equal(new ControllerInfo(name, connection), ControllerInfo.Describe(type, status));
+
+    [Fact]
+    public void DescribeKnowsXInputReaderAndNothingElse()
+    {
+        using var xbox = new XInputReader((uint _, out State state) => { state = default; return 1167u; },
+            (_, _, _) => { }, () => 0);
+        var info = ControllerInfo.Describe(xbox);
+        Assert.Equal(L.T("Xbox 手把", "Xbox controller"), info!.Name);
+        Assert.Equal(ControllerConnection.Unknown, info.Connection);
+        Assert.Null(ControllerInfo.Describe((IInputReader?)null));
+        Assert.Null(ControllerInfo.Describe(new FakeInput()));
+    }
+
+    [Fact]
+    public void DescribeFollowsTheActiveReaderOfAnAutoReader()
+    {
+        using var xbox = new XInputReader((uint index, out State state) => { state = default; return index == 0 ? 0u : 1167u; },
+            (_, _, _) => { }, () => 0);
+        using var auto = new AutoInputReader([new Unavailable(new FakeInput()), xbox], ["A", "B"]);
+        Assert.Null(ControllerInfo.Describe(auto.ActiveReader));
+        Assert.True(auto.TryGetState(out _));
+        Assert.Same(xbox, auto.ActiveReader);
+        Assert.Equal(L.T("Xbox 手把", "Xbox controller"), ControllerInfo.Describe(auto.ActiveReader)!.Name);
+    }
 
     [Fact]
     public void CoordinatorExposesNothingWhileNotMapping()
