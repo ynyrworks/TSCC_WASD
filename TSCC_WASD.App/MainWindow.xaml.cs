@@ -59,7 +59,11 @@ public partial class MainWindow : FluentWindow
     private void OnStateChanged(object? sender, EventArgs e)
     {
         // Mapping keeps running; the tray icon brings the window back.
-        if (WindowState == WindowState.Minimized && _viewModel.MinimizeToTray) Hide();
+        if (WindowState == WindowState.Minimized && _viewModel.MinimizeToTray)
+        {
+            _viewModel.FlushProfiles(); // pending profile edits reach the disk before the window goes to the tray
+            Hide();
+        }
     }
 
     private async void OnClosing(object? sender, CancelEventArgs e)

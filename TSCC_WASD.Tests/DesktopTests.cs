@@ -38,7 +38,7 @@ public class DesktopTests
                 vm.SelectedProfile!.Name = profileName;
                 vm.SelectedProfile.DeadZone = 0.2;
                 vm.SelectedProfile.InputType = TSCC_WASD.Core.Models.InputDeviceType.Switch2ProUsb;
-                vm.SaveCommand.Execute(null);
+                Assert.True(vm.FlushProfiles());
                 Assert.Equal(profileName, store.LoadProfiles()[1].Name);
                 Assert.Equal(0.2, store.LoadProfiles()[1].DeadZone);
                 Assert.Equal(TSCC_WASD.Core.Models.InputDeviceType.Switch2ProUsb, store.LoadProfiles()[1].InputType);
@@ -105,7 +105,7 @@ public class DesktopTests
                 foreach (var command in new System.Windows.Input.ICommand[]
                 {
                     vm.StartCommand, vm.PauseCommand, vm.StopCommand, vm.RestartSteamCommand, vm.InstallDepsCommand,
-                    vm.PickProcessCommand, vm.CalibrateCommand, vm.OpenControllerTestCommand, vm.SaveCommand, vm.NewCommand,
+                    vm.PickProcessCommand, vm.CalibrateCommand, vm.OpenControllerTestCommand, vm.DuplicateCommand, vm.NewCommand,
                     vm.DeleteCommand, vm.ImportCommand, vm.ExportCommand, vm.ReloadCommand, vm.OpenProfilesCommand,
                     vm.SetupReconnectCommand, vm.RemoveReconnectCommand, vm.OpenHelpCommand, vm.CheckUpdatesCommand,
                     vm.CancelUpdateCommand, vm.AboutCommand

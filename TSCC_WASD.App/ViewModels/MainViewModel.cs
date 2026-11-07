@@ -35,11 +35,22 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private DateTime? _hiddenSince;
     private string _dependencyStatus = DependencyChecker.BuildStatusText();
 
-    public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null)
+    private readonly ProfileAutoSaver _saver;
+    private bool _loading;
+    private ProfileSaveState _saveState = ProfileSaveState.Saved;
+    private string? _saveError;
+
+    /// <summary>Quiet period after the last profile edit before it is written to disk.</summary>
+    public static readonly TimeSpan DefaultSaveDelay = TimeSpan.FromMilliseconds(800);
+
+    public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null, TimeSpan? saveDelay = null)
     {
         _coordinator = new MappingCoordinator(profileStore, () => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true));
         _settingsStore = settingsStore ?? new AppSettingsStore();
         Settings = _settingsStore.Load();
+        _saver = new ProfileAutoSaver(() => Profiles.Select(p => p.Snapshot()).ToList(), profiles => _coordinator.SaveProfiles(profiles),
+            () => !_loadFailed, OnSaveReport, saveDelay ?? DefaultSaveDelay, SynchronizationContext.Current, IsMouseButtonDown);
+        Profiles.CollectionChanged += OnProfilesChanged;
         StartCommand = Command(() => StartAsync(automatic: false, atSignIn: false), () => !IsRunning && SelectedProfile is not null);
         StopCommand = Command(StopAsync, () => IsRunning);
         PauseCommand = Command(() =>
@@ -65,8 +76,23 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 : L.T("沒有移除自動重新連接工具（已取消或失敗）。", "The automatic reconnect helper was not removed (cancelled or failed).");
         }, () => ControllerReconnector.IsPresent);
         RestartSteamCommand = Command(() => RestartSteamAsync(silent: false), () => IsRunning);
-        ReloadCommand = Command(() => { Reload(); return Task.CompletedTask; }, () => !IsRunning);
-        SaveCommand = Command(() => { Save(); return Task.CompletedTask; }, () => !_loadFailed);
+        ReloadCommand = Command(() =>
+        {
+            // Pending edits go to disk first; if they cannot be written, ask before they are thrown away.
+            if (!_saver.Flush() && !ConfirmDiscardUnsaved()) return Task.CompletedTask;
+            Reload();
+            return Task.CompletedTask;
+        }, () => !IsRunning);
+        DuplicateCommand = Command(() =>
+        {
+            if (SelectedProfile is null) return Task.CompletedTask;
+            var copy = SelectedProfile.Snapshot();
+            copy.Id = Guid.NewGuid().ToString();
+            copy.Name = Truncate(L.T($"{copy.Name} 的副本", $"Copy of {copy.Name}"), 100);
+            Profiles.Add(copy);
+            SelectedProfile = copy;
+            return Task.CompletedTask;
+        }, () => !_loadFailed && SelectedProfile is not null);
         NewCommand = Command(() =>
         {
             var profile = new MappingProfile { Name = L.T("新設定檔", "New profile") };
@@ -78,7 +104,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             if (SelectedProfile is not null) Profiles.Remove(SelectedProfile);
             SelectedProfile = Profiles.FirstOrDefault();
-            StatusMessage = L.T("已移除，按儲存套用至磁碟。", "Removed. Click Save all to apply.");
+            StatusMessage = L.T("已移除。", "Removed.");
             return Task.CompletedTask;
         }, () => !IsRunning && !_loadFailed && Profiles.Count > 1 && SelectedProfile is not null);
         ImportCommand = Command(() =>
@@ -93,7 +119,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                     Profiles.Add(profile);
                 }
                 SelectedProfile = Profiles.Last();
-                StatusMessage = L.T("匯入完成，按儲存套用至磁碟。", "Imported. Click Save all to apply.");
+                StatusMessage = L.T("匯入完成。", "Imported.");
             }
             return Task.CompletedTask;
         }, () => !IsRunning && !_loadFailed);
@@ -414,7 +440,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand RemoveReconnectCommand { get; }
     public ICommand RestartSteamCommand { get; }
     public ICommand ReloadCommand { get; }
-    public ICommand SaveCommand { get; }
+    public ICommand DuplicateCommand { get; }
     public ICommand NewCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand ImportCommand { get; }
@@ -754,6 +780,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private void Reload()
     {
+        _loading = true;
         try
         {
             var profiles = _coordinator.LoadProfiles();
@@ -771,16 +798,77 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             StatusMessage = L.T($"無法讀取設定檔，原始檔案已保留。請開啟設定資料夾修正 profiles.json 後重新載入：{ex.Message}",
                 $"Could not read profiles; the file was kept. Open the settings folder, fix profiles.json and reload: {ex.Message}");
         }
+        finally { _loading = false; }
+        _saver.Reset(); // what is in memory now is what is on disk (or nothing may be saved at all)
+        RaiseSaveStatus();
         DependencyStatus = DependencyChecker.BuildStatusText();
         NotifyState();
     }
 
-    private void Save()
+    // ---- Profile auto-save ----
+
+    /// <summary>Writes pending profile edits now (window hides to the tray, app exits, reload). True when nothing is left unsaved.</summary>
+    public bool FlushProfiles() => _saver.Flush();
+
+    /// <summary>Asks before unwritable edits are discarded by a reload. Replaceable so tests need no dialog.</summary>
+    internal Func<bool> ConfirmDiscardUnsaved { get; set; } = () => MessageBox.Show(
+        L.T("目前的修改無法寫入磁碟（見設定檔頁的提示）。重新載入會捨棄這些修改，要繼續嗎？",
+            "The current edits cannot be written to disk (see the note on the Profiles page). Reloading discards them. Continue?"),
+        AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+
+    private static bool IsMouseButtonDown()
     {
-        _coordinator.SaveProfiles(Profiles);
-        StatusMessage = L.T("設定已儲存，前一版保留為 profiles.json.bak。", "Saved. The previous version is kept as profiles.json.bak.");
-        System.Windows.Data.CollectionViewSource.GetDefaultView(Profiles).Refresh();
+        var dispatcher = Application.Current?.Dispatcher;
+        return dispatcher is not null && dispatcher.CheckAccess() && Mouse.LeftButton == MouseButtonState.Pressed;
     }
+
+    private static string Truncate(string text, int length) => text.Length <= length ? text : text[..length];
+
+    private void OnProfilesChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null) foreach (MappingProfile profile in e.OldItems) profile.PropertyChanged -= OnProfileEdited;
+        if (e.NewItems is not null) foreach (MappingProfile profile in e.NewItems) profile.PropertyChanged += OnProfileEdited;
+        if (!_loading && e.Action is System.Collections.Specialized.NotifyCollectionChangedAction.Add
+                or System.Collections.Specialized.NotifyCollectionChangedAction.Remove) _saver.Touch();
+    }
+
+    private void OnProfileEdited(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (!_loading) _saver.Touch();
+    }
+
+    private void OnSaveReport(ProfileSaveState state, string? error)
+    {
+        _saveState = state;
+        _saveError = error;
+        if (state == ProfileSaveState.Failed)
+        {
+            AppLog.Warn($"Could not save profiles: {error}");
+            StatusMessage = L.T($"無法儲存設定檔：{error}", $"Could not save profiles: {error}");
+        }
+        RaiseSaveStatus();
+    }
+
+    private void RaiseSaveStatus()
+    {
+        RaisePropertyChanged(nameof(SaveStatusText));
+        RaisePropertyChanged(nameof(SaveStatusIsError));
+        RaisePropertyChanged(nameof(SaveStatusIsSaved));
+    }
+
+    public bool SaveStatusIsError => _loadFailed || _saveState is ProfileSaveState.Invalid or ProfileSaveState.Failed;
+    public bool SaveStatusIsSaved => !_loadFailed && _saveState == ProfileSaveState.Saved;
+
+    /// <summary>Next to the profile name: "✓ 已自動儲存", "儲存中…" or why the edits are not on disk.</summary>
+    public string SaveStatusText => _loadFailed
+        ? L.T("沒有載入設定檔，不會自動儲存", "Profiles were not loaded; nothing is saved automatically")
+        : _saveState switch
+        {
+            ProfileSaveState.Saved => L.T("✓ 已自動儲存", "✓ Saved automatically"),
+            ProfileSaveState.Invalid => L.T($"未儲存：{_saveError}", $"Not saved: {_saveError}"),
+            ProfileSaveState.Failed => L.T($"儲存失敗：{_saveError}", $"Save failed: {_saveError}"),
+            _ => L.T("儲存中…", "Saving…")
+        };
 
     /// <summary>Starts mapping without user interaction when the settings ask for it.</summary>
     /// <param name="atSignIn">Launched by Windows at sign-in (<c>--startup</c>).</param>
@@ -1025,6 +1113,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        try { _saver.Flush(); }
+        catch (Exception ex) { AppLog.Warn($"Could not flush profiles on exit: {ex.Message}"); }
+        _saver.Dispose();
         _closing = true;
         _updateCts?.Cancel();
         _timer.Stop();
