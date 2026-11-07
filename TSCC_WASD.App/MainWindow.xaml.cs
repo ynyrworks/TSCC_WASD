@@ -20,7 +20,9 @@ public partial class MainWindow : FluentWindow
     public MainWindow(MainViewModel viewModel)
     {
         _viewModel = viewModel;
-        // Follows the Windows light/dark setting, also when it changes while the app runs.
+        // Follows the Windows light/dark setting, also when it changes while the app runs. Registered once the window
+        // really has a handle: the watcher re-applies the theme to every FluentWindow, which breaks tests that build windows on several threads.
+        SourceInitialized += (_, _) => SystemThemeWatcher.Watch(this);
         InitializeComponent();
         DataContext = _viewModel;
         RootNavigation.SetPageProviderService(new SharedViewModelPages(_viewModel));

@@ -35,7 +35,7 @@ public partial class ControllerTestWindow : Wpf.Ui.Controls.FluentWindow
             var chip = new Border
             {
                 Margin = new Thickness(2), Padding = new Thickness(2, 4, 2, 4), CornerRadius = new CornerRadius(4),
-                                Child = new TextBlock { Text = flag.ToString(), FontSize = 11, TextAlignment = TextAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis }
+                Child = new TextBlock { Text = flag.ToString(), FontSize = 11, TextAlignment = TextAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis }
             };
             chip.SetResourceReference(Border.BackgroundProperty, "ControlFillColorDefaultBrush");
             ((TextBlock)chip.Child).SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorPrimaryBrush");

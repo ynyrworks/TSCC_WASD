@@ -34,7 +34,7 @@ public partial class App : Application
             return;
         }
         base.OnStartup(e);
-        ApplicationThemeManager.ApplySystemTheme(); // MainWindow's SystemThemeWatcher follows later changes.
+        ApplicationThemeManager.ApplySystemTheme(); // MainWindow registers the SystemThemeWatcher that follows later changes.
         RegisterCrashHandlers();
         AppLog.Prune();
         AppLog.Info($"TSCC_WASD {UpdateChecker.CurrentVersion.ToString(3)} starting; args: {string.Join(' ', e.Args)}");
