@@ -24,6 +24,16 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Margin" Value="0,0,0,16"/>
     </Style>
+    <!-- Small "?" next to a label; the explanation is the tooltip. -->
+    <Style x:Key="HelpMark" TargetType="TextBlock">
+        <Setter Property="Text" Value="?"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Margin" Value="8,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Help"/>
+        <Setter Property="ToolTipService.ShowDuration" Value="30000"/>
+    </Style>
     <Style x:Key="Card" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>

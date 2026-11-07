@@ -8,6 +8,7 @@ using Microsoft.Win32;
 using TSCC_WASD.Core;
 using TSCC_WASD.Core.Models;
 using TSCC_WASD.Core.Services;
+using TSCC_WASD.Core.Services.Input;
 using TSCC_WASD.Core.Services.Mapping;
 using TSCC_WASD.Core.Services.Setup;
 
@@ -245,6 +246,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (previous is not null) previous.PropertyChanged -= OnSelectedProfileEdited;
             if (value is not null) value.PropertyChanged += OnSelectedProfileEdited;
             NotifyState();
+            RaiseHomeState();
             if (!_autoSelecting) _autoSwitch.NotifyManualSelection();
             if (IsRunning && value is not null) _ = ApplyLiveAsync(value, switched: true, automatic: _autoSelecting, previousOutput: previous?.OutputType);
         }
@@ -252,6 +254,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private void OnSelectedProfileEdited(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        RaiseHomeState();
         if (IsRunning && sender is MappingProfile profile) _ = ApplyLiveAsync(profile, switched: false);
     }
 
@@ -301,6 +304,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (!SetField(ref _isRunning, value)) return;
             if (!value) IsPaused = false;
             RaisePropertyChanged(nameof(StatusTitle));
+            RaiseHomeState();
             NotifyState();
         }
     }
@@ -313,6 +317,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             _coordinator.Paused = value;
             RaisePropertyChanged(nameof(StatusTitle));
             RaisePropertyChanged(nameof(PauseButtonText));
+            RaiseHomeState();
         }
     }
 
@@ -426,6 +431,64 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public const string KoFiUrl = "https://ko-fi.com/ynyr5566";
 
     public string VersionText => $"v{UpdateChecker.CurrentVersion.ToString(3)}";
+
+    private BatteryStatus _battery;
+    private int _batteryReading;
+
+    /// <summary>
+    /// Where the Home page reads the battery of the physical controller. Called off the UI thread, about once a second
+    /// while mapping. Not wired yet: the core does not expose the active reader (see the task report).
+    /// </summary>
+    public Func<BatteryStatus>? BatterySource { get; set; }
+
+    /// <summary>Last known battery; kept after mapping stops.</summary>
+    public BatteryStatus Battery
+    {
+        get => _battery;
+        private set { if (SetField(ref _battery, value)) RaisePropertyChanged(nameof(BatteryText)); }
+    }
+
+    private void PollBattery()
+    {
+        var source = BatterySource;
+        if (source is null || Interlocked.Exchange(ref _batteryReading, 1) == 1) return;
+        var context = TaskScheduler.FromCurrentSynchronizationContext();
+        Task.Run(() =>
+        {
+            try { return source(); }
+            catch { return BatteryStatus.Unknown; }
+        }).ContinueWith(task =>
+        {
+            Volatile.Write(ref _batteryReading, 0);
+            if (!_closing) Battery = task.Result;
+        }, context);
+    }
+
+    public string BatteryText => HomeText.Battery(Battery, IsRunning, L.Chinese);
+    public bool HasBatteryText => BatteryText.Length > 0;
+
+    /// <summary>Main button of the controller card: starts while stopped, stops while mapping.</summary>
+    public string MainButtonText => HomeText.MainButton(IsRunning, L.Chinese);
+    public ICommand MainCommand => IsRunning ? StopCommand : StartCommand;
+
+    public OutputControllerType CurrentOutput => SelectedProfile?.OutputType ?? OutputControllerType.DualShock4;
+    public string StatusLine => HomeText.StatusLine(IsRunning, IsPaused, CurrentOutput, L.Chinese);
+    public string OutputTitle => HomeText.OutputName(CurrentOutput);
+    public string OutputDetail => HomeText.OutputDetail(CurrentOutput, L.Chinese);
+    public string FooterText => HomeText.Footer(IsRunning, IsRunning && _coordinator.HidingSince is not null, L.Chinese);
+    public bool AutoSwitchApplies => AutoProfileSwitchRule.HasAnyMatch(Profiles);
+
+    /// <summary>The controller being read: the reader's status while mapping, otherwise the profile's input choice.</summary>
+    public string ControllerName => IsRunning && !string.IsNullOrWhiteSpace(_coordinator.InputStatus) ? _coordinator.InputStatus!
+        : InputOptions.FirstOrDefault(o => o.Type == SelectedProfile?.InputType)?.Name ?? "";
+
+    private void RaiseHomeState()
+    {
+        foreach (var name in new[] { nameof(MainButtonText), nameof(MainCommand), nameof(StatusLine), nameof(CurrentOutput), nameof(OutputTitle),
+                                     nameof(OutputDetail), nameof(FooterText), nameof(ControllerName), nameof(BatteryText), nameof(HasBatteryText),
+                                     nameof(AutoSwitchApplies) })
+            RaisePropertyChanged(name);
+    }
 
     /// <summary>Headline of the status card.</summary>
     public string StatusTitle => !IsRunning ? L.T("已停止", "Stopped") : IsPaused ? L.T("已暫停", "Paused") : L.T("映射中", "Mapping");
@@ -841,7 +904,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         if (IsRunning && !running)
             StatusMessage = L.T($"映射已結束：{_coordinator.LastError ?? "已停止"}", $"Mapping ended: {_coordinator.LastError ?? "stopped"}");
         IsRunning = running;
-        if (running) { if (++_autoSwitchTicks % 4 == 0) AutoSwitchTick(); } // Once a second.
+        if (running) { if (++_autoSwitchTicks % 4 == 0) { AutoSwitchTick(); PollBattery(); RaiseHomeState(); } } // Once a second.
         else { _autoSwitchTicks = 0; RestoreAfterAutoSwitch(); }
         if (running && ++_antiCheatTicks % 20 == 0) CheckAntiCheat(); // Every 5 seconds.
         if (!running) _antiCheatWarned = null;

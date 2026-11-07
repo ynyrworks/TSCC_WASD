@@ -97,6 +97,11 @@ public class DesktopTests
                 // Every command the old single column offered is still bound somewhere in the pages.
                 var bound = surfaces.SelectMany(FindAll<System.Windows.Controls.Primitives.ButtonBase>)
                     .Select(b => b.Command).Where(c => c is not null).ToHashSet();
+                // The Home drop-down keeps the less common commands in a flyout menu (not part of the visual tree).
+                foreach (var dropDown in surfaces.SelectMany(FindAll<Wpf.Ui.Controls.DropDownButton>))
+                    if (dropDown.Flyout is System.Windows.Controls.ContextMenu menu)
+                        foreach (var item in menu.Items.OfType<System.Windows.Controls.MenuItem>())
+                            if (item.Command is not null) bound.Add(item.Command);
                 foreach (var command in new System.Windows.Input.ICommand[]
                 {
                     vm.StartCommand, vm.PauseCommand, vm.StopCommand, vm.RestartSteamCommand, vm.InstallDepsCommand,

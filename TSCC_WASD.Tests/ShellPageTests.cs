@@ -98,6 +98,34 @@ public class ShellPageTests
     [Theory]
     [InlineData(ApplicationTheme.Dark)]
     [InlineData(ApplicationTheme.Light)]
+    public async Task HomePageFitsTheDefaultWindowWidthWithItsControls(ApplicationTheme theme)
+    {
+        await RunSta(() =>
+        {
+            var vm = new MainViewModel();
+            var host = ThemedHost(theme);
+            var nav = new NavigationView { PaneDisplayMode = NavigationViewPaneDisplayMode.Left };
+            nav.SetPageProviderService(new MainWindow.SharedViewModelPages(vm));
+            host.Child = nav;
+            Layout(host);
+            try
+            {
+                nav.Navigate(typeof(TSCC_WASD.App.Pages.HomePage));
+                Layout(host);
+                var page = FindAll<Page>(host).Single();
+                Assert.True(page.ActualWidth <= 960, "Home is wider than the window: " + page.ActualWidth);
+                Assert.Equal(3, FindAll<ToggleSwitch>(page).Count());
+                Assert.Single(FindAll<DropDownButton>(page));
+                var content = (FrameworkElement)page.Content;
+                Assert.True(content.ActualWidth <= page.ActualWidth + 0.5);
+            }
+            finally { vm.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
+        });
+    }
+
+    [Theory]
+    [InlineData(ApplicationTheme.Dark)]
+    [InlineData(ApplicationTheme.Light)]
     public async Task PageTextStylesUseTheWpfUiThemeBrushes(ApplicationTheme theme)
     {
         await RunSta(() =>
