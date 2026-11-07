@@ -16,25 +16,39 @@
                 <TextBlock x:Name="VersionText" Style="{StaticResource Muted}"/>
             </StackPanel>
         </StackPanel>
+        <!-- About -->
         <TextBlock Margin="0,0,0,10"
                    Text="{app:T Zh='讓遊戲把 Xbox 或 Nintendo Switch 2 Pro 手把當成 DualShock 4，顯示 PS 按鍵圖示。', En='Makes games see an Xbox or Nintendo Switch 2 Pro controller as a DualShock 4, so they show PS prompts.'}"/>
-        <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,16"
+        <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,8"
                    Text="{app:T Zh='TSCC＝Triangle、Square、Cross、Circle（三角形、正方形、叉叉、圓形）。', En='TSCC = Triangle, Square, Cross, Circle.'}"/>
-        <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,4"
-                   Text="{app:T Zh='MIT 授權開源。NS2 Pro 協定部分改作自 SDL（zlib 授權）。使用 ViGEmBus 與 HidHide（另行安裝）。', En='Open source under the MIT License. NS2 Pro protocol portions are adapted from SDL (zlib). Uses ViGEmBus and HidHide (installed separately).'}"/>
-        <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,16"
-                   Text="{app:T Zh='PlayStation、DualShock、Xbox、Nintendo Switch、Steam 為各自所有者的商標，本專案與其無關聯。', En='PlayStation, DualShock, Xbox, Nintendo Switch and Steam are trademarks of their owners; this project is not affiliated with them.'}"/>
-        <WrapPanel Margin="0,0,0,8">
-            <Button Content="GitHub" Click="OnOpen" Tag="https://github.com/ynyrworks/TSCC_WASD"/>
-            <Button Content="{app:T Zh=第三方聲明, En='Third-party notices'}" Click="OnOpen"
-                    Tag="https://github.com/ynyrworks/TSCC_WASD/blob/main/THIRD-PARTY-NOTICES.md"/>
-            <Button Content="{app:T Zh=回報問題, En='Report an issue'}" Click="OnOpen" Tag="https://github.com/ynyrworks/TSCC_WASD/issues"/>
-        </WrapPanel>
+        <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,4"
+                   Text="{app:T Zh='尚未簽章：此程式還沒有程式碼簽章，Windows 可能顯示未知發行者的提醒。下載後請比對發行頁上的 SHA-256。', En='Unsigned: this app is not code-signed yet, so Windows may warn about an unknown publisher. Check your download against the SHA-256 on the release page.'}"/>
         <WrapPanel Margin="0,0,0,16">
+            <Button Content="GitHub" Click="OnOpen" Tag="https://github.com/ynyrworks/TSCC_WASD"/>
+            <Button x:Name="SigningPolicyButton" Content="{app:T Zh=簽章政策, En='Code-signing policy'}" Click="OnOpen"/>
+        </WrapPanel>
+
+        <!-- Help -->
+        <TextBlock Text="{app:T Zh=說明, En=Help}" FontWeight="SemiBold" Margin="0,0,0,6"/>
+        <WrapPanel Margin="0,0,0,16">
+            <Button x:Name="ManualButton" Content="{app:T Zh=使用手冊, En='User manual'}" Click="OnOpen"/>
+            <Button Content="{app:T Zh=回報問題, En='Report an issue'}" Click="OnOpen" Tag="https://github.com/ynyrworks/TSCC_WASD/issues"/>
             <Button Content="{app:T Zh=複製診斷資訊, En='Copy diagnostics'}" Command="{Binding CopyDiagnosticsCommand}"
                     ToolTip="{app:T Zh='版本、驅動程式與手把狀態，貼到問題回報中', En='Versions, drivers and controller state, for a bug report'}"/>
             <Button Content="{app:T Zh=開啟日誌資料夾, En='Open log folder'}" Command="{Binding OpenLogsCommand}"/>
         </WrapPanel>
+
+        <!-- Legal -->
+        <TextBlock Text="{app:T Zh=法律資訊, En=Legal}" FontWeight="SemiBold" Margin="0,0,0,6"/>
+        <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,4"
+                   Text="{app:T Zh='MIT 授權開源。NS2 Pro 協定部分改作自 SDL（zlib 授權）。使用 ViGEmBus 與 HidHide（另行安裝）。', En='Open source under the MIT License. NS2 Pro protocol portions are adapted from SDL (zlib). Uses ViGEmBus and HidHide (installed separately).'}"/>
+        <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,8"
+                   Text="{app:T Zh='PlayStation、DualShock、Xbox、Nintendo Switch、Steam 為各自所有者的商標，本專案與其無關聯。', En='PlayStation, DualShock, Xbox, Nintendo Switch and Steam are trademarks of their owners; this project is not affiliated with them.'}"/>
+        <WrapPanel Margin="0,0,0,16">
+            <Button Content="{app:T Zh=第三方聲明, En='Third-party notices'}" Click="OnOpen"
+                    Tag="https://github.com/ynyrworks/TSCC_WASD/blob/main/THIRD-PARTY-NOTICES.md"/>
+        </WrapPanel>
+
         <TextBlock Style="{StaticResource Muted}" Margin="0,0,0,8"
                    Text="{app:T Zh='TSCC_WASD 免費且開源。如果它幫上忙，歡迎請作者喝杯咖啡。', En='TSCC_WASD is free and open source. If it helps you, you can buy the author a coffee.'}"/>
         <Button Content="{app:T Zh='☕ 在 Ko-fi 支持', En='☕ Support on Ko-fi'}" Command="{Binding SupportCommand}"

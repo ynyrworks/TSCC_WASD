@@ -4,6 +4,7 @@ using TSCC_WASD.Core.Services.Setup;
 
 namespace TSCC_WASD.Tests;
 
+[Collection(AppLogCollection.Name)]
 public class ControllerReconnectorCopyTests
 {
     [Fact]
@@ -34,7 +35,7 @@ public class ControllerReconnectorCopyTests
             Assert.Equal("new", File.ReadAllText(Path.Combine(helper, "TSCC_WASD.exe")));
             Assert.Equal("{}", File.ReadAllText(Path.Combine(helper, "last-reconnect.json")));
         }
-        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+        finally { TempDir.Delete(root); }
     }
 
     [Fact]
@@ -61,7 +62,7 @@ public class ControllerReconnectorCopyTests
         finally
         {
             if (File.Exists(locked)) File.SetAttributes(locked, FileAttributes.Normal);
-            if (Directory.Exists(root)) Directory.Delete(root, true);
+            TempDir.Delete(root);
         }
     }
 }

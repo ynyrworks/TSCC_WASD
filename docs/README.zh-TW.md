@@ -2,145 +2,78 @@
 
 免費開源的 Windows 工具：讓遊戲把你的 Xbox 或 Nintendo Switch 2 Pro 手把當成
 PlayStation DualShock 4，顯示 PS 按鍵圖示。也可以改成輸出虛擬 Xbox 360 手把，例如讓 PlayStation
-或任天堂手把顯示 Xbox 圖示（DualShock 4、DualSense、Switch Pro 輸入為實驗性）。
+或任天堂手把顯示 Xbox 圖示。
 對應付費軟體 reWASD 最常用的「偽裝成 DS4」功能，改用免費元件 ViGEmBus（虛擬手把）與 HidHide（隱藏實體手把）完成。
-目前為 **0.99.0，也就是 1.0 的候選版（RC）**，介面支援繁體中文與英文。
+免費、不用訂閱、沒有遙測。目前版本 **1.0.0**，介面支援繁體中文與英文。
 
 [![在 Ko-fi 支持](https://img.shields.io/badge/Ko--fi-支持這個專案-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
+
+**完整教學：[使用手冊](MANUAL.zh-TW.md)**，從下載、安裝、第一次映射、Steam、設定檔、各種手把到疑難排解。English: [README](../README.md) · [User manual](MANUAL.md)
+
+![主視窗](images/editor.zh-TW.png)
 
 **名稱由來：** TSCC 是 **T**riangle（三角形）、**S**quare（正方形）、**C**ross（叉叉）、**C**ircle（圓形）
 的縮寫，也就是這個工具讓遊戲顯示的四個 PlayStation 按鍵。本專案在 0.4.0 以前叫 *YnyrWASD*，
 更新到 0.4.1 時會自動搬移原本的設定檔與設定。
 
-![主視窗](images/editor.zh-TW.png)
+## 特色
 
-主畫面只放每天會用到的：狀態、設定檔、「啟動映射」。設定檔細節與程式設定收在可展開的區塊裡
-（展開後的樣子見[這裡](images/settings.zh-TW.png)）；右上角有「使用說明」「檢查更新」「關於」。
+- **一鍵隱藏實體手把：** 啟動映射時，用 HidHide 把真正的手把藏起來，遊戲只看得到虛擬手把，
+  圖示不會在 Xbox／PS 之間跳動。停止映射會完整還原原本的 HidHide 設定。
+- **幫你處理 Steam：** Steam 先握住手把時，「自動重新連接」會讓 USB 手把斷電重新連接一兩秒，不必重啟 Steam；
+  也可以登入 Windows 後由 TSCC_WASD 在映射開始後才啟動 Steam。
+- **選你習慣的圖示：** 虛擬 **DualShock 4**（PS 圖示）或 **Xbox 360**（Xbox 圖示），還能對調 A/B 與 X/Y。
+- **依遊戲切換設定檔：** 遊戲到前景時，自動套用對應的設定檔。
+- **震動、PS 鍵與體感**、圓形搖桿死區、手把測試與報告匯出、系統匣、開機自動啟動。
+- **下載一次就齊全：** ZIP 內含 .NET 執行環境，以及 ViGEmBus、HidHide 的官方安裝程式。
+- **沒有遙測、沒有背景服務：** 只有你主動按「檢查更新」或「安裝驅動程式」時才會連網。
 
-## 手把支援與實機驗證
+PS 圖示仍取決於遊戲：遊戲必須原生支援 DS4，或透過 Steam Input 支援。
+尚未支援：任意按鍵重排、巨集、觸控板滑動、鍵鼠、DualSense 輸出、疊圖。
+
+## 支援的手把
 
 **1.0 承諾的範圍：** Xbox 手把（USB、藍牙）和 USB 連接的 NS2 Pro，輸出成 DualShock 4 或 Xbox 360。
-其他項目（包括隱藏第三方 XInput 手把）都維持**實驗性**：可能可以用，但 1.0 不做保證。
-目前是候選版，要先完成[這些檢查](RC-CHECKLIST.md)並收到外部回報，才會發布 1.0。
+其他項目都維持**實驗性**：可能可以用，但 1.0 不做保證。
 
-| 手把 | 連線方式 | 目前狀態 |
+| 手把 | 連線方式 | 1.0 的狀態 |
 | --- | --- | --- |
-| Xbox Wireless Controller | USB | **1.0 穩定範圍。** 已實機測試，驗證 XInput 存取及 HidHide 隱藏 |
-| Xbox Wireless Controller | 藍牙 | **1.0 穩定範圍。** 已實機測試，驗證 HidHide 隱藏及透過 Steam Input 顯示 PS 圖示 |
-| Nintendo Switch 2 Pro Controller | USB | **1.0 穩定範圍。** 已實機測試，驗證虛擬 DS4 輸入及 USB 自動重新連接 |
-| Nintendo Switch 2 Pro Controller | 藍牙（電腦內建藍牙） | **實驗性：** 輸入、校準、體感、震動、重新連線已實機測試，尚未在遊戲中實測 |
+| Xbox Wireless Controller | USB | **穩定範圍。** 已實機測試，驗證 XInput 存取及 HidHide 隱藏 |
+| Xbox Wireless Controller | 藍牙 | **穩定範圍。** 已實機測試，驗證 HidHide 隱藏及透過 Steam Input 顯示 PS 圖示 |
+| Nintendo Switch 2 Pro Controller | USB | **穩定範圍。** 已實機測試，驗證虛擬 DS4 輸入及 USB 自動重新連接 |
+| Nintendo Switch 2 Pro Controller | 藍牙（電腦內建藍牙） | **實驗性：** 輸入、校準、體感、震動、重新連線已實機測試，尚未在遊戲中實測。按住 **Sync** 連線 |
 | 第一代 Switch Pro 手把 | 藍牙 | **實驗性：** 所有按鍵、使用手把內建校準的搖桿、HidHide 隱藏已實機測試；尚未在遊戲中實測 |
 | 第一代 Switch Pro 手把 | USB | 實驗性，尚待實體手把測試 |
 | DualShock 4、DualSense | USB、藍牙 | 實驗性，尚待實體手把測試 |
+| 第三方 XInput 手把（8BitDo、PowerA 等） | 任何 | 映射時預設隱藏（實驗性） |
 
 以上結果不代表所有按鍵、震動、自動重新連接或遊戲相容性均已通過完整測試。詳細項目見[驗證紀錄](VALIDATION.md)。
 
-## 功能
+## 下載與驗證
 
-- **自動偵測輸入（預設）：** 同時監看 NS2 Pro（USB）、Xbox／XInput，以及（實驗性）DualShock 4、DualSense、
-  第一代 Switch Pro 手把，按哪一支就用哪一支，閒置的手把不會搶走控制權；也可以指定只用其中一種。
-  實驗性的手把尚未經過實機驗證，歡迎回報結果。PS／任天堂手把搭配「輸出成 Xbox 360」就能顯示 Xbox 圖示。
-- **持續存在的虛擬手把：** 整段映射期間保持連線；手把斷線時輸出歸零，驅動出錯會自動重連。
-- **自動隱藏實體手把：** 安裝 HidHide 後，啟動映射就會把實體手把藏起來，遊戲只看得到虛擬手把，
-  圖示不會在 Xbox／PS 之間跳動。TSCC_WASD 自己的虛擬手把絕不會被隱藏。停止映射會完整還原原本的 HidHide 設定。
-- **不必再重啟 Steam：** Steam 比映射早開、握著實體手把時，「自動重新連接」會讓 USB 手把斷電重新連接一兩秒，
-  Steam 就會放開它，只看到虛擬 DS4。只需設定一次（一次管理員權限），之後不再詢問。藍牙手把關開一次即可；
-  重啟 Steam 只當備案。
-- **不必停止就能改設定：** 映射中修改設定、切換設定檔都會立即套用。「暫停」讓遊戲收到放開所有按鍵的 DS4，
-  實體手把仍保持隱藏，繼續時不必處理 Steam；「停止」則完全釋放手把。
-- **選你習慣的圖示：** 每個設定檔可輸出虛擬 **DualShock 4**（PS 圖示）或 **Xbox 360**（Xbox 圖示，相容性最好），
-  也能**對調 A/B 與 X/Y**（任天堂習慣：右邊的鍵確認）。偵測到已知會拒絕虛擬手把的反作弊（EA Javelin）時會提醒。
-- **依遊戲切換設定檔：** 在設定檔填入遊戲的程序名稱（也可以從執行中的程式挑選）。映射中遊戲到前景時就套用這個設定檔，
-  Alt-Tab 離開時不變，遊戲結束才切回原本的設定檔；期間手動選的設定檔優先。如果輸出類型改變，會通知你：遊戲沒抓到手把時請重開遊戲。
-  這個功能不會自己啟動映射。
-- **手把測試：** 映射中可即時查看輸入，也能把原始報告錄成檔案，方便回報問題。貼出檔案前請先看過內容。
-- **震動、PS 鍵與體感：** 遊戲的震動會轉給 Xbox、NS2 Pro、DualShock 4 或 DualSense（第一代 Switch Pro 尚不支援震動）；Xbox 的 Guide 鍵與 NS2 的 Home 鍵當作 PS 鍵，
-  Xbox 的 View 鍵（可改成 Share）與 NS2 的截圖鍵當作觸控板按下；NS2 Pro、DualShock 4、DualSense 的陀螺儀與加速度計會轉成 DS4 體感。
-- **設定一次就好：** 可選擇登入 Windows 時自動啟動、縮在系統匣直接映射，並在隱藏手把後才啟動或重啟 Steam，
-  從此不用手動重啟 Steam。
-- **下載一次就齊全：** Release ZIP 內含 .NET 執行環境，以及 ViGEmBus、HidHide 的官方安裝程式。
-  開啟時若偵測到缺少驅動，會詢問是否安裝（也可以隨時按「安裝驅動程式」）；執行前會先核對固定的 SHA-256。
-- **方便回報問題：** 本機日誌（`%APPDATA%\TSCC_WASD\logs`，保留 7 天），以及「關於 → 複製診斷資訊」
-  （版本、驅動程式、手把狀態）。映射中時系統匣圖示會出現綠點。
-- 常用按鍵、方向鍵、搖桿、扳機；圓形搖桿死區與輪詢頻率；設定檔匯入／匯出。
-- 不收集遙測、沒有背景服務。只有你主動要求時才會連網：「檢查更新」向 GitHub 查詢最新版本
-  （或在設定中開啟啟動時檢查），你同意後才從 GitHub 下載該版本的 ZIP，核對 SHA-256（發行版簽章後也會核對數位簽章）再安裝；
-  「安裝驅動程式」只在 `drivers` 資料夾裡沒有安裝檔時，才從 GitHub 下載官方安裝程式。
-  不會在沒有詢問的情況下下載或安裝更新。（程式內更新從 0.9.1 開始：舊版仍會打開 Release 頁面，0.9.1 請手動安裝一次。）
+1. 到 [Releases](https://github.com/ynyrworks/TSCC_WASD/releases) 下載 `TSCC_WASD-<版本>-win-x64.zip` 與同名的 `.sha256` 檔。
+2. 在 PowerShell 執行 `Get-FileHash .\TSCC_WASD-<版本>-win-x64.zip -Algorithm SHA256`，結果要和 `.sha256` 檔完全一致。
+3. 解壓縮到一個資料夾，執行 `TSCC_WASD.exe`。如果 SmartScreen 警告，請按「其他資訊 → 仍要執行」，但只限於雜湊值相符的 ZIP。
 
-**PS 圖示仍取決於遊戲：** 遊戲必須原生支援 DS4，或透過 Steam Input 支援。只內建 Xbox 圖示的遊戲還是會顯示 Xbox。
+之後的新版可以直接用「檢查更新」在程式內安裝，只需要手動下載這一次。原因見[為什麼沒有簽章？](#為什麼沒有簽章)。
 
-尚未支援：任意按鍵重排、巨集、觸控板滑動、鍵鼠、DualSense 輸出、疊圖。
-NS2 Pro 藍牙為實驗性，只在按住 Sync 時連線（不會和電腦配對）；C 鍵與背面 GL/GR 尚未映射。
-
-## 安裝與快速開始
+## 快速開始
 
 1. Windows 10（2004 版以上）／11 x64（Windows 11 為主要測試平台）。不需要另外安裝 .NET。
-2. 從 [Releases](https://github.com/ynyrworks/TSCC_WASD/releases) 下載 ZIP，解壓後執行 `TSCC_WASD.exe`。
-   發行版（包括 1.0）**沒有數位簽章**，SmartScreen 可能出現警告；請先比對 ZIP 與 `.sha256` 檔（[說明](SIGNING.md)）。
-   之後的新版可以直接用「檢查更新」在程式內安裝，只需要手動下載這一次。
-3. 第一次開啟時，程式會詢問是否用 `drivers` 資料夾內的官方安裝程式安裝 **ViGEmBus**（必要）與
+2. 第一次開啟時，程式會詢問是否用 `drivers` 資料夾內的官方安裝程式安裝 **ViGEmBus**（必要）與
    **HidHide**（強烈建議，不需手動設定）。選「是」，完成兩個安裝程式，依提示重新開機。
-   也可以從[官方下載頁](https://docs.nefarius.at/Downloads/)自行安裝。ViGEmBus 已停止維護，
-   請參考[上游公告](https://docs.nefarius.at/projects/ViGEm/End-of-Life/)。
-4. 輸入手把保持「自動偵測」，勾選「映射時自動隱藏實體手把」，按「啟動映射」。
-5. 若提示 Steam 已在執行，選「是」設定自動重新連接（只需一次），或選「否」這次先重啟 Steam。
-6. **最後才開遊戲。**
+3. 接上手把。輸入保持「自動偵測」，勾選「映射時自動隱藏實體手把」，按「啟動映射」。
+4. 若提示 Steam 已在執行，選「是」設定自動重新連接（只需一次），或選「否」這次先重啟 Steam。
+5. **最後才開遊戲。**遊戲若已經開著，請重開一次。
 
-### 建議：開機自動啟動
+短暫休息用「暫停」，用完按「停止」，停止後實體手把會恢復可見。
+每個步驟的細節，包括依遊戲切換設定檔、各種手把、NS2 Pro 藍牙與校準，以及出問題時怎麼辦，都在 **[使用手冊](MANUAL.zh-TW.md)**。
 
-在「程式設定」勾選「登入 Windows 時自動啟動並開始映射」與「自動開始映射後啟動 Steam」，
-並到 Steam 設定關閉「電腦開機時執行 Steam」。登入後 TSCC_WASD 會先隱藏手把、在系統匣開始映射，
-然後才啟動 Steam，Steam 就永遠看不到實體手把。萬一 Steam 還是先開了，
-「自動開始映射時，若 Steam 已先開啟就自動重啟它」會處理。
+## 設定檔與疑難排解
 
-### 為什麼要注意開啟順序
-
-HidHide 只能阻止程式「打開」手把，不能把已經打開的手把搶回來，所以：
-
-- **遊戲已經開著：** 啟動映射後請重開遊戲。
-- **Steam 已經開著：** Steam Input 會繼續把實體手把轉給 Steam 遊戲，圖示就會在 Xbox／PS 間交替。
-  設定好「自動重新連接」後，程式會讓 USB 手把斷電重新連接，手把回來時已經對 Steam 隱藏；沒設定時則詢問是否重啟 Steam。
-  該遊戲的 Steam Input 請保持「預設／啟用」：
-  像人中之龍 0 這類遊戲靠 Steam Input 決定 PS 圖示，停用後反而會顯示 Xbox 圖示。
-
-短暫休息請用「暫停」而不是「停止」：手把仍保持隱藏，繼續時不必處理 Steam。停止映射後實體手把會恢復可見；
-關閉 TSCC_WASD 不會關閉 Steam。若 Steam 在隱藏期間失去了手把，停止或關閉時會自動重新連接
-（沒設定自動重新連接時則詢問是否重啟 Steam），讓 Steam 重新認得實體手把。
-
-**自動重新連接**會把 TSCC_WASD 複製到 `%ProgramFiles%\TSCC_WASD\Helper`（只有管理員能修改），
-並建立一個只在需要時執行的排程工作 `\TSCC_WASD\ReconnectControllers`，以最高權限讓已連接的 Xbox、NS2 Pro、
-DualShock 4／DualSense、Switch Pro 手把所在的 USB 埠斷電重新連接。可在「程式設定 → 移除」刪除。Xbox 無線接收器會整個重新連接，上面所有手把都會重連。USB 埠重新連接輔助程式不會重置藍牙連線；藍牙手把可關閉再重新開啟，或改為重新啟動 Steam。
-
-## 運作方式
-
-啟動映射時，程式會：
-
-1. 先把目前的 HidHide 狀態記錄到 `%APPDATA%\TSCC_WASD\hidhide-restore.json`；
-2. 把自己加入 HidHide 允許清單；
-3. 隱藏它會讀取的手把（NS2 Pro、Xbox、DualShock 4／DualSense、Switch Pro；藍牙／HID 以及有線 XUSB／GIP 類別），
-   但不動 ViGEm 建立的虛擬手把（包括 TSCC_WASD 自己輸出的 DS4／Xbox 360，以及 DS4Windows 的輸出）。
-   預設也會隱藏第三方 XInput 手把（8BitDo、PowerA 等，實驗性）；這可能包含支援 XInput 的方向盤和大型搖桿，
-   如果裝置不見了，請關閉「程式設定 → 映射時也隱藏第三方 XInput 手把」。隱藏的裝置都會寫入日誌；
-4. 開啟隱藏功能。
-
-之後新接上的手把會在 Windows 通知時立刻隱藏，並每 30 秒掃描一次作為備援；停止時只還原自己改過的部分。程式若被強制結束，下次開啟會自動還原。
-HidHide 為反向清單模式時不會更動。NS2 Pro、藍牙和 USB 連接的 Xbox 手把，以及藍牙連接的第一代 Switch Pro，隱藏功能都已實機驗證；PlayStation 手把尚未實機測試。
-
-## 設定檔與程式設定
-
-- 設定檔：`%APPDATA%\TSCC_WASD\profiles.json`，前一版備份為 `.json.bak`。「新增／移除／匯入」後要按「儲存全部」才會寫入。
-  損壞的檔案不會被覆寫，可透過「設定資料夾」修復或還原備份。
-- 程式設定（開機啟動、系統匣、Steam、語言）：同資料夾的 `settings.json`，變更後立即儲存。
-- 「登入 Windows 時自動啟動」會寫入目前使用者的 `HKCU\...\Run`，取消勾選即移除。
-- 語言可選「跟隨 Windows／繁體中文／English」，重新開啟程式後套用。
-
-NS2 Pro 若推到底卻像輕推、或放開時飄移，按「校準 NS2 Pro 搖桿」照步驟做一次即可（映射中也可以）。
-**NS2 Pro 藍牙（實驗性）：** 拔掉 USB 線、啟動映射，然後按住手把上的 **Sync** 鍵，程式就會透過電腦內建藍牙連線
-（不需接收器，也不用在 Windows 設定裡配對）。按鍵、搖桿、體感、震動都和 USB 一樣，Windows 11 上約 67 次／秒。
-Windows 與 Steam 都看不到它，所以不需要隱藏。手把仍保留和 Switch 2 主機的配對；手把關機後要再按住 Sync 重新連線。
-
-NS2 Pro 的細節見 [NS2 Pro 設定說明](NS2-PRO.md)，常見問題見[疑難排解](TROUBLESHOOTING.md)。
+設定檔在 `%APPDATA%\TSCC_WASD\profiles.json`，程式設定在同資料夾的 `settings.json`，日誌在 `%APPDATA%\TSCC_WASD\logs`。
+見[使用手冊的疑難排解](MANUAL.zh-TW.md#疑難排解)、[疑難排解清單](TROUBLESHOOTING.md)、[設定檔格式](PROFILES.md)與
+[NS2 Pro 設定說明](NS2-PRO.md)。
 
 ## 解除安裝
 
@@ -150,6 +83,8 @@ NS2 Pro 的細節見 [NS2 Pro 設定說明](NS2-PRO.md)，常見問題見[疑難
    與工作排程器中的 `\TSCC_WASD\ReconnectControllers`）。
 4. 視需要到「Windows 設定 → 應用程式 → 已安裝的應用程式」解除安裝 **ViGEmBus** 與 **HidHide**
    （DS4Windows 等其他工具可能也在使用）。
+
+之後手把如果仍被隱藏，見[還原被隱藏的手把](MANUAL.zh-TW.md#解除安裝與還原被隱藏的手把)。
 
 ## 回報問題
 
@@ -161,6 +96,13 @@ NS2 Pro 的細節見 [NS2 Pro 設定說明](NS2-PRO.md)，常見問題見[疑難
 
 TSCC_WASD 永遠免費。如果它幫你省下 reWASD 的費用，或只是讓遊戲畫面看起來對了，
 歡迎在 [Ko-fi 請我喝杯咖啡](https://ko-fi.com/ynyr5566)。回報問題、相容性結果和 Pull Request 也同樣是很大的幫助。
+
+## 為什麼沒有簽章？
+
+TSCC_WASD 1.0 **沒有數位簽章**。程式碼簽章憑證要付費，也要經過審核；這是個免費的個人專案，目前沒有取得，
+所以第一次執行時 Windows SmartScreen 可能會警告。因此每個發行版都附有 `.sha256` 檔：只執行雜湊值相符的 ZIP。
+程式內更新也會先核對下載檔的 SHA-256 才安裝。簽章不屬於 1.0 的範圍。
+誰負責建置、審查與核准發布、程式會改動系統的哪些部分，以及隱私聲明，見[程式碼簽章政策](CODE-SIGNING-POLICY.md)。
 
 ## 程式碼簽章政策
 

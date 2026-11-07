@@ -1,7 +1,6 @@
 using System.Windows;
 using TSCC_WASD.App.ViewModels;
 using TSCC_WASD.Core;
-using TSCC_WASD.Core.Services;
 
 namespace TSCC_WASD.App;
 
@@ -10,7 +9,10 @@ public partial class AboutWindow : Window
     public AboutWindow()
     {
         InitializeComponent();
-        VersionText.Text = L.T($"版本 {UpdateChecker.CurrentVersion.ToString(3)} 預覽版", $"Version {UpdateChecker.CurrentVersion.ToString(3)} preview");
+        string version = AboutInfo.CurrentVersionText;
+        VersionText.Text = L.T($"版本 {version} · {AboutInfo.ChannelText(version, true)}", $"Version {version} · {AboutInfo.ChannelText(version, false)}");
+        ManualButton.Tag = AboutInfo.ManualUrl(L.Chinese);
+        SigningPolicyButton.Tag = AboutInfo.SigningPolicyUrl;
     }
 
     private void OnOpen(object sender, RoutedEventArgs e)

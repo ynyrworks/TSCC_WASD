@@ -9,6 +9,7 @@ using TSCC_WASD.Core.Services.Setup;
 
 namespace TSCC_WASD.Tests;
 
+[Collection(AppLogCollection.Name)]
 public class SetupTests
 {
     [Fact]
@@ -83,7 +84,7 @@ public class SetupTests
         finally
         {
             AppLog.Directory = original;
-            Directory.Delete(dir, recursive: true);
+            TempDir.Delete(dir);
         }
     }
 

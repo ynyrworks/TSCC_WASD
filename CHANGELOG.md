@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.0
+
+**The first official release.** It builds on the 0.99.x release candidates and adds a full
+[user manual](https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/MANUAL.md) (also in
+[Chinese](https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/MANUAL.zh-TW.md)).
+
+**What 1.0 promises:** Xbox controllers (USB, Bluetooth) and the Nintendo Switch 2 Pro (NS2 Pro) over USB, output as
+a DualShock 4 or Xbox 360 controller. DualShock 4, DualSense, the original Switch Pro, the NS2 Pro over Bluetooth and
+hiding third-party XInput controllers stay **experimental**: they may work, but 1.0 makes no promise about them.
+
+**Not code-signed:** SmartScreen may warn. Compare the ZIP with its `.sha256` file first; the manual explains
+how and why.
+
+- **User manual** with screenshots, in English and Traditional Chinese: download and verify, installing the
+  drivers, first mapping, Steam, profiles, every supported controller, NS2 Pro calibration, controller test,
+  tray, updating, troubleshooting, uninstall and where logs live.
+- The README is shorter and points to the manual; it now has a "Why is it unsigned?" section.
+- Highlights since 0.9.x, all described in the sections below: in-app updates (0.9.1), NS2 Pro over Bluetooth
+  and original Switch Pro calibration (0.9.2), per-game profiles, round stick dead zone, hiding third-party XInput
+  controllers and the controller test window (0.99.0), and the NS2 Pro USB access fix (0.99.1).
+
 ## 0.99.1 — second release candidate for 1.0
 
 **Please test this and tell us how it went:** [what to check and how to report](https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/RC-CHECKLIST.md).
