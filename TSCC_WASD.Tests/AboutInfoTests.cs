@@ -33,6 +33,15 @@ public class AboutInfoTests
         Assert.Equal("https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/MANUAL.md", AboutInfo.ManualUrl(false));
     }
 
+    [Theory]
+    [InlineData(true, "MANUAL.zh-TW.md")]
+    [InlineData(false, "MANUAL.md")]
+    public void HelpUrlEqualsAboutManualUrl(bool chinese, string file)
+    {
+        Assert.Equal(AboutInfo.ManualUrl(chinese), AboutInfo.HelpUrl(chinese));
+        Assert.EndsWith("/docs/" + file, AboutInfo.HelpUrl(chinese));
+    }
+
     [Fact]
     public void SigningPolicyLinkPointsAtTheDoc() =>
         Assert.Equal("https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/CODE-SIGNING-POLICY.md", AboutInfo.SigningPolicyUrl);

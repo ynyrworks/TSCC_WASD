@@ -169,8 +169,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         CancelUpdateCommand = new RelayCommand(() => _updateCts?.Cancel());
         OpenHelpCommand = Command(() =>
         {
-            OpenUrl(L.T($"https://github.com/{UpdateChecker.Repository}/blob/main/docs/README.zh-TW.md",
-                $"https://github.com/{UpdateChecker.Repository}#readme"));
+            OpenUrl(AboutInfo.HelpUrl(L.Chinese));
             return Task.CompletedTask;
         });
         AboutCommand = Command(() =>

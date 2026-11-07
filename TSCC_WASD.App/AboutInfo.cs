@@ -37,5 +37,8 @@ public static class AboutInfo
     public static string ManualUrl(bool chinese) =>
         $"{RepoUrl}/blob/main/docs/{(chinese ? "MANUAL.zh-TW.md" : "MANUAL.md")}";
 
+    /// <summary>The main window's Help link target; always the same manual the About window opens.</summary>
+    public static string HelpUrl(bool chinese) => ManualUrl(chinese);
+
     public static string SigningPolicyUrl => $"{RepoUrl}/blob/main/docs/CODE-SIGNING-POLICY.md";
 }
