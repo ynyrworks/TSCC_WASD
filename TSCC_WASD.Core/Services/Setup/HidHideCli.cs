@@ -62,9 +62,19 @@ public static class HidHideCli
     {
         try
         {
-            if (Job.Value != 0) AssignProcessToJobObject(Job.Value, process.Handle);
+            if (Job.Value != 0 && !AssignProcessToJobObject(Job.Value, process.Handle))
+                WarnJobOnce($"could not add HidHideCLI to the job object (Win32 error {Marshal.GetLastWin32Error()})");
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { }
+    }
+
+    private static int _jobWarned;
+
+    /// <summary>Logs a job-object problem once per app run; the CLI still runs, bounded by the timeout.</summary>
+    private static void WarnJobOnce(string message)
+    {
+        if (Interlocked.Exchange(ref _jobWarned, 1) == 0)
+            AppLog.Warn($"HidHide CLI job object unavailable: {message}; a hung CLI is only stopped by the timeout.");
     }
 
     private static nint CreateKillOnCloseJob()
@@ -72,7 +82,11 @@ public static class HidHideCli
         try
         {
             nint job = CreateJobObject(0, null);
-            if (job == 0) return 0;
+            if (job == 0)
+            {
+                WarnJobOnce($"CreateJobObject failed (Win32 error {Marshal.GetLastWin32Error()})");
+                return 0;
+            }
             var info = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
             info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
             int size = Marshal.SizeOf<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>();
@@ -80,12 +94,20 @@ public static class HidHideCli
             try
             {
                 Marshal.StructureToPtr(info, ptr, false);
-                if (!SetInformationJobObject(job, JobObjectExtendedLimitInformation, ptr, (uint)size)) return 0;
+                if (!SetInformationJobObject(job, JobObjectExtendedLimitInformation, ptr, (uint)size))
+                {
+                    WarnJobOnce($"SetInformationJobObject failed (Win32 error {Marshal.GetLastWin32Error()})");
+                    return 0;
+                }
             }
             finally { Marshal.FreeHGlobal(ptr); }
             return job;
         }
-        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException) { return 0; }
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException)
+        {
+            WarnJobOnce(ex.Message);
+            return 0;
+        }
     }
 
     private const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000;

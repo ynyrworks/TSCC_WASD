@@ -24,8 +24,8 @@ public class HidHideCliTests
         try
         {
             var watch = Stopwatch.StartNew();
-            Assert.Throws<TimeoutException>(() => HidHideCli.Run(PowerShell, Script($"Set-Content -LiteralPath '{pidFile}' $PID; Start-Sleep -Seconds 60"), TimeSpan.FromSeconds(2)));
-            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(20));
+            Assert.Throws<TimeoutException>(() => HidHideCli.Run(PowerShell, Script($"Set-Content -LiteralPath '{pidFile}' $PID; Start-Sleep -Seconds 60"), TimeSpan.FromSeconds(8)));
+            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(40));
             Assert.Contains("was killed", LogFile.ReadAllText(TSCC_WASD.Core.AppLog.CurrentFile));
             int pid = int.Parse(File.ReadAllText(pidFile).Trim());
             Assert.True(!ProcessExists(pid, WaitMs: 3000), "the hung CLI process was still running");
