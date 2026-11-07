@@ -10,7 +10,7 @@ namespace TSCC_WASD.Core.Services.Input;
 /// from SPI flash (the user's own, else the factory one); until it arrives, or on controllers without
 /// it, stick travel is learned while playing. No rumble. Experimental.
 /// </summary>
-public sealed class SwitchProInputReader : IInputReader
+public sealed class SwitchProInputReader : IInputReader, IBatterySource
 {
     private static readonly TimeSpan Fresh = TimeSpan.FromMilliseconds(250);
     private readonly object _gate = new();
@@ -18,6 +18,7 @@ public sealed class SwitchProInputReader : IInputReader
     private readonly Task _worker;
     private State _latest;
     private bool _hasState;
+    private BatteryStatus _battery;
     private long _receivedAt;
     private string _status = L.T("尋找 Switch Pro 手把...", "Looking for a Switch Pro Controller...");
     private bool _disposed;
@@ -25,6 +26,8 @@ public sealed class SwitchProInputReader : IInputReader
     public SwitchProInputReader() => _worker = Task.Run(() => RunAsync(_stop.Token));
 
     public string Status { get { lock (_gate) return _status; } }
+
+    public BatteryStatus Battery { get { lock (_gate) return _battery; } }
 
     public bool TryGetState(out State state)
     {
@@ -43,6 +46,7 @@ public sealed class SwitchProInputReader : IInputReader
             _status = status;
             _hasState = false;
             _latest = default;
+            _battery = default;
         }
     }
 
@@ -119,6 +123,7 @@ public sealed class SwitchProInputReader : IInputReader
                             if (calibratedLeft is { } l && calibratedRight is { } r) (left, right) = (l, r);
                             if (!SwitchProReport.TryParse(data, left, right, out var state, out _)) continue;
                             Publish(state, calibratedLeft is null ? name : name + L.T("，原廠校準", ", factory calibration"));
+                            lock (_gate) _battery = BatteryParser.FromSwitchPro(data[2]);
                         }
                         else if (SwitchProReport.TryParse(data, Switch2StickCalibration.Nominal, Switch2StickCalibration.Nominal, out var simple, out _))
                             Publish(simple, name + L.T("（簡易模式）", " (simple mode)"));
@@ -133,7 +138,7 @@ public sealed class SwitchProInputReader : IInputReader
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception ex) { SetStatus(L.T($"Switch Pro 手把輸入已停止：{ex.Message}", $"Switch Pro Controller input stopped: {ex.Message}")); }
-        finally { lock (_gate) { _hasState = false; _latest = default; } }
+        finally { lock (_gate) { _hasState = false; _latest = default; _battery = default; } }
     }
 
     private void Publish(State state, string status)

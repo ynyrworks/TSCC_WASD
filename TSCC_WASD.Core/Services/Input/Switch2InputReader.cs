@@ -6,7 +6,7 @@ using Microsoft.Win32.SafeHandles;
 namespace TSCC_WASD.Core.Services.Input;
 
 /// <summary>One NS2 Pro USB device. Background I/O never blocks the mapping poll loop.</summary>
-public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTarget
+public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTarget, IBatterySource
 {
     private readonly object _gate = new();
     private readonly CancellationTokenSource _stop = new();
@@ -20,6 +20,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
     private volatile bool _calibrationChanged;
     private long _receivedAt;
     private bool _hasState;
+    private BatteryStatus _battery;
     private readonly Switch2CalibrationCache _calibrationCache;
     private string _status = L.T("尋找 NS2 Pro（USB）...", "Looking for NS2 Pro (USB)...");
     private bool _disposed;
@@ -31,6 +32,8 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
         _worker = Task.Run(() => RunAsync(_stop.Token));
     }
     public string Status { get { lock (_gate) return _status; } }
+
+    public BatteryStatus Battery { get { lock (_gate) return _battery; } }
 
     public bool TryGetState(out State state)
     {
@@ -72,7 +75,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
         lock (_gate)
         {
             _status = status;
-            if (clear) { _hasState = false; _latest = default; _hasMotion = false; }
+            if (clear) { _hasState = false; _latest = default; _hasMotion = false; _battery = default; }
         }
     }
 
@@ -162,6 +165,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
                                 _hasMotion = hasMotion;
                                 _receivedAt = Stopwatch.GetTimestamp();
                                 _hasState = true;
+                                if (BatteryParser.TryParseNs2(report.AsSpan(0, length), bluetooth: false, out var battery)) _battery = battery;
                                 _status = userCalibration ? L.T("NS2 Pro（使用者校準）", "NS2 Pro (your calibration)")
                                     : !sharedMode ? L.T("NS2 Pro（USB，原廠校準）", "NS2 Pro (USB, factory calibration)")
                                     : cachedCalibration ? L.T("NS2 Pro（HID 共用，已記住的原廠校準）", "NS2 Pro (shared HID, remembered factory calibration)")
@@ -192,7 +196,7 @@ public sealed class Switch2InputReader : IInputReader, IMotionSource, IRumbleTar
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception ex) { SetStatus(L.T($"NS2 Pro 輸入已停止：{ex.Message}", $"NS2 Pro input stopped: {ex.Message}")); }
-        finally { lock (_gate) { _hasState = false; _latest = default; } }
+        finally { lock (_gate) { _hasState = false; _latest = default; _battery = default; } }
     }
 
     /// <summary>Set by the mapping coordinator while it hides controllers; null otherwise.</summary>
