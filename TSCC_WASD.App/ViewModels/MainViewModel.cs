@@ -34,9 +34,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private DateTime? _hiddenSince;
     private string _dependencyStatus = DependencyChecker.BuildStatusText();
 
-    public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null)
+    public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null,
+        Func<HidHideGuard?>? hidHideFactory = null)
     {
-        _coordinator = new MappingCoordinator(profileStore, () => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true));
+        _coordinator = new MappingCoordinator(profileStore, hidHideFactory ?? (() => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true)));
         _settingsStore = settingsStore ?? new AppSettingsStore();
         Settings = _settingsStore.Load();
         StartCommand = Command(() => StartAsync(automatic: false, atSignIn: false), () => !IsRunning && SelectedProfile is not null);

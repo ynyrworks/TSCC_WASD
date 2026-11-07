@@ -330,26 +330,7 @@ public sealed partial class HidHideGuard : Input.IHidHideRecovery
         return File.Exists(fallback) ? fallback : null;
     }
 
-    private static string RunCli(string cli, IReadOnlyList<string> args)
-    {
-        var info = new ProcessStartInfo(cli)
-        {
-            UseShellExecute = false, CreateNoWindow = true,
-            RedirectStandardOutput = true, RedirectStandardError = true
-        };
-        foreach (var arg in args) info.ArgumentList.Add(arg);
-        using var process = Process.Start(info) ?? throw new IOException(L.T("無法啟動 HidHideCLI。", "Could not start HidHideCLI."));
-        var stdout = process.StandardOutput.ReadToEndAsync();
-        var stderr = process.StandardError.ReadToEndAsync();
-        if (!process.WaitForExit(10_000))
-        {
-            try { process.Kill(); } catch { /* Already exited. */ }
-            throw new TimeoutException(L.T("HidHideCLI 沒有回應。", "HidHideCLI did not respond."));
-        }
-        if (process.ExitCode != 0)
-            throw new IOException(L.T($"HidHideCLI 失敗（{process.ExitCode}）：{stderr.Result.Trim()}", $"HidHideCLI failed ({process.ExitCode}): {stderr.Result.Trim()}"));
-        return stdout.Result;
-    }
+    private static string RunCli(string cli, IReadOnlyList<string> args) => HidHideCli.Run(cli, args);
 
     [GeneratedRegex("(--[a-z-]+)\\s+\"([^\"]+)\"")]
     private static partial Regex QuotedArgument();
