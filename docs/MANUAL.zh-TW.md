@@ -55,8 +55,6 @@ DualShock 4、DualSense、第一代 Switch Pro、NS2 Pro 藍牙，以及隱藏�
 1. 到 [Releases](https://github.com/ynyrworks/TSCC_WASD/releases) 下載最新版的 `TSCC_WASD-<版本>-win-x64.zip`，
    同一頁還有一個 `.sha256` 檔。
 
-   ![Release 頁面的檔案清單](images/manual/01-release-page.png)
-
 2. **核對 SHA-256。** 在 ZIP 所在的資料夾開啟 PowerShell，執行：
 
    ```powershell
@@ -65,12 +63,8 @@ DualShock 4、DualSense、第一代 Switch Pro、NS2 Pro 藍牙，以及隱藏�
 
    輸出的 `Hash` 要和 `.sha256` 檔裡的那串字（不分大小寫）完全一致。不一致就不要執行，重新下載。
 
-   ![用 PowerShell 核對 SHA-256](images/manual/02-verify-hash.png)
-
 3. 在 ZIP 上按右鍵「全部解壓縮」，**解壓到一個資料夾**再執行 `TSCC_WASD.exe`（不要直接在 ZIP 裡面執行）。
 4. **SmartScreen 警告：** 第一次執行時 Windows 可能顯示「Windows 已保護您的電腦」。請按「**其他資訊**」，再按「**仍要執行**」。
-
-   ![SmartScreen：其他資訊與仍要執行](images/manual/03-smartscreen.png)
 
    **為什麼會這樣？** TSCC_WASD 1.0 **沒有數位簽章**。程式碼簽章憑證要付費，也要經過審核；這是個免費的個人專案，目前沒有取得。
    SmartScreen 對沒有簽章又很少人下載的程式一律會警告，不代表程式有問題，也不代表它沒問題，所以才需要上一步的 SHA-256 核對：
@@ -83,8 +77,6 @@ DualShock 4、DualSense、第一代 Switch Pro、NS2 Pro 藍牙，以及隱藏�
 
 ZIP 裡的 `drivers` 資料夾附有這兩個驅動程式的官方安裝程式。第一次開啟 TSCC_WASD，如果偵測到缺少驅動，會跳出詢問視窗：
 
-![缺少驅動程式時的詢問視窗](images/manual/04-driver-prompt.png)
-
 1. 按「**是**」。程式會先核對安裝檔的 SHA-256，再依序執行安裝程式（Windows 會要求管理員權限）。
 2. 兩個安裝程式都跑完。如果它要求重新開機，**請先重開機**，再開啟 TSCC_WASD。
 3. ViGEmBus 是必要的；HidHide 強烈建議安裝，沒有它就沒辦法隱藏實體手把，圖示可能會在 Xbox／PS 之間跳動。
@@ -94,8 +86,6 @@ ZIP 裡的 `drivers` 資料夾附有這兩個驅動程式的官方安裝程式�
 > ViGEmBus 上游已停止維護（[公告](https://docs.nefarius.at/projects/ViGEm/End-of-Life/)）。它目前仍可正常運作，TSCC_WASD 也還在使用它。
 
 ## 第一次映射
-
-![主視窗，尚未啟動映射](images/manual/05-main-window.png)
 
 主視窗只放每天會用到的東西：上方是狀態，中間是「啟動映射」「暫停」「停止」「重新啟動 Steam」，下面有兩個可展開的區塊「設定檔與手把」和「程式設定」。
 右上角是「使用說明」「檢查更新」「關於」。
@@ -108,8 +98,6 @@ ZIP 裡的 `drivers` 資料夾附有這兩個驅動程式的官方安裝程式�
 5. 如果程式說 Steam 已經在執行，見下一節。
 6. 狀態列出現「映射運作中」之後，**再開遊戲**。順序很重要：HidHide 只能阻止程式「打開」手把，不能把已經被打開的手把搶回來，
    所以遊戲若已經開著，請在映射啟動後重開遊戲。
-
-   ![映射運作中](images/manual/06-mapping-running.png)
 
 短暫休息請按「**暫停**」：遊戲收到的是什麼都沒按的虛擬手把，實體手把仍保持隱藏，按「繼續」就能接著玩。
 按「**停止**」則完全釋放：虛擬手把消失、實體手把恢復可見，HidHide 設定還原成映射之前的樣子。
@@ -126,8 +114,6 @@ Steam 的 Steam Input 會「打開」你的手把，並把它轉給 Steam 遊戲
 2. **重新啟動 Steam：** 選「否」，或按主視窗的「**重新啟動 Steam**」（映射中才能按）。
 3. **讓 Steam 永遠晚一步：** 見[系統匣與開機自動啟動](#系統匣與開機自動啟動)。
 
-![詢問是否設定自動重新連接](images/manual/07-steam-prompt.png)
-
 自動重新連接會把 TSCC_WASD 複製到 `%ProgramFiles%\TSCC_WASD\Helper`（只有管理員能修改），並建立一個只在需要時才執行的排程工作
 `\TSCC_WASD\ReconnectControllers`。要移除，到「程式設定」按「移除」。程式更新後需要重新按一次「設定自動重新連接」。
 
@@ -138,8 +124,6 @@ NS2 Pro 在較新的 Steam 上，停止後的自動重新連接可能不足以�
 ## 設定檔
 
 展開「**設定檔與手把**」。一個設定檔就是一組輸出選項，可以建立很多個（例如「PS 圖示」「Xbox 圖示」）。
-
-![設定檔與手把區塊](images/manual/08-profile-section.png)
 
 | 選項 | 說明 |
 | --- | --- |
@@ -166,8 +150,6 @@ Xbox 的 Guide 鍵與 NS2 的 Home 鍵當作 PS 鍵，NS2 的截圖鍵當作觸�
 
 在「**遊戲程序名稱**」填入遊戲的程序名稱（例如 `game.exe`，不分大小寫，`.exe` 可省略），或按「**從執行中的程式挑選**」從清單選。
 
-![從執行中的程式挑選](images/manual/09-process-picker.png)
-
 映射中：
 
 - 遊戲來到前景時，套用這個設定檔；
@@ -178,8 +160,6 @@ Xbox 的 Guide 鍵與 NS2 的 Home 鍵當作 PS 鍵，NS2 的截圖鍵當作觸�
 - 這個功能**不會自己啟動映射**。
 
 ### 程式設定
-
-![程式設定區塊](images/manual/10-app-settings.png)
 
 | 選項 | 說明 |
 | --- | --- |
@@ -248,8 +228,6 @@ USB 或藍牙。藍牙配對：DualShock 4 按住 Share + PS 鍵，DualSense 按
 
 1. 展開「設定檔與手把」，按「**校準 NS2 Pro 搖桿**」。
 
-   ![校準視窗](images/manual/11-calibration.png)
-
 2. **步驟 1／2：** 把手把放在桌上，不要碰兩支搖桿，按「下一步」。
 3. **步驟 2／2：** 把兩支搖桿沿著邊緣各慢慢轉 3 圈，確實推到底。八個方向的進度條都滿了，就按「儲存」。
 4. 校準存好後優先使用，不論 Steam 開不開。要放棄時，按「**清除我的校準**」，之後改用原廠校準或自動學習。
@@ -258,8 +236,6 @@ USB 或藍牙。藍牙配對：DualShock 4 按住 Share + PS 鍵，DualSense 按
 
 映射中，按「**手把測試與報告匯出**」開啟「手把測試」視窗：即時顯示兩支搖桿、L2／R2 與按鍵，用來確認程式有沒有讀到你的手把。
 
-![手把測試視窗](images/manual/12-controller-test.png)
-
 要回報問題時，按「**錄製 5 秒並儲存**」：程式收集手把的原始報告，存成純文字檔。檔案內含診斷資訊（版本、系統、驅動程式狀態），
 **上傳到 GitHub 前請先打開看過**；程式不會自動上傳任何東西。
 
@@ -267,8 +243,6 @@ USB 或藍牙。藍牙配對：DualShock 4 按住 Share + PS 鍵，DualSense 按
 
 TSCC_WASD 會在通知區域（系統匣）放一個圖示：**映射中有綠點**，暫停時有橘點。
 滑鼠移上去會顯示狀態，連按兩下開啟視窗，右鍵選單有「顯示視窗」「啟動映射」「暫停」「停止映射」「結束」。
-
-![系統匣圖示與右鍵選單](images/manual/14-tray-menu.png)
 
 勾選「**最小化時縮到系統匣**」，最小化後視窗就收進系統匣。
 
@@ -280,8 +254,6 @@ Steam 就永遠看不到實體手把。登入後沒看到視窗是正常的：�
 ## 在程式內更新
 
 按右上角的「**檢查更新**」（或在「程式設定」勾選開啟程式時自動檢查）。有新版本時：
-
-![更新詢問視窗](images/manual/15-update-prompt.png)
 
 1. 程式詢問是否下載；選「是」才會從 GitHub 下載該版本的 ZIP。
 2. 下載完會核對 SHA-256（發行版簽章後也會核對數位簽章）。核對失敗就不會安裝。
@@ -355,8 +327,6 @@ Steam 就永遠看不到實體手把。登入後沒看到視窗是正常的：�
 2. 到 [GitHub Issues](https://github.com/ynyrworks/TSCC_WASD/issues) 新增問題，貼上診斷資訊，說明你做了什麼、預期什麼、實際發生什麼。
 3. 需要的話，附上「開啟日誌資料夾」裡當天的日誌，或[手把測試](#手把測試與報告匯出)錄下的報告。**貼出前請先看過內容。**
 4. 遊戲能不能顯示 PS 圖示也歡迎回報：用「遊戲相容性回報」範本，結果會整理到[相容性清單](COMPATIBILITY.md)。
-
-![關於視窗](images/manual/13-about.png)
 
 TSCC_WASD 是 MIT 授權的免費軟體；NS2 Pro 協定的部分改作自 SDL（zlib 授權），隨附與外部元件見[第三方聲明](../THIRD-PARTY-NOTICES.md)。
 PlayStation、DualShock、Xbox、Nintendo Switch、Steam、reWASD 為各自所有者的商標，本專案與其無關聯。

@@ -59,8 +59,6 @@ controllers are **experimental**: they may work, but 1.0 makes no promise about 
 1. Download the latest `TSCC_WASD-<version>-win-x64.zip` from [Releases](https://github.com/ynyrworks/TSCC_WASD/releases).
    The same page has a `.sha256` file.
 
-   ![The asset list on the release page](images/manual/01-release-page.png)
-
 2. **Check the SHA-256.** Open PowerShell in the folder with the ZIP and run:
 
    ```powershell
@@ -70,12 +68,8 @@ controllers are **experimental**: they may work, but 1.0 makes no promise about 
    The `Hash` must match the string in the `.sha256` file exactly (case does not matter). If it does not,
    do not run it; download again.
 
-   ![Checking the SHA-256 in PowerShell](images/manual/02-verify-hash.png)
-
 3. Right-click the ZIP, choose *Extract All*, and run `TSCC_WASD.exe` from the extracted folder (not from inside the ZIP).
 4. **SmartScreen warning:** on first run Windows may show "Windows protected your PC". Click **More info**, then **Run anyway**.
-
-   ![SmartScreen: More info and Run anyway](images/manual/03-smartscreen.png)
 
    **Why?** TSCC_WASD 1.0 is **not code-signed**. A code-signing certificate costs money and needs vetting;
    this is a free personal project and has none yet. SmartScreen warns about any unsigned program that few people
@@ -90,8 +84,6 @@ You only download by hand once; later versions can be [updated in the app](#upda
 The ZIP's `drivers` folder holds the official installers for both drivers. When you first open TSCC_WASD and a driver
 is missing, it asks:
 
-![The missing-driver question](images/manual/04-driver-prompt.png)
-
 1. Click **Yes**. The app checks each installer's SHA-256, then runs them one after another (Windows asks for administrator rights).
 2. Finish both installers. If one asks for a reboot, **reboot first**, then open TSCC_WASD again.
 3. ViGEmBus is required. HidHide is strongly recommended: without it the real controller cannot be hidden and
@@ -103,8 +95,6 @@ is missing, it asks:
 > It still works, and TSCC_WASD still uses it.
 
 ## First mapping
-
-![Main window before mapping starts](images/manual/05-main-window.png)
 
 The main window keeps what you use every day: status at the top, **Start mapping**, **Pause**, **Stop** and **Restart Steam** in
 the middle, and two expandable sections, **Profile and controller** and **App settings**. **Help**, **Check for updates** and
@@ -120,8 +110,6 @@ the middle, and two expandable sections, **Profile and controller** and **App se
 6. When the status says mapping is running, **then start the game.** The order matters: HidHide stops programs from
    *opening* a controller, but cannot take it from a program that already has it open, so if the game was already
    running, restart it after mapping has started.
-
-   ![Mapping is running](images/manual/06-mapping-running.png)
 
 For a short break use **Pause**: games get a virtual controller with nothing pressed, the real controller stays hidden,
 and **Resume** continues. **Stop** releases everything: the virtual controller goes away, the real one is visible
@@ -141,8 +129,6 @@ between Xbox and PS. There are three ways out, from most convenient to fallback:
 2. **Restart Steam:** choose **No**, or click **Restart Steam** in the main window (available while mapping).
 3. **Make Steam start last:** see [Tray icon and start with Windows](#tray-icon-and-start-with-windows).
 
-![The automatic reconnect question](images/manual/07-steam-prompt.png)
-
 Automatic reconnect copies TSCC_WASD to `%ProgramFiles%\TSCC_WASD\Helper` (only administrators can change it) and registers
 an on-demand task, `\TSCC_WASD\ReconnectControllers`. Remove it with **Remove** under **App settings**. After an app update,
 click **Set up automatic reconnect** once more.
@@ -155,8 +141,6 @@ current Steam, that reconnect may not be enough for Steam to see it again; unplu
 ## Profiles
 
 Expand **Profile and controller**. A profile is a set of output options; you can have several (for example "PS prompts" and "Xbox prompts").
-
-![The Profile and controller section](images/manual/08-profile-section.png)
 
 | Option | Meaning |
 | --- | --- |
@@ -185,8 +169,6 @@ A damaged profile file is never overwritten and editing is disabled; repair it t
 Enter the game's process name in **Game process name** (for example `game.exe`; case-insensitive, `.exe` optional), or click
 **Pick from running programs**.
 
-![Pick from running programs](images/manual/09-process-picker.png)
-
 While mapping:
 
 - the profile applies when the game comes to the foreground;
@@ -197,8 +179,6 @@ While mapping:
 - this **never starts mapping by itself**.
 
 ### App settings
-
-![The App settings section](images/manual/10-app-settings.png)
 
 | Option | Meaning |
 | --- | --- |
@@ -270,8 +250,6 @@ mapping and applies as soon as you save.
 
 1. Expand **Profile and controller** and click **Calibrate NS2 Pro sticks**.
 
-   ![The calibration window](images/manual/11-calibration.png)
-
 2. **Step 1 of 2:** put the controller down without touching either stick and click **Next**.
 3. **Step 2 of 2:** slowly circle each stick three times at the edge, pushing fully. When the bar for every direction is full, click **Save**.
 4. Your calibration takes priority whether Steam is open or not. To drop it, click **Clear my calibration**; the factory calibration or automatic learning is used instead.
@@ -281,8 +259,6 @@ mapping and applies as soon as you save.
 While mapping, click **Controller test and report export** to open the *Controller test* window: both sticks, L2 / R2 and the buttons
 live, to confirm the app is reading your controller.
 
-![The controller test window](images/manual/12-controller-test.png)
-
 For a bug report click **Record 5 seconds and save**: the app collects the controller's raw reports into a plain-text file. The file includes
 diagnostic information (versions, system, driver state), so **read it before you upload it to GitHub**. Nothing is uploaded automatically.
 
@@ -290,8 +266,6 @@ diagnostic information (versions, system, driver state), so **read it before you
 
 TSCC_WASD puts an icon in the notification area: **a green dot while mapping**, an orange dot while paused. Hover for the state, double-click to open the
 window; the right-click menu has *Show window*, *Start mapping*, *Pause*, *Stop mapping* and *Exit*.
-
-![The tray icon and its menu](images/manual/14-tray-menu.png)
 
 With **Minimize to the notification area** on, minimizing tucks the window into the tray.
 
@@ -303,8 +277,6 @@ then starts Steam, so Steam never sees the real controller. Seeing no window aft
 ## Updating in the app
 
 Click **Check for updates** in the top right (or turn on checking at startup under **App settings**). When there is a newer version:
-
-![The update question](images/manual/15-update-prompt.png)
 
 1. The app asks whether to download; only if you say yes does it download that version's ZIP from GitHub.
 2. It checks the SHA-256 (and the digital signature, once releases are signed). A failed check means nothing is installed.
@@ -378,8 +350,6 @@ automatically since 0.4.1.
 2. Open a [GitHub issue](https://github.com/ynyrworks/TSCC_WASD/issues), paste the diagnostics and say what you did, what you expected and what happened.
 3. If asked, attach today's log from **Open log folder**, or a report recorded in the [controller test](#controller-test-and-report-export). **Read it before you post it.**
 4. Whether a game shows PS prompts is worth reporting too: use the *Game compatibility* template; results are collected in the [compatibility list](COMPATIBILITY.md).
-
-![The About window](images/manual/13-about.png)
 
 TSCC_WASD is free software under the MIT license; the NS2 Pro protocol portions adapted from SDL keep their zlib license, and bundled and external components are in
 [THIRD-PARTY-NOTICES.md](../THIRD-PARTY-NOTICES.md). PlayStation, DualShock, Xbox, Nintendo Switch, Steam and reWASD are trademarks of their respective owners; TSCC_WASD

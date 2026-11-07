@@ -10,7 +10,6 @@ PlayStation DualShock 4，顯示 PS 按鍵圖示。也可以改成輸出虛擬 X
 
 **完整教學：[使用手冊](MANUAL.zh-TW.md)**，從下載、安裝、第一次映射、Steam、設定檔、各種手把到疑難排解。English: [README](../README.md) · [User manual](MANUAL.md)
 
-<!-- 截圖位置：拍完手冊的截圖後，把 images/editor.zh-TW.png 換成 1.0.0 的主視窗。 -->
 ![主視窗](images/editor.zh-TW.png)
 
 **名稱由來：** TSCC 是 **T**riangle（三角形）、**S**quare（正方形）、**C**ross（叉叉）、**C**ircle（圓形）

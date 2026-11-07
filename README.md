@@ -16,7 +16,6 @@ English and Traditional Chinese UI.
 
 **Full guide:** the [user manual](docs/MANUAL.md) covers install, first mapping, Steam, profiles, every controller and troubleshooting.
 
-<!-- Screenshot slot: replace docs/images/editor.png with the 1.0.0 main window after the manual shots are taken. -->
 ![Main window](docs/images/editor.png)
 
 **The name:** TSCC stands for **T**riangle, **S**quare, **C**ross and **C**ircle, the four
