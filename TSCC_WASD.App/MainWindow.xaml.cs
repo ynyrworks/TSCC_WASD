@@ -6,7 +6,6 @@ using TSCC_WASD.Core;
 using Wpf.Ui.Abstractions;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
-using MessageBox = System.Windows.MessageBox;
 
 namespace TSCC_WASD.App;
 
@@ -22,7 +21,6 @@ public partial class MainWindow : FluentWindow
     {
         _viewModel = viewModel;
         // Follows the Windows light/dark setting, also when it changes while the app runs.
-        SystemThemeWatcher.Watch(this);
         InitializeComponent();
         DataContext = _viewModel;
         RootNavigation.SetPageProviderService(new SharedViewModelPages(_viewModel));
@@ -81,7 +79,7 @@ public partial class MainWindow : FluentWindow
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, L.T("清理控制器時發生錯誤", "Error while cleaning up controllers"));
+            AppDialog.Show(ex.Message, L.T("清理控制器時發生錯誤", "Error while cleaning up controllers"));
         }
         finally
         {

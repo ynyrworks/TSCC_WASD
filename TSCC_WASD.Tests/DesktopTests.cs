@@ -11,6 +11,7 @@ using TSCC_WASD.Core.Services;
 
 namespace TSCC_WASD.Tests;
 
+[Collection(WpfUiCollection.Name)]
 public class DesktopTests
 {
     [Fact]
@@ -132,7 +133,7 @@ public class DesktopTests
                 Assert.Equal(AboutInfo.VersionLine(AboutInfo.CurrentVersionText, TSCC_WASD.Core.L.Chinese), vm.VersionLine);
 
                 Assert.Equal("", errors.ToString());
-                window.Close();
+                window.Close(); ThemeEventCleanup.DropSubscribers();
                 completion.TrySetResult();
             }
             catch (Exception ex) { completion.TrySetException(ex); }
@@ -179,7 +180,7 @@ public class DesktopTests
                 Assert.Single(list.Items);
                 Assert.Null(window.SelectedProcessName);
                 Assert.DoesNotContain(ProcessPickerWindow.EnumerateWindowedProcesses(), e => e.Name.Equals("TSCC_WASD", StringComparison.OrdinalIgnoreCase));
-                window.Close();
+                window.Close(); ThemeEventCleanup.DropSubscribers();
                 completion.TrySetResult();
             }
             catch (Exception ex) { completion.TrySetException(ex); }
@@ -226,7 +227,7 @@ public class DesktopTests
                     using var stream = File.Create(Path.Combine(screenshotDir, "calibration.png"));
                     encoder.Save(stream);
                 }
-                window.Close();
+                window.Close(); ThemeEventCleanup.DropSubscribers();
                 completion.TrySetResult();
             }
             catch (Exception ex) { completion.TrySetException(ex); }

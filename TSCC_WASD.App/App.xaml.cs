@@ -43,7 +43,7 @@ public partial class App : Application
         if (Mutex.TryOpenExisting(@"Local\" + AppPaths.LegacyName + ".Desktop", out var legacyInstance))
         {
             legacyInstance.Dispose();
-            MessageBox.Show(L.T("舊版 YnyrWASD 仍在執行，請先關閉它再開啟 TSCC_WASD。",
+            AppDialog.Show(L.T("舊版 YnyrWASD 仍在執行，請先關閉它再開啟 TSCC_WASD。",
                 "The old YnyrWASD is still running. Close it before opening TSCC_WASD."), AppPaths.Name);
             Shutdown();
             return;

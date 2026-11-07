@@ -7,7 +7,7 @@ using TSCC_WASD.Core.Services.Input;
 namespace TSCC_WASD.App;
 
 /// <summary>Two-step NS2 Pro stick calibration: release the sticks, then circle them at the edge.</summary>
-public partial class CalibrationWindow : Window
+public partial class CalibrationWindow : Wpf.Ui.Controls.FluentWindow
 {
     private enum Step { Connecting, Center, MeasuringCenter, Range }
 
@@ -94,7 +94,7 @@ public partial class CalibrationWindow : Window
     {
         _cache.ClearUser();
         ResetButton.IsEnabled = false;
-        MessageBox.Show(this, L.T("已清除你的校準，之後會改用原廠校準或自動學習。", "Your calibration was cleared; the factory calibration or automatic learning is used instead."),
+        AppDialog.Show(this, L.T("已清除你的校準，之後會改用原廠校準或自動學習。", "Your calibration was cleared; the factory calibration or automatic learning is used instead."),
             "TSCC_WASD");
     }
 

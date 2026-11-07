@@ -1,43 +1,48 @@
-<Window x:Class="TSCC_WASD.App.CalibrationWindow"
+<ui:FluentWindow x:Class="TSCC_WASD.App.CalibrationWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:app="clr-namespace:TSCC_WASD.App"
         Title="{app:T Zh='校準 NS2 Pro 搖桿', En='Calibrate NS2 Pro sticks'}"
         Icon="Assets/TSCC_WASD.ico" Width="560" SizeToContent="Height" ResizeMode="NoResize"
-        WindowStartupLocation="CenterOwner" Background="{DynamicResource BackgroundBrush}" Foreground="{DynamicResource TextBrush}" FontFamily="Segoe UI">
+        WindowStartupLocation="CenterOwner"
+        ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica">
     <Window.Resources>
-        <ResourceDictionary Source="Themes/Dark.xaml"/>
+        <ResourceDictionary Source="Themes/Shell.xaml"/>
     </Window.Resources>
-    <StackPanel Margin="24">
-        <TextBlock x:Name="StepTitle" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <ui:TitleBar Title="{app:T Zh='校準 NS2 Pro 搖桿', En='Calibrate NS2 Pro sticks'}" ShowMaximize="False" ShowMinimize="False">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="Assets/TSCC_WASD.ico"/>
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+    <StackPanel Grid.Row="1" Margin="24,8,24,24">
+        <TextBlock x:Name="StepTitle" Style="{StaticResource PageTitle}" FontSize="18" Margin="0,0,0,8"/>
         <TextBlock x:Name="StepText" Style="{StaticResource Muted}" FontSize="13" Margin="0,0,0,16"/>
         <Grid x:Name="RangePanel" Visibility="Collapsed" Margin="0,0,0,8">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="24"/><ColumnDefinition/></Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="{app:T Zh=左搖桿, En='Left stick'}" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBlock Text="{app:T Zh=右, En=Right}" FontSize="12"/><ProgressBar x:Name="L0"/>
-                <TextBlock Text="{app:T Zh=左, En=Left}" FontSize="12"/><ProgressBar x:Name="L1"/>
-                <TextBlock Text="{app:T Zh=上, En=Up}" FontSize="12"/><ProgressBar x:Name="L2"/>
-                <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="L3"/>
+                <TextBlock Text="{app:T Zh=右, En=Right}" FontSize="12"/><ProgressBar x:Name="L0" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=左, En=Left}" FontSize="12"/><ProgressBar x:Name="L1" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=上, En=Up}" FontSize="12"/><ProgressBar x:Name="L2" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="L3" Margin="0,2,0,6"/>
             </StackPanel>
             <StackPanel Grid.Column="2">
                 <TextBlock Text="{app:T Zh=右搖桿, En='Right stick'}" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBlock Text="{app:T Zh=右, En=Right}" FontSize="12"/><ProgressBar x:Name="R0"/>
-                <TextBlock Text="{app:T Zh=左, En=Left}" FontSize="12"/><ProgressBar x:Name="R1"/>
-                <TextBlock Text="{app:T Zh=上, En=Up}" FontSize="12"/><ProgressBar x:Name="R2"/>
-                <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="R3"/>
+                <TextBlock Text="{app:T Zh=右, En=Right}" FontSize="12"/><ProgressBar x:Name="R0" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=左, En=Left}" FontSize="12"/><ProgressBar x:Name="R1" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=上, En=Up}" FontSize="12"/><ProgressBar x:Name="R2" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="R3" Margin="0,2,0,6"/>
             </StackPanel>
         </Grid>
         <TextBlock x:Name="RawText" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <StackPanel.Resources>
-                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                    <Setter Property="Margin" Value="0,0,8,0"/>
-                </Style>
-            </StackPanel.Resources>
-            <Button x:Name="ResetButton" Content="{app:T Zh=清除我的校準, En='Clear my calibration'}" Click="OnReset"/>
-            <Button Content="{app:T Zh=取消, En=Cancel}" IsCancel="True" Click="OnCancel"/>
-            <Button x:Name="NextButton" Style="{StaticResource PrimaryButton}" Margin="0" IsDefault="True" Click="OnNext"/>
+            <ui:Button x:Name="ResetButton" Margin="0,0,8,0" Content="{app:T Zh=清除我的校準, En='Clear my calibration'}" Click="OnReset"/>
+            <ui:Button Margin="0,0,8,0" Content="{app:T Zh=取消, En=Cancel}" IsCancel="True" Click="OnCancel"/>
+            <ui:Button x:Name="NextButton" Appearance="Primary" Margin="0" IsDefault="True" Click="OnNext"/>
         </StackPanel>
     </StackPanel>
-</Window>
+    </Grid>
+</ui:FluentWindow>

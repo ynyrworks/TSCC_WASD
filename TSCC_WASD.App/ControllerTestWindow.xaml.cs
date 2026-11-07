@@ -11,7 +11,7 @@ using TSCC_WASD.Core.Services.Mapping;
 namespace TSCC_WASD.App;
 
 /// <summary>Live view of the latest mapped input, plus a short raw-report recording saved to a file the user picks.</summary>
-public partial class ControllerTestWindow : Window
+public partial class ControllerTestWindow : Wpf.Ui.Controls.FluentWindow
 {
     private readonly Func<MappingSession.InputSnapshot?> _latest;
     private readonly Func<bool> _isRunning;
@@ -35,9 +35,10 @@ public partial class ControllerTestWindow : Window
             var chip = new Border
             {
                 Margin = new Thickness(2), Padding = new Thickness(2, 4, 2, 4), CornerRadius = new CornerRadius(4),
-                Background = (Brush)FindResource("RaisedBrush"),
-                Child = new TextBlock { Text = flag.ToString(), FontSize = 11, TextAlignment = TextAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis }
+                                Child = new TextBlock { Text = flag.ToString(), FontSize = 11, TextAlignment = TextAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis }
             };
+            chip.SetResourceReference(Border.BackgroundProperty, "ControlFillColorDefaultBrush");
+            ((TextBlock)chip.Child).SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorPrimaryBrush");
             _chips[flag] = chip;
             ButtonGrid.Children.Add(chip);
         }
@@ -61,7 +62,11 @@ public partial class ControllerTestWindow : Window
             : !snapshot.Available ? L.T("尚未收到有效輸入。", "No valid input yet.") : "";
         var gamepad = snapshot is { Paused: false, Available: true } ? snapshot.State.Gamepad : default;
         foreach (var (flag, chip) in _chips)
-            chip.Background = (Brush)FindResource(gamepad.Buttons.HasFlag(flag) ? "AccentBrush" : "RaisedBrush");
+        {
+            bool down = gamepad.Buttons.HasFlag(flag);
+            chip.SetResourceReference(Border.BackgroundProperty, down ? "AccentFillColorDefaultBrush" : "ControlFillColorDefaultBrush");
+            ((TextBlock)chip.Child).SetResourceReference(TextBlock.ForegroundProperty, down ? "TextOnAccentFillColorPrimaryBrush" : "TextFillColorPrimaryBrush");
+        }
         Place(LeftDot, gamepad.LeftThumbX, gamepad.LeftThumbY);
         Place(RightDot, gamepad.RightThumbX, gamepad.RightThumbY);
         LeftValue.Text = $"({gamepad.LeftThumbX}, {gamepad.LeftThumbY})";

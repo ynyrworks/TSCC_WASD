@@ -5,7 +5,7 @@
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              ShutdownMode="OnMainWindowClose">
     <!-- WPF-UI theme and controls for the main window; the system theme is applied in App.OnStartup.
-         The other windows still merge Themes/Dark.xaml themselves (restyled in a later step), so they
+         Every window merges Themes/Shell.xaml for its text styles, so they
          also render in tests without App. -->
     <Application.Resources>
         <ResourceDictionary>

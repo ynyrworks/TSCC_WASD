@@ -686,7 +686,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         var source = packages.All(DriverInstaller.IsBundled)
             ? L.T("將執行程式資料夾 drivers 內附的 Nefarius 官方安裝程式", "The official Nefarius installers in the drivers folder will run")
             : L.T("將從 GitHub 下載 Nefarius 官方安裝程式", "The official Nefarius installers will be downloaded from GitHub");
-        var answer = MessageBox.Show(
+        var answer = AppDialog.Show(
             L.T($"尚未安裝下列免費驅動程式：\n\n{lines}\n\n要現在安裝嗎？{source}，執行前會核對 SHA-256。" +
                 "Windows 會要求管理員權限，安裝後可能需要重新開機。\n解除安裝：Windows 設定 → 應用程式。",
                 $"These free drivers are not installed:\n\n{lines}\n\nInstall them now? {source}; each is checked against its SHA-256 first. " +
@@ -754,7 +754,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         if (package is null || problem is not null)
         {
             // Can't install from here; the release page still has the download.
-            var open = MessageBox.Show(
+            var open = AppDialog.Show(
                 L.T($"有新版本 {latest.Tag}（目前 {VersionText}）。{problem}\n\n要開啟下載頁嗎？",
                     $"{latest.Tag} is available (you have {VersionText}). {problem}\n\nOpen the download page?"),
                 AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Information);
@@ -762,7 +762,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return;
         }
         string size = package.Zip.Size > 0 ? $"{package.Zip.Size / 1048576.0:0.0} MB" : "?";
-        var answer = MessageBox.Show(
+        var answer = AppDialog.Show(
             L.T($"有新版本 {latest.Tag}（目前 {VersionText}）。要下載並安裝嗎？\n\n" +
                 $"將從 TSCC_WASD 的 GitHub 發行版下載 {package.Zip.Name}（{size}），安裝前會核對 SHA-256 與數位簽章。",
                 $"{latest.Tag} is available (you have {VersionText}). Download and install it?\n\n" +
@@ -800,7 +800,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             catch (UpdateVerificationException ex)
             {
                 StatusMessage = L.T($"更新未通過驗證：{ex.Message}", $"The update failed verification: {ex.Message}");
-                MessageBox.Show(ex.Message, AppPaths.Name, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppDialog.Show(ex.Message, AppPaths.Name, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException
@@ -811,7 +811,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             }
             finally { UpdateProgressText = null; }
 
-            var install = MessageBox.Show(
+            var install = AppDialog.Show(
                 L.T($"已下載並驗證 {tag}。要現在安裝並重新啟動 TSCC_WASD 嗎？" +
                     (IsRunning ? "\n\n會先停止映射並還原 HidHide 設定，再更新程式。" : ""),
                     $"{tag} is downloaded and verified. Install it and restart TSCC_WASD now?" +
@@ -893,7 +893,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public bool FlushProfiles() => _saver.Flush();
 
     /// <summary>Asks before unwritable edits are discarded by a reload. Replaceable so tests need no dialog.</summary>
-    internal Func<bool> ConfirmDiscardUnsaved { get; set; } = () => MessageBox.Show(
+    internal Func<bool> ConfirmDiscardUnsaved { get; set; } = () => AppDialog.Show(
         L.T("目前的修改無法寫入磁碟（見設定檔頁的提示）。重新載入會捨棄這些修改，要繼續嗎？",
             "The current edits cannot be written to disk (see the note on the Profiles page). Reloading discards them. Continue?"),
         AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
@@ -1015,7 +1015,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 return;
             }
             if (automatic) return;
-            var answer = MessageBox.Show(
+            var answer = AppDialog.Show(
                 L.T("Steam 在隱藏實體手把之前就已啟動，仍握有實體手把，會透過 Steam Input 轉給遊戲，造成按鍵圖示在 Xbox／PS 之間交替。\n\n" +
                     "• 是：設定「自動重新連接」（只需一次，會要求一次管理員權限）。之後 TSCC_WASD 會自動重新連接 USB 手把讓 Steam 放開它，不必再重啟 Steam。\n" +
                     "• 否：這次先重新啟動 Steam（請先關閉正在執行的 Steam 遊戲）。\n" +
@@ -1049,7 +1049,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Sets up the elevated reconnect helper (one administrator prompt). True when it is ready.</summary>
     private async Task<bool> SetUpReconnectHelperAsync(bool confirm = true)
     {
-        if (confirm && MessageBox.Show(
+        if (confirm && AppDialog.Show(
                 L.T("「自動重新連接」會在 Steam 握著實體手把時，讓 USB 手把斷電重新連接一次（約 1–3 秒），Steam 就會放開它，不必重啟 Steam。\n\n" +
                     $"設定時 Windows 會要求一次管理員權限：TSCC_WASD 會複製到 {ControllerReconnector.HelperDirectory}，並建立一個只在需要時執行的排程工作。" +
                     "之後不再詢問。可隨時在「程式設定」移除。\n\n要現在設定嗎？",
@@ -1136,7 +1136,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return;
         }
         if (!SteamHelper.StartedSince(since.Value)) return;
-        var answer = MessageBox.Show(
+        var answer = AppDialog.Show(
             L.T("Steam 是在實體手把被隱藏期間啟動的，現在可能看不到實體手把。\n\n" +
                 "要再重新啟動 Steam 一次，讓它重新認得實體手把嗎？\n（請先關閉正在執行的 Steam 遊戲。）",
                 "Steam started while the physical controllers were hidden and may not see them now.\n\n" +

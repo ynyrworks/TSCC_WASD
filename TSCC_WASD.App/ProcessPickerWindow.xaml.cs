@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace TSCC_WASD.App;
 
-public partial class ProcessPickerWindow : Window
+public partial class ProcessPickerWindow : Wpf.Ui.Controls.FluentWindow
 {
     private readonly List<ProcessEntry> _all;
 

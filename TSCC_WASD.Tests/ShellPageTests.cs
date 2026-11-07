@@ -14,9 +14,10 @@ using TSCC_WASD.App.ViewModels;
 
 namespace TSCC_WASD.Tests;
 
+[Collection(WpfUiCollection.Name)]
 public class ShellPageTests
 {
-    private static Task RunSta(Action body)
+    internal static Task RunSta(Action body)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
