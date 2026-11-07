@@ -56,6 +56,13 @@ showed 0.99.0), hiding on:
 | After stop with automatic reconnect, Steam detects the NS2 Pro again | **Failed:** Steam logged no arrival after the port cycle; unplugging and replugging made it appear. The status now says so (0.99.1) |
 | HidHide recovery (re-register, then a brief unhide) | Not exercised: the build in the source folder was never refused. Must be checked on 0.99.1 installed by the in-app update into the folder that failed |
 
+**0.99.1 from the in-app update, 2026-11-07.** Same PC and folder. Just before updating, 0.99.0 showed
+"NS2 Pro USB is in use" again, every 1–5 seconds. After *Check for updates* installed 0.99.1 and
+restarted it, mapping with hiding on (HidHide hid 5 interfaces) found the NS2 Pro over USB within
+17 seconds and the controller test recorded its reports. **Passed**, but HidHide did not refuse the
+open this time, so the log has no recovery step: the recovery itself is still not exercised. Whether
+the update's restart or the fix made the difference is not known.
+
 ### Unreleased — 1.0 features, 2026-11-02
 
 Release build of `main` at `6625831` (About still showed 0.9.2), run by the maintainer on their PC.
