@@ -337,7 +337,7 @@ Everything is in `%APPDATA%\TSCC_WASD` (paste it into the File Explorer address 
 | --- | --- |
 | `profiles.json`, `profiles.json.bak` | Profiles and the previous version |
 | `settings.json` | App settings |
-| `logs\` | Logs, kept for 7 days |
+| `logs\` | Logs, one file per day; the newest 7 are kept |
 | `hidhide-restore.json` | HidHide's state before mapping, used to restore it |
 | `ns2-calibration.json` | The remembered NS2 Pro calibration |
 
