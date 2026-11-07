@@ -6,6 +6,7 @@ using TSCC_WASD.Core.Services.Setup;
 
 namespace TSCC_WASD.Tests;
 
+[Collection(AppLogCollection.Name)]
 public class HidHideGuardTests
 {
     private const string Ns2 = @"HID\VID_057E&PID_2069&MI_00\a&37d9c433&0&0000";

@@ -8,6 +8,7 @@ using TSCC_WASD.Core.Services.Setup;
 
 namespace TSCC_WASD.Tests;
 
+[Collection(AppLogCollection.Name)]
 public class HidHideRescannerTests
 {
     private static readonly TimeSpan Debounce = TimeSpan.FromMilliseconds(100);

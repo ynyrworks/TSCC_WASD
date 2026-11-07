@@ -9,6 +9,7 @@ using TSCC_WASD.Core.Services.Setup;
 
 namespace TSCC_WASD.Tests;
 
+[Collection(AppLogCollection.Name)]
 public class SetupTests
 {
     [Fact]
