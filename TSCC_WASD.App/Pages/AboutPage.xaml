@@ -57,7 +57,7 @@
             </StackPanel>
         </Border>
         <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh=說明, En=Help}"/>
-        <Border Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
+        <Border x:Name="HelpCard" Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
             <StackPanel>
                 <Grid Margin="0,5">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -66,6 +66,16 @@
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Margin="8,0,0,0" Content="{app:T Zh='使用手冊', En='User manual'}" Command="{Binding OpenHelpCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <TextBlock Text="{app:T Zh='新手導覽', En='Guided tour'}" TextWrapping="Wrap"/>
+                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='再看一次首次啟動時的簡短導覽', En='Replay the short tour shown on first launch'}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="ReplayTourButton" Margin="8,0,0,0" Content="{app:T Zh='重新顯示導覽', En='Show the tour again'}" Command="{Binding ReplayTourCommand}"/>
                     </StackPanel>
                 </Grid>
                 <Grid Margin="0,5">

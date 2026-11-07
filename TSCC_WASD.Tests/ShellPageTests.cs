@@ -36,7 +36,7 @@ public class ShellPageTests
         return completion.Task.WaitAsync(TimeSpan.FromSeconds(60));
     }
 
-    private static Border ThemedHost(ApplicationTheme theme)
+    internal static Border ThemedHost(ApplicationTheme theme)
     {
         var host = new Border();
         host.Resources.MergedDictionaries.Add(new ThemesDictionary { Theme = theme });
@@ -44,7 +44,7 @@ public class ShellPageTests
         return host;
     }
 
-    private static void Layout(Border host)
+    internal static void Layout(Border host)
     {
         host.Measure(new Size(960, 600));
         host.Arrange(new Rect(0, 0, 960, 600));
@@ -53,7 +53,7 @@ public class ShellPageTests
         host.UpdateLayout();
     }
 
-    private static IEnumerable<T> FindAll<T>(DependencyObject root) where T : DependencyObject
+    internal static IEnumerable<T> FindAll<T>(DependencyObject root) where T : DependencyObject
     {
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
         {

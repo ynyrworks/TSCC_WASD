@@ -1,0 +1,41 @@
+<UserControl x:Class="TSCC_WASD.App.TourOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:app="clr-namespace:TSCC_WASD.App"
+             Visibility="Collapsed" Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="Show"/>
+    </UserControl.Resources>
+    <!-- Nothing here has a background, so clicks outside the card reach the page: the tour never blocks the app. -->
+    <Canvas x:Name="Surface">
+        <Border x:Name="Highlight" IsHitTestVisible="False" Visibility="Collapsed" CornerRadius="8" BorderThickness="2"
+                BorderBrush="{DynamicResource SystemAccentColorPrimaryBrush}"/>
+        <Border x:Name="Card" Width="340" Padding="16" CornerRadius="8" BorderThickness="1"
+                Background="{DynamicResource ApplicationBackgroundBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                KeyboardNavigation.TabNavigation="Cycle" AutomationProperties.Name="{app:T Zh=新手導覽, En='Guided tour'}">
+            <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.35"/></Border.Effect>
+            <StackPanel>
+                <Grid Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TitleText" Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="StepCounter" Grid.Column="1" Text="{Binding StepText}" Margin="12,0,0,0" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" AutomationProperties.LiveSetting="Polite"/>
+                </Grid>
+                <TextBlock x:Name="BodyText" Text="{Binding Body}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                <Button x:Name="InstallButton" HorizontalAlignment="Left" Margin="0,0,0,12" Content="{app:T Zh=安裝驅動程式, En='Install drivers'}"
+                        Visibility="{Binding ShowInstall, Converter={StaticResource Show}}"/>
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Button x:Name="SkipButton" HorizontalAlignment="Left" Content="{app:T Zh=略過, En=Skip}"
+                            Visibility="{Binding ShowSkip, Converter={StaticResource Show}}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button x:Name="BackButton" Margin="0,0,8,0" Content="{app:T Zh=上一步, En=Back}"
+                                Visibility="{Binding CanGoBack, Converter={StaticResource Show}}"/>
+                        <ui:Button x:Name="NextButton" Appearance="Primary" MinWidth="88" Content="{Binding NextText}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Canvas>
+</UserControl>

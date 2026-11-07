@@ -146,6 +146,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             }
             if (ConfirmDriverInstall(missing)) await InstallDriversAsync(missing);
         }, () => !IsRunning);
+        ReplayTourCommand = new RelayCommand(() => TourRequested?.Invoke());
         CopyDiagnosticsCommand = Command(() =>
         {
             Clipboard.SetText(DiagnosticReport.Build(InputSummary, IsRunning) + $"Log: {AppLog.CurrentFile}{Environment.NewLine}");
@@ -511,6 +512,19 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand ImportCommand { get; }
     public ICommand ExportCommand { get; }
     public ICommand InstallDepsCommand { get; }
+    public ICommand ReplayTourCommand { get; }
+
+    /// <summary>Asks the window to (re)start the guided tour.</summary>
+    public event Action? TourRequested;
+    public bool TourCompleted => Settings.TourCompleted;
+
+    /// <summary>Skipping and finishing the tour both end here; it is the only setting the tour changes.</summary>
+    public void MarkTourCompleted()
+    {
+        if (Settings.TourCompleted) return;
+        Settings.TourCompleted = true;
+        SaveSettings();
+    }
     public ICommand OpenProfilesCommand { get; }
     public ICommand CalibrateCommand { get; }
     private ControllerTestWindow? _controllerTestWindow;
