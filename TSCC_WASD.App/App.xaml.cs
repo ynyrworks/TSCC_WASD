@@ -102,9 +102,9 @@ public partial class App : Application
             // Keep running: the mapper and HidHide restore live outside the failed UI action.
             args.Handled = true;
             MessageBox.Show(L.T($"發生未預期的錯誤：{args.Exception.Message}\n\n詳細內容已寫入日誌：\n{AppLog.CurrentFile}\n\n" +
-                    "回報問題時請附上日誌（關於 → 開啟日誌資料夾）。",
+                    "回報問題時請附上日誌（關於與說明 → 開啟日誌資料夾）。",
                     $"An unexpected error occurred: {args.Exception.Message}\n\nDetails were written to the log:\n{AppLog.CurrentFile}\n\n" +
-                    "Please attach the log when reporting the problem (About → Open log folder)."),
+                    "Please attach the log when reporting the problem (About & help → Open log folder)."),
                 AppPaths.Name, MessageBoxButton.OK, MessageBoxImage.Error);
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
