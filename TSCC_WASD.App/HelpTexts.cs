@@ -12,8 +12,8 @@ public static class HelpTexts
     {
         // ---- Home ----
         ["home.controller"] = (
-            "目前的映射狀態與使用中的輸入手把。映射中會即時顯示按下的按鍵；找不到手把時，請接上 Xbox 手把，或用 USB 接上 NS2 Pro。",
-            "The mapping state and the controller in use. While mapping runs it shows the buttons you press. If no controller is found, connect an Xbox controller or an NS2 Pro over USB."),
+            "目前的映射狀態與使用中的輸入手把。映射中會即時顯示按下的按鍵；找不到手把時請接上支援的手把：Xbox、Switch Pro、NS2 Pro（USB，或藍牙：按住 Sync 鍵，不需 Windows 配對）、DualShock 4、DualSense。",
+            "The mapping state and the controller in use. While mapping runs it shows the buttons you press. If none is found, connect a supported one: Xbox, Switch Pro, NS2 Pro (USB, or Bluetooth: hold Sync, no Windows pairing), DualShock 4 or DualSense."),
         ["home.main"] = (
             "開始映射：建立虛擬手把，並把實體手把的輸入送給它。請先開始映射、再開遊戲。缺少驅動程式時會先詢問是否安裝。映射中此鈕會變成「停止映射」。",
             "Starts mapping: creates the virtual controller and feeds your controller's input to it. Start it before the game. If a driver is missing the app first offers to install it. While mapping runs this button becomes Stop mapping."),
@@ -159,8 +159,8 @@ public static class HelpTexts
             "把版本、驅動程式與手把狀態複製到剪貼簿，貼到問題回報中。貼出前請先看過內容。",
             "Copies versions, driver state and controller state to the clipboard for a bug report. Read it before you post it."),
         ["about.logs"] = (
-            "開啟日誌資料夾（%APPDATA%\\TSCC_WASD\\logs，保留 7 天）。回報問題時若被要求附上日誌，請附當天的檔案，貼出前先看過。",
-            "Opens the log folder (%APPDATA%\\TSCC_WASD\\logs, kept for 7 days). When asked for a log in a bug report, attach today’s file and read it before you post it."),
+            "開啟日誌資料夾（%APPDATA%\\TSCC_WASD\\logs，保留最近 7 個每日日誌檔，每個執行過的日期一個，不是 7 天）。回報問題時若被要求附上日誌，請附當天的檔案，貼出前先看過。",
+            "Opens the log folder (%APPDATA%\\TSCC_WASD\\logs, the newest 7 daily log files are kept, one per day the app ran, not 7 days). When asked for a log in a bug report, attach today’s file and read it before you post it."),
         ["about.unsigned"] = (
             "此程式還沒有程式碼簽章，Windows SmartScreen 可能顯示未知發行者的提醒。只有在下載檔的 SHA-256 與發行頁相符時，才按「仍要執行」。這不代表程式有問題。",
             "This app is not code-signed yet, so Windows SmartScreen may warn about an unknown publisher. Only choose Run anyway if the download’s SHA-256 matches the release page. It says nothing against the program."),
