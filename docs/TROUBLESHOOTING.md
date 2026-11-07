@@ -1,5 +1,7 @@
 # Troubleshooting
 
+The [user manual](MANUAL.md) ([中文](MANUAL.zh-TW.md)) walks through the common cases below with screenshots.
+
 | Symptom | Check |
 | --- | --- |
 | App does not launch | Extract the whole ZIP first (do not run it from inside the ZIP); release builds include .NET, source builds need the .NET 10 Desktop Runtime |

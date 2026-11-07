@@ -1,5 +1,7 @@
 # Profile format
 
+How to use profiles in the app, including automatic switching per game, is in the [user manual](MANUAL.md#profiles) ([中文](MANUAL.zh-TW.md#設定檔)). This page describes the file format.
+
 The root JSON value is a non-empty array. See [example](../examples/profiles.json).
 
 | Field | Meaning |
