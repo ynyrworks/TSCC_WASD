@@ -3,7 +3,7 @@ using TSCC_WASD.Core.Services;
 
 namespace TSCC_WASD.App;
 
-/// <summary>Version channel and link rules for the About window.</summary>
+/// <summary>Version channel and link rules for the About page.</summary>
 public static class AboutInfo
 {
     public static readonly string RepoUrl = $"https://github.com/{UpdateChecker.Repository}";
@@ -37,8 +37,17 @@ public static class AboutInfo
     public static string ManualUrl(bool chinese) =>
         $"{RepoUrl}/blob/main/docs/{(chinese ? "MANUAL.zh-TW.md" : "MANUAL.md")}";
 
-    /// <summary>The main window's Help link target; always the same manual the About window opens.</summary>
+    /// <summary>The main window's Help link target; always the same manual the About page opens.</summary>
     public static string HelpUrl(bool chinese) => ManualUrl(chinese);
+
+    public static string IssuesUrl => $"{RepoUrl}/issues";
+
+    public static string ThirdPartyNoticesUrl => $"{RepoUrl}/blob/main/THIRD-PARTY-NOTICES.md";
+
+    /// <summary>The header line of the About page, such as "版本 1.0.0 · 正式版".</summary>
+    public static string VersionLine(string version, bool chinese) => chinese
+        ? $"版本 {version} · {ChannelText(version, true)}"
+        : $"Version {version} · {ChannelText(version, false)}";
 
     public static string SigningPolicyUrl => $"{RepoUrl}/blob/main/docs/CODE-SIGNING-POLICY.md";
 }

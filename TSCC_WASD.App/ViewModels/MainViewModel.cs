@@ -202,11 +202,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             OpenUrl(AboutInfo.HelpUrl(L.Chinese));
             return Task.CompletedTask;
         });
-        AboutCommand = Command(() =>
-        {
-            new AboutWindow { Owner = Application.Current?.MainWindow, DataContext = this }.ShowDialog();
-            return Task.CompletedTask;
-        });
+        ReportIssueCommand = Command(() => OpenLink(AboutInfo.IssuesUrl));
+        OpenRepoCommand = Command(() => OpenLink(AboutInfo.RepoUrl));
+        SigningPolicyCommand = Command(() => OpenLink(AboutInfo.SigningPolicyUrl));
+        ThirdPartyNoticesCommand = Command(() => OpenLink(AboutInfo.ThirdPartyNoticesUrl));
         OpenProfilesCommand = Command(() =>
         {
             var path = AppPaths.DataDirectory;
@@ -520,12 +519,24 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand CheckUpdatesCommand { get; }
     public ICommand CancelUpdateCommand { get; }
     public ICommand OpenHelpCommand { get; }
-    public ICommand AboutCommand { get; }
+    public ICommand ReportIssueCommand { get; }
+    public ICommand OpenRepoCommand { get; }
+    public ICommand SigningPolicyCommand { get; }
+    public ICommand ThirdPartyNoticesCommand { get; }
     public ICommand CopyDiagnosticsCommand { get; }
     public ICommand OpenLogsCommand { get; }
     public ICommand SupportCommand { get; }
 
     public const string KoFiUrl = "https://ko-fi.com/ynyr5566";
+
+    /// <summary>The About page header line: version and stable/preview channel.</summary>
+    public string VersionLine => AboutInfo.VersionLine(AboutInfo.CurrentVersionText, L.Chinese);
+
+    private static Task OpenLink(string url)
+    {
+        OpenUrl(url);
+        return Task.CompletedTask;
+    }
 
     public string VersionText => $"v{UpdateChecker.CurrentVersion.ToString(3)}";
 
