@@ -21,13 +21,13 @@ public static class TourSteps
     public static IReadOnlyList<TourStep> Build() =>
     [
         new("welcome", L.T("歡迎使用 TSCC_WASD", "Welcome to TSCC_WASD"),
-            L.T("這個程式讓遊戲把你的 Xbox 或 NS2 Pro 手把當成 DualShock 4，顯示 PS 按鍵圖示。花一分鐘看看怎麼開始？",
-                "This app makes games see your Xbox or NS2 Pro controller as a DualShock 4, so they show PS prompts. Take a minute to see how to get going?"),
+            L.T("這個程式讓遊戲把你的 Xbox、Switch 或 PS 手把當成 DualShock 4，顯示 PS 按鍵圖示。花一分鐘看看怎麼開始？",
+                "This app makes games see an Xbox, Switch or PlayStation controller as a DualShock 4, so they show PS prompts. Take a minute to see how to get going?"),
             typeof(HomePage), []),
         new("drivers", L.T("驅動程式", "Drivers"), "", typeof(SettingsPage), ["DriversRow"], Kind: TourStepKind.Drivers),
         new("controller", L.T("連接手把", "Connect your controller"),
-            L.T("USB 直接插上；藍牙請先在 Windows 配對。NS2 Pro 走藍牙時，請先按「開始映射」，再按住手把上的 Sync 鍵。",
-                "Plug in over USB, or pair over Bluetooth in Windows first. For an NS2 Pro over Bluetooth, press Start mapping first, then hold the Sync button on the controller."),
+            L.T("USB 直接插上；其他手把走藍牙時，請先在 Windows 配對。NS2 Pro 走藍牙時不要在 Windows 配對：先按「開始映射」，再按住手把上的 Sync 鍵。",
+                "Plug in over USB. Other controllers over Bluetooth are paired in Windows first. An NS2 Pro over Bluetooth is not paired in Windows: press Start mapping first, then hold the Sync button on the controller."),
             typeof(HomePage), ["ControllerCard"]),
         new("output", L.T("遊戲看到的手把", "The controller games see"),
             L.T("這裡是遊戲實際看到的手把：DualShock 4 讓遊戲顯示 PS 按鍵，Xbox 360 的相容性最好。可在設定檔頁的「輸出成」更換。",
@@ -171,6 +171,6 @@ public sealed class TourController : ObservableObject
 /// <summary>Decides whether the tour may open on its own right now.</summary>
 public static class TourGate
 {
-    public static bool CanAutoStart(bool completed, bool active, bool windowVisible, bool minimized, bool dialogOpen) =>
-        !completed && !active && windowVisible && !minimized && !dialogOpen;
+    public static bool CanAutoStart(bool completed, bool active, bool windowVisible, bool minimized, bool dialogOpen, bool startupPromptsDone) =>
+        !completed && !active && windowVisible && !minimized && !dialogOpen && startupPromptsDone;
 }

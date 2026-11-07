@@ -129,13 +129,28 @@ public class TourTests
 
     [Theory]
     [InlineData(false, false, true, false, false, true)]
+    [InlineData(false, false, true, false, false, false, false)] // launch prompts not finished
     [InlineData(true, false, true, false, false, false)]   // already done
     [InlineData(false, true, true, false, false, false)]   // already showing
     [InlineData(false, false, false, false, false, false)] // window hidden in the tray
     [InlineData(false, false, true, true, false, false)]   // minimized
     [InlineData(false, false, true, false, true, false)]   // a dialog is up
-    public void TheTourOpensOnlyForAVisibleUnobstructedWindowThatHasNotSeenIt(bool completed, bool active, bool visible, bool minimized, bool dialog, bool expected) =>
-        Assert.Equal(expected, TourGate.CanAutoStart(completed, active, visible, minimized, dialog));
+    public void TheTourOpensOnlyForAVisibleUnobstructedWindowThatHasNotSeenIt(bool completed, bool active, bool visible, bool minimized, bool dialog, bool expected, bool promptsDone = true) =>
+        Assert.Equal(expected, TourGate.CanAutoStart(completed, active, visible, minimized, dialog, promptsDone));
+
+    [Fact]
+    public void EveryModalPromptScopeMarksTheAppAsHavingADialogOpenUntilItEnds()
+    {
+        Assert.False(AppDialog.IsModalOpen);
+        var outer = AppDialog.ModalScope();
+        var inner = AppDialog.ModalScope();
+        Assert.True(AppDialog.IsModalOpen);
+        inner.Dispose();
+        inner.Dispose(); // disposing twice does not unbalance the count
+        Assert.True(AppDialog.IsModalOpen);
+        outer.Dispose();
+        Assert.False(AppDialog.IsModalOpen);
+    }
 
     [Fact]
     public void ADoneFlagMissingFromAnOldSettingsFileMeansTheTourShows()

@@ -47,6 +47,24 @@ public static class AppDialog
     public static MessageBoxResult Show(Window owner, string text, string caption, MessageBoxButton buttons = MessageBoxButton.OK,
         MessageBoxImage image = MessageBoxImage.None) => Show(text, caption, buttons, image, owner);
 
+    private static int _modalOpen;
+
+    /// <summary>True while any modal prompt of the app (AppDialog or the native crash box) is on screen. UI thread only.</summary>
+    public static bool IsModalOpen => _modalOpen > 0;
+
+    /// <summary>Marks a modal prompt as open until disposed; wrap every native MessageBox call in it.</summary>
+    public static IDisposable ModalScope()
+    {
+        _modalOpen++;
+        return new Scope();
+    }
+
+    private sealed class Scope : IDisposable
+    {
+        private bool _disposed;
+        public void Dispose() { if (!_disposed) { _disposed = true; _modalOpen--; } }
+    }
+
     private static MessageBoxResult ShowOnUiThread(string text, string caption, MessageBoxButton buttons, MessageBoxImage image, Window? owner)
     {
         owner = UsableOwner(owner) ?? UsableOwner(Application.Current?.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive));
@@ -54,7 +72,7 @@ public static class AppDialog
         // Without a visible owner (hidden in the tray) the dialog stands alone, on top, with a taskbar button.
         if (owner is not null) dialog.Owner = owner;
         else { dialog.Topmost = true; dialog.ShowInTaskbar = true; dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen; }
-        dialog.ShowDialog();
+        using (ModalScope()) dialog.ShowDialog();
         return dialog.Result;
     }
 

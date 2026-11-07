@@ -55,14 +55,23 @@ public partial class MainWindow : FluentWindow
         StateChanged += OnStateChanged;
     }
 
-    private bool DialogOpen() => Application.Current?.Windows.OfType<Window>()
+    private bool _tourAllowed;
+
+    /// <summary>The launch-time prompts (driver install offer) are finished; until then the tour does not open by itself.</summary>
+    public void AllowTour()
+    {
+        _tourAllowed = true;
+        TryAutoStartTour();
+    }
+
+    private bool DialogOpen() => AppDialog.IsModalOpen || Application.Current?.Windows.OfType<Window>()
         .Any(w => w != this && w.IsVisible && (w is DialogWindow || w.Owner == this)) == true;
 
     private void TryAutoStartTour()
     {
         if (_viewModel.TourCompleted) { _tourTimer.Stop(); return; }
         if (!IsLoaded) return;
-        if (!TourGate.CanAutoStart(_viewModel.TourCompleted, _tour.IsActive, IsVisible, WindowState == WindowState.Minimized, DialogOpen())) return;
+        if (!TourGate.CanAutoStart(_viewModel.TourCompleted, _tour.IsActive, IsVisible, WindowState == WindowState.Minimized, DialogOpen(), _tourAllowed)) return;
         _tourTimer.Stop();
         StartTour();
     }

@@ -83,13 +83,14 @@ public partial class App : Application
             _tray.ShowBalloon(L.T("TSCC_WASD 已在背景執行。", "TSCC_WASD is running in the background."));
         else
             window.Show();
-        _ = StartAsync(viewModel, atSignIn);
+        _ = StartAsync(viewModel, window, atSignIn);
     }
 
-    private static async Task StartAsync(MainViewModel viewModel, bool atSignIn)
+    private static async Task StartAsync(MainViewModel viewModel, MainWindow window, bool atSignIn)
     {
         // A silent sign-in launch never pops up installers; mapping reports the missing driver instead.
         if (!atSignIn) await viewModel.OfferMissingDriversAsync();
+        window.AllowTour(); // the launch prompts are over: the tour may open now
         await viewModel.AutoStartAsync(atSignIn);
         if (viewModel.CheckUpdatesOnStartup) await viewModel.CheckUpdatesAsync(quiet: true);
     }
@@ -101,6 +102,7 @@ public partial class App : Application
             AppLog.Error("Unhandled UI exception", args.Exception);
             // Keep running: the mapper and HidHide restore live outside the failed UI action.
             args.Handled = true;
+            using var modal = AppDialog.ModalScope(); // the tour must not open over this box
             MessageBox.Show(L.T($"發生未預期的錯誤：{args.Exception.Message}\n\n詳細內容已寫入日誌：\n{AppLog.CurrentFile}\n\n" +
                     "回報問題時請附上日誌（關於與說明 → 開啟日誌資料夾）。",
                     $"An unexpected error occurred: {args.Exception.Message}\n\nDetails were written to the log:\n{AppLog.CurrentFile}\n\n" +
