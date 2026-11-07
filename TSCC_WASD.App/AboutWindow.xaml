@@ -10,7 +10,7 @@
     </Window.Resources>
     <StackPanel Margin="24">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-            <Image Source="Assets/TSCC_WASD.ico" Width="48" Height="48" Margin="0,0,14,0"/>
+            <Image Source="Assets/TSCC_WASD_256.png" RenderOptions.BitmapScalingMode="HighQuality" Width="48" Height="48" Margin="0,0,14,0"/>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="TSCC_WASD" FontSize="22" FontWeight="Bold"/>
                 <TextBlock x:Name="VersionText" Style="{StaticResource Muted}"/>
