@@ -188,6 +188,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         });
         Reload();
         if (_coordinator.RecoverHiddenControllers() is { } recovered) StatusMessage = recovered;
+        BatterySource = () => _coordinator.Battery ?? BatteryStatus.Unknown;
+        ControllerSource = () => _coordinator.Controller;
+        HiddenCountSource = () => _coordinator.HiddenInterfaceCount;
         _timer.Tick += OnTick;
         _timer.Start();
     }
@@ -433,34 +436,57 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public string VersionText => $"v{UpdateChecker.CurrentVersion.ToString(3)}";
 
     private BatteryStatus _battery;
+    private ControllerInfo? _controller;
+    private int? _hiddenCount;
     private int _batteryReading;
 
     /// <summary>
     /// Where the Home page reads the battery of the physical controller. Called off the UI thread, about once a second
-    /// while mapping. Not wired yet: the core does not expose the active reader (see the task report).
+    /// while mapping. Defaults to the coordinator; unknown when not mapping.
     /// </summary>
     public Func<BatteryStatus>? BatterySource { get; set; }
+
+    /// <summary>Name and connection of the controller being read (null = none). Same threading as <see cref="BatterySource"/>.</summary>
+    public Func<ControllerInfo?>? ControllerSource { get; set; }
+
+    /// <summary>Interfaces HidHide hid for this session (null = not hiding). Same threading as <see cref="BatterySource"/>.</summary>
+    public Func<int?>? HiddenCountSource { get; set; }
 
     /// <summary>Last known battery; kept after mapping stops.</summary>
     public BatteryStatus Battery
     {
         get => _battery;
-        private set { if (SetField(ref _battery, value)) RaisePropertyChanged(nameof(BatteryText)); }
+        private set { if (!SetField(ref _battery, value)) return; RaisePropertyChanged(nameof(BatteryText)); RaisePropertyChanged(nameof(HasBatteryText)); RaisePropertyChanged(nameof(ControllerName)); }
     }
+
+    /// <summary>Last known controller; kept after mapping stops.</summary>
+    public ControllerInfo? Controller => _controller;
 
     private void PollBattery()
     {
-        var source = BatterySource;
-        if (source is null || Interlocked.Exchange(ref _batteryReading, 1) == 1) return;
+        var battery = BatterySource;
+        var controller = ControllerSource;
+        var hidden = HiddenCountSource;
+        if (battery is null && controller is null && hidden is null) return;
+        if (Interlocked.Exchange(ref _batteryReading, 1) == 1) return;
         var context = TaskScheduler.FromCurrentSynchronizationContext();
         Task.Run(() =>
         {
-            try { return source(); }
-            catch { return BatteryStatus.Unknown; }
+            BatteryStatus status = BatteryStatus.Unknown;
+            ControllerInfo? info = null;
+            int? count = null;
+            try { if (battery is not null) status = battery(); } catch { }
+            try { info = controller?.Invoke(); } catch { }
+            try { count = hidden?.Invoke(); } catch { }
+            return (status, info, count);
         }).ContinueWith(task =>
         {
             Volatile.Write(ref _batteryReading, 0);
-            if (!_closing) Battery = task.Result;
+            if (_closing || task.IsFaulted) return;
+            var (status, info, count) = task.Result;
+            Battery = status;
+            _hiddenCount = count;
+            if (info is not null) { _controller = info; RaiseHomeState(); }
         }, context);
     }
 
@@ -475,12 +501,23 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public string StatusLine => HomeText.StatusLine(IsRunning, IsPaused, CurrentOutput, L.Chinese);
     public string OutputTitle => HomeText.OutputName(CurrentOutput);
     public string OutputDetail => HomeText.OutputDetail(CurrentOutput, L.Chinese);
-    public string FooterText => HomeText.Footer(IsRunning, IsRunning && _coordinator.HidingSince is not null, L.Chinese);
+    public string FooterText => HomeText.Footer(IsRunning, IsRunning && _coordinator.HidingSince is not null, L.Chinese, _hiddenCount);
     public bool AutoSwitchApplies => AutoProfileSwitchRule.HasAnyMatch(Profiles);
 
-    /// <summary>The controller being read: the reader's status while mapping, otherwise the profile's input choice.</summary>
-    public string ControllerName => IsRunning && !string.IsNullOrWhiteSpace(_coordinator.InputStatus) ? _coordinator.InputStatus!
-        : InputOptions.FirstOrDefault(o => o.Type == SelectedProfile?.InputType)?.Name ?? "";
+    /// <summary>
+    /// Controller card line, "NS2 Pro · USB · 電量 低 · 充電中". Name and connection come from the active reader
+    /// (last known after mapping stops), else the reader's status while mapping, else the profile's input choice.
+    /// </summary>
+    public string ControllerName
+    {
+        get
+        {
+            string name = _controller is { } info ? HomeText.Controller(info, L.Chinese)
+                : IsRunning && !string.IsNullOrWhiteSpace(_coordinator.InputStatus) ? _coordinator.InputStatus!
+                : InputOptions.FirstOrDefault(o => o.Type == SelectedProfile?.InputType)?.Name ?? "";
+            return HomeText.ControllerLine(name, BatteryText);
+        }
+    }
 
     private void RaiseHomeState()
     {

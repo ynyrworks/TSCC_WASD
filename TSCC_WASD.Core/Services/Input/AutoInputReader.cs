@@ -126,6 +126,12 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IBatterySourc
     /// <summary>Name of the source currently being mapped, or null while none is available.</summary>
     public string? ActiveSource => _active < 0 ? null : _names[_active];
 
+    /// <summary>The reader currently in use, or null while none is available. A snapshot; may change right after.</summary>
+    public IInputReader? ActiveReader
+    {
+        get { int active = _active; return active < 0 ? null : _sources[active]; }
+    }
+
     public bool TryGetState(out State state)
     {
         Span<bool> available = stackalloc bool[_sources.Length];

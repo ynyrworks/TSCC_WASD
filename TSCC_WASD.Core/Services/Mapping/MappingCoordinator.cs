@@ -45,6 +45,18 @@ public sealed class MappingCoordinator : IAsyncDisposable
     public string? LastError => _session?.LastError;
     public MappingSession.InputSnapshot? LatestInput => _session?.LatestInput;
     public string? InputStatus => _session?.InputStatus;
+
+    /// <summary>Battery of the active reader; null when not mapping. Safe to call from any thread.</summary>
+    public BatteryStatus? Battery => _session?.Battery;
+
+    /// <summary>The controller being read; null when not mapping or none connected.</summary>
+    public ControllerInfo? Controller => _session?.Controller;
+
+    /// <summary>
+    /// How many controller interfaces HidHide hid for this session; null when not hiding. Counts the interfaces
+    /// this app hid itself, not ones that were already hidden.
+    /// </summary>
+    public int? HiddenInterfaceCount => _hider?.HiddenCount;
     public string InputSummary => _session?.InputSummary ?? L.T("尚未啟動映射", "Mapping not started");
 
     public async Task<(bool started, string message)> StartAsync(MappingProfile profile, Action<string>? statusCallback = null)

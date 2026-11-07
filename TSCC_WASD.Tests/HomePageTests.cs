@@ -1,6 +1,8 @@
 using TSCC_WASD.App.ViewModels;
+using TSCC_WASD.Core;
 using TSCC_WASD.Core.Models;
 using TSCC_WASD.Core.Services.Input;
+using TSCC_WASD.Core.Services.Mapping;
 using Xunit;
 
 namespace TSCC_WASD.Tests;
@@ -25,6 +27,48 @@ public class HomePageTests
             Assert.Same(vm.StartCommand, vm.MainCommand);
         }
         finally { await vm.DisposeAsync(); }
+    }
+
+    [Fact]
+    public async Task MainCommandIsStopAndLabelIsStopWhileRunning()
+    {
+        var vm = new MainViewModel();
+        try
+        {
+            typeof(MainViewModel).GetProperty(nameof(MainViewModel.IsRunning))!.SetValue(vm, true);
+            Assert.True(vm.IsRunning);
+            Assert.Same(vm.StopCommand, vm.MainCommand);
+            Assert.Equal(HomeText.MainButton(true, L.Chinese), vm.MainButtonText);
+            Assert.Equal(L.Chinese ? "停止映射" : "Stop mapping", vm.MainButtonText);
+        }
+        finally { await vm.DisposeAsync(); }
+    }
+
+    [Fact]
+    public void ControllerTextShowsNameAndConnection()
+    {
+        Assert.Equal("NS2 Pro · USB", HomeText.Controller(new ControllerInfo("NS2 Pro", ControllerConnection.Usb), true));
+        Assert.Equal("DualSense · 藍牙", HomeText.Controller(new ControllerInfo("DualSense", ControllerConnection.Bluetooth), true));
+        Assert.Equal("DualSense · Bluetooth", HomeText.Controller(new ControllerInfo("DualSense", ControllerConnection.Bluetooth), false));
+        Assert.Equal("Switch Pro", HomeText.Controller(new ControllerInfo("Switch Pro", ControllerConnection.Unknown), true));
+    }
+
+    [Fact]
+    public void ControllerLineJoinsNameConnectionAndBattery()
+    {
+        string name = HomeText.Controller(new ControllerInfo("NS2 Pro", ControllerConnection.Usb), true);
+        string battery = HomeText.Battery(BatteryStatus.Of(BatteryLevel.Low, true), true, true);
+        Assert.Equal("NS2 Pro · USB · 電量 低 · 充電中", HomeText.ControllerLine(name, battery));
+        Assert.Equal("NS2 Pro · USB", HomeText.ControllerLine(name, ""));
+        Assert.Equal("電量 —", HomeText.ControllerLine("", "電量 —"));
+    }
+
+    [Fact]
+    public void FooterShowsHiddenCountOnlyWhenPositive()
+    {
+        Assert.Contains("2", HomeText.Footer(true, true, true, 2));
+        Assert.Equal(HomeText.Footer(true, true, true), HomeText.Footer(true, true, true, 0));
+        Assert.Equal(HomeText.Footer(true, false, true), HomeText.Footer(true, false, true, 2));
     }
 
     [Theory]

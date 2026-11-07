@@ -43,13 +43,7 @@
                                        AutomationProperties.LiveSetting="Polite"/>
                         </StackPanel>
                         <TextBlock Text="{Binding ControllerName}" TextWrapping="Wrap" Margin="22,0,0,2"/>
-                        <TextBlock Text="{Binding BatteryText}" Style="{StaticResource Muted}" Margin="22,0,0,2">
-                            <TextBlock.Visibility>
-                                <Binding Path="HasBatteryText">
-                                    <Binding.Converter><BooleanToVisibilityConverter/></Binding.Converter>
-                                </Binding>
-                            </TextBlock.Visibility>
-                        </TextBlock>
+                        <!-- Stick calibration status goes here once the calibration branch lands. -->
                         <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Muted}" Margin="22,4,0,0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">

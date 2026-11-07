@@ -99,6 +99,28 @@ public sealed class MappingSession : IAsyncDisposable
     /// <summary>The input reader's own status text, e.g. which controller is being read.</summary>
     public string InputStatus => _input.Status;
 
+    /// <summary>Battery of the controller being read; null when not running, unknown when the reader has none or fails.</summary>
+    public BatteryStatus? Battery
+    {
+        get
+        {
+            if (!IsRunning) return null;
+            try { return _input is IBatterySource source ? source.Battery : BatteryStatus.Unknown; }
+            catch { return BatteryStatus.Unknown; }
+        }
+    }
+
+    /// <summary>Name and connection of the controller being read; null when not running or none is connected yet.</summary>
+    public ControllerInfo? Controller
+    {
+        get
+        {
+            if (!IsRunning) return null;
+            try { return ControllerInfo.Describe(_input is AutoInputReader auto ? auto.ActiveReader : _input); }
+            catch { return null; }
+        }
+    }
+
     private bool IsXInputSource() =>
         _input is XInputReader || (_input is AutoInputReader auto && auto.ActiveSource?.Contains("XInput") == true);
 
