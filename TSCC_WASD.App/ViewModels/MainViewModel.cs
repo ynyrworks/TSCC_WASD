@@ -18,6 +18,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 {
     private readonly MappingCoordinator _coordinator;
     private readonly AppSettingsStore _settingsStore;
+    private readonly Action<bool, string> _startupWriter;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(250) };
     private readonly List<AsyncRelayCommand> _commands = new();
     private readonly AutoProfileSwitchRule _autoSwitch = new();
@@ -43,8 +44,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Quiet period after the last profile edit before it is written to disk.</summary>
     public static readonly TimeSpan DefaultSaveDelay = TimeSpan.FromMilliseconds(800);
 
-    public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null, TimeSpan? saveDelay = null)
+    public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null, TimeSpan? saveDelay = null,
+        Action<bool, string>? startupWriter = null)
     {
+        _startupWriter = startupWriter ?? StartupRegistration.Set;
         _coordinator = new MappingCoordinator(profileStore, () => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true));
         _settingsStore = settingsStore ?? new AppSettingsStore();
         Settings = _settingsStore.Load();
@@ -398,20 +401,32 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public AppSettings Settings { get; }
 
+    /// <summary>Writes the Windows start-up entry first; the setting changes only if that worked. False (with a message) otherwise.</summary>
+    private bool TrySetStartWithWindows(bool value)
+    {
+        if (Settings.StartWithWindows == value) return true;
+        try
+        {
+            _startupWriter(value, Environment.ProcessPath ?? throw new InvalidOperationException());
+            Settings.StartWithWindows = value;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = L.T($"無法變更開機啟動：{ex.Message}", $"Could not change sign-in launch: {ex.Message}");
+            return false;
+        }
+    }
+
     public bool StartWithWindows
     {
         get => Settings.StartWithWindows;
         set
         {
-            if (Settings.StartWithWindows == value) return;
-            try
-            {
-                StartupRegistration.Set(value, Environment.ProcessPath ?? throw new InvalidOperationException());
-                Settings.StartWithWindows = value;
-                SaveSettings();
-            }
-            catch (Exception ex) { StatusMessage = L.T($"無法變更開機啟動：{ex.Message}", $"Could not change sign-in launch: {ex.Message}"); }
+            if (TrySetStartWithWindows(value)) SaveSettings();
             RaisePropertyChanged();
+            RaisePropertyChanged(nameof(StartupChoice));
+            RaisePropertyChanged(nameof(StartupDescription));
         }
     }
     public StartupChoice StartupChoice
@@ -420,11 +435,19 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         set
         {
             var (signIn, onOpen) = SettingChoices.Apply(value);
-            StartWithWindows = signIn; // keeps the Run-key side effect; leaves the old value if the key cannot be written
-            StartMappingOnLaunch = onOpen;
+            // Both values change together or not at all: if the Run key cannot be written nothing is applied.
+            if (TrySetStartWithWindows(signIn))
+            {
+                Settings.StartMappingOnLaunch = onOpen;
+                SaveSettings();
+            }
+            RaisePropertyChanged(nameof(StartWithWindows));
+            RaisePropertyChanged(nameof(StartMappingOnLaunch));
             RaisePropertyChanged();
+            RaisePropertyChanged(nameof(StartupDescription));
         }
     }
+    public string StartupDescription => SettingChoices.Description(StartupChoice, L.Chinese);
     public SteamChoice SteamChoice
     {
         get => SettingChoices.GetSteam(Settings.ManageSteam, Settings.LaunchSteamAfterAutoStart);
@@ -441,7 +464,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public IReadOnlyList<ChoiceOption<SteamChoice>> SteamOptions { get; } =
         Enum.GetValues<SteamChoice>().Select(c => new ChoiceOption<SteamChoice>(c, SettingChoices.Name(c, L.Chinese))).ToList();
     public sealed record ChoiceOption<T>(T Value, string Name);
-    public bool StartMappingOnLaunch { get => Settings.StartMappingOnLaunch; set => SetSetting(() => Settings.StartMappingOnLaunch = value); }
+    public bool StartMappingOnLaunch
+    {
+        get => Settings.StartMappingOnLaunch;
+        set { SetSetting(() => Settings.StartMappingOnLaunch = value); RaisePropertyChanged(nameof(StartupChoice)); RaisePropertyChanged(nameof(StartupDescription)); }
+    }
     public bool MinimizeToTray { get => Settings.MinimizeToTray; set => SetSetting(() => Settings.MinimizeToTray = value); }
     public bool ManageSteam { get => Settings.ManageSteam; set => SetSetting(() => Settings.ManageSteam = value); }
     public bool LaunchSteamAfterAutoStart { get => Settings.LaunchSteamAfterAutoStart; set => SetSetting(() => Settings.LaunchSteamAfterAutoStart = value); }

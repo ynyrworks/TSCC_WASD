@@ -53,14 +53,28 @@ public class SettingChoicesTests
         }
     }
 
-    [Fact]
-    public void SteamChoiceOnTheViewModelWritesTheSettingsAndReadsThemBack()
+    private static (MainViewModel vm, AppSettingsStore store, Action cleanup) NewVm(Action<bool, string> writer)
     {
         string dir = Path.Combine(Path.GetTempPath(), "wasd-choices-" + Guid.NewGuid().ToString("N"));
+        var store = new AppSettingsStore(Path.Combine(dir, "settings.json"));
+        return (new MainViewModel(settingsStore: store, startupWriter: writer), store,
+            () => { try { Directory.Delete(dir, true); } catch (IOException) { } });
+    }
+
+    [Fact]
+    public void ChoiceSettersWriteTheSettingsAndReadThemBack()
+    {
+        var written = new List<bool>();
+        var (vm, store, cleanup) = NewVm((on, _) => written.Add(on));
         try
         {
-            var store = new AppSettingsStore(Path.Combine(dir, "settings.json"));
-            var vm = new MainViewModel(settingsStore: store);
+            foreach (var choice in Enum.GetValues<StartupChoice>())
+            {
+                vm.StartupChoice = choice;
+                Assert.Equal(choice, vm.StartupChoice);
+                var saved = store.Load();
+                Assert.Equal(SettingChoices.Apply(choice), (saved.StartWithWindows, saved.StartMappingOnLaunch));
+            }
             foreach (var choice in Enum.GetValues<SteamChoice>())
             {
                 vm.SteamChoice = choice;
@@ -68,9 +82,45 @@ public class SettingChoicesTests
                 var saved = store.Load();
                 Assert.Equal(SettingChoices.Apply(choice), (saved.ManageSteam, saved.LaunchSteamAfterAutoStart));
             }
-            // The start-up drop-down is not driven here: it writes the real HKCU Run entry.
-            Assert.Equal(StartupChoice.Off, SettingChoices.GetStartup(vm.Settings.StartWithWindows, vm.Settings.StartMappingOnLaunch));
+            Assert.NotEmpty(written); // the injected writer, never the real Run key
         }
-        finally { try { Directory.Delete(dir, true); } catch (IOException) { } }
+        finally { cleanup(); }
+    }
+
+    [Fact]
+    public void StartupDescriptionFollowsTheChoice()
+    {
+        var (vm, _, cleanup) = NewVm((_, _) => { });
+        try
+        {
+            var seen = new HashSet<string>();
+            foreach (var choice in Enum.GetValues<StartupChoice>())
+            {
+                vm.StartupChoice = choice;
+                Assert.Equal(SettingChoices.Description(choice, TSCC_WASD.Core.L.Chinese), vm.StartupDescription);
+                seen.Add(vm.StartupDescription);
+            }
+            Assert.Equal(4, seen.Count);
+        }
+        finally { cleanup(); }
+    }
+
+    [Fact]
+    public void FailedRunKeyWriteChangesNeitherSettingAndShowsTheError()
+    {
+        var (vm, store, cleanup) = NewVm((_, _) => throw new UnauthorizedAccessException("denied"));
+        try
+        {
+            var raised = new List<string?>();
+            vm.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+            vm.StartupChoice = StartupChoice.AtSignInAndOnOpen;
+            Assert.Equal(StartupChoice.Off, vm.StartupChoice);
+            Assert.False(vm.Settings.StartWithWindows);
+            Assert.False(vm.Settings.StartMappingOnLaunch);
+            Assert.Contains("denied", vm.StatusMessage);
+            Assert.Contains(nameof(MainViewModel.StartupChoice), raised); // the drop-down re-reads the real state
+            Assert.False(store.Load().StartMappingOnLaunch);
+        }
+        finally { cleanup(); }
     }
 }

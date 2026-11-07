@@ -30,6 +30,13 @@ public class ProfileAutoSaveTests : IDisposable
         return condition();
     }
 
+    /// <summary>Reads the file; a read that races the saver replacing it (IOException, half-written JSON) counts as "not yet".</summary>
+    private MappingProfile? TryLoadFirst()
+    {
+        try { return new ProfileStore(ProfilePath).LoadProfiles()[0]; }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException) { return null; }
+    }
+
     // ---- ProfileAutoSaver on its own ----
 
     private sealed class Probe
@@ -138,10 +145,10 @@ public class ProfileAutoSaveTests : IDisposable
             vm.SelectedProfile!.Name = "A";
             vm.SelectedProfile.Name = "AB";
             vm.SelectedProfile.PollingRateHz = 200;
-            Assert.True(await WaitFor(() => new ProfileStore(ProfilePath).LoadProfiles()[0].Name == "AB"));
-            Assert.Equal(200, new ProfileStore(ProfilePath).LoadProfiles()[0].PollingRateHz);
-            Assert.True(await WaitFor(() => vm.SaveStatusIsSaved));
-            Assert.True(File.Exists(ProfilePath + ".bak"));
+            // Both edits must be on disk together; a read during the replace is retried, the assertion is unchanged.
+            Assert.True(await WaitFor(() => TryLoadFirst() is { Name: "AB", PollingRateHz: 200 }, 10_000));
+            Assert.True(await WaitFor(() => vm.SaveStatusIsSaved, 10_000));
+            Assert.True(await WaitFor(() => File.Exists(ProfilePath + ".bak"), 10_000));
         }
         finally { await vm.DisposeAsync(); }
     }

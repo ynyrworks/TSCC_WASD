@@ -9,41 +9,41 @@
     </Page.Resources>
     <!-- No ScrollViewer here: the navigation view's content presenter already scrolls the page. -->
     <StackPanel Margin="24,8,24,24">
-        <TextBlock Style="{StaticResource PageTitle}" Text="{app:T Zh=程式設定, En='App settings'}"/>
-        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,8,0,6" Text="{app:T Zh='開機與 Steam', En='Start-up and Steam'}"/>
-        <Border Style="{StaticResource Card}" Padding="16,4" Margin="0,0,0,12">
+        <TextBlock Style="{StaticResource PageTitle}" Margin="0,0,0,8" Text="{app:T Zh=程式設定, En='App settings'}"/>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh='開機與 Steam', En='Start-up and Steam'}"/>
+        <Border Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
             <StackPanel>
-                    <Grid Margin="0,8">
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{app:T Zh='登入 Windows 時', En='When signing in to Windows'}" TextWrapping="Wrap"/>
                                 <TextBlock Style="{StaticResource HelpMark}">
                                 <TextBlock.ToolTip>
-                                    <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='登入 Windows 後縮在系統匣直接映射，搭配「開始映射時的 Steam」就不必再手動重啟 Steam。「每次開啟程式就自動開始映射」也在這裡選：手動開啟程式時是否自動開始映射。', En='Runs in the notification area right after sign-in and starts mapping; with the Steam option below you never need to restart Steam by hand. Whether the app also begins mapping whenever you open it by hand (Begin mapping whenever the app opens) is chosen here too.'}"/></ToolTip>
+                                    <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='登入 Windows 後縮在系統匣直接映射，搭配「自動開始映射時的 Steam」就不必再手動重啟 Steam。「每次開啟程式就自動開始映射」也在這裡選：手動開啟程式時是否自動開始映射。', En='Runs in the notification area right after sign-in and starts mapping; with the Steam option below you never need to restart Steam by hand. Whether the app also begins mapping whenever you open it by hand (Begin mapping whenever the app opens) is chosen here too.'}"/></ToolTip>
                                 </TextBlock.ToolTip>
                             </TextBlock>
                             </StackPanel>
-                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='縮在系統匣，直接開始映射', En='In the tray, mapping right away'}"/>
+                        <TextBlock Style="{StaticResource Muted}" Text="{Binding StartupDescription}"/>
                         </StackPanel>
                         <ComboBox Grid.Column="1" Width="260" ItemsSource="{Binding StartupOptions}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding StartupChoice}" AutomationProperties.Name="{app:T Zh='登入 Windows 時', En='When signing in to Windows'}"/>
                     </Grid>
-                    <Grid Margin="0,8">
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{app:T Zh='開始映射時的 Steam', En='Steam when mapping starts'}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{app:T Zh='自動開始映射時的 Steam', En='Steam on automatic start'}" TextWrapping="Wrap"/>
                                 <TextBlock Style="{StaticResource HelpMark}">
                                 <TextBlock.ToolTip>
                                     <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='建議同時在 Steam 設定關閉「電腦開機時執行 Steam」，讓 Steam 一律在隱藏手把之後才啟動。', En='Also turn off Steam’s own “Run Steam when my computer starts” so Steam always starts after the controllers are hidden.'}"/></ToolTip>
                                 </TextBlock.ToolTip>
                             </TextBlock>
                             </StackPanel>
-                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='讓 Steam 一律在隱藏手把之後才啟動', En='Steam always starts after the controllers are hidden'}"/>
+                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='只在登入或開啟程式而自動開始映射時套用；手動按「開始」時請改用「重新啟動 Steam」按鈕。', En='Applies only when mapping starts automatically (at sign-in or when the app opens). When you press Start by hand, use the Restart Steam button instead.'}"/>
                         </StackPanel>
-                        <ComboBox Grid.Column="1" Width="260" ItemsSource="{Binding SteamOptions}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SteamChoice}" AutomationProperties.Name="{app:T Zh='開始映射時的 Steam', En='Steam when mapping starts'}"/>
+                        <ComboBox Grid.Column="1" Width="260" ItemsSource="{Binding SteamOptions}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SteamChoice}" AutomationProperties.Name="{app:T Zh='自動開始映射時的 Steam', En='Steam on automatic start'}"/>
                     </Grid>
-                    <Grid Margin="0,8">
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
@@ -61,10 +61,10 @@
                     </Grid>
             </StackPanel>
         </Border>
-        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,8,0,6" Text="{app:T Zh='驅動程式與隱藏', En='Drivers and hiding'}"/>
-        <Border Style="{StaticResource Card}" Padding="16,4" Margin="0,0,0,12">
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh='驅動程式與隱藏', En='Drivers and hiding'}"/>
+        <Border Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
             <StackPanel>
-                    <Grid Margin="0,8">
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
@@ -74,7 +74,7 @@
                         </StackPanel>
                         <Button Grid.Column="1" VerticalAlignment="Center" Content="{app:T Zh=安裝驅動程式, En='Install drivers'}" Command="{Binding InstallDepsCommand}"/>
                     </Grid>
-                    <Grid Margin="0,8">
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
@@ -93,10 +93,10 @@
                     </Grid>
             </StackPanel>
         </Border>
-        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,8,0,6" Text="{app:T Zh='外觀與更新', En='Appearance and updates'}"/>
-        <Border Style="{StaticResource Card}" Padding="16,4" Margin="0,0,0,12">
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh='外觀與更新', En='Appearance and updates'}"/>
+        <Border Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
             <StackPanel>
-                    <Grid Margin="0,8">
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
@@ -105,7 +105,7 @@
                         </StackPanel>
                         <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" AutomationProperties.Name="{app:T Zh='最小化時縮到系統匣', En='Minimize to the notification area'}"/>
                     </Grid>
-                    <Grid Margin="0,8">
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
@@ -119,7 +119,7 @@
                         </StackPanel>
                         <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding CheckUpdatesOnStartup}" AutomationProperties.Name="{app:T Zh='開啟程式時檢查更新', En='Check for updates when the app opens'}"/>
                     </Grid>
-                    <Grid Margin="0,8">
+                    <Grid Margin="0,5">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">

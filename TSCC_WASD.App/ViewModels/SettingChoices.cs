@@ -77,11 +77,19 @@ public static class SettingChoices
         _ => zh ? "登入時啟動並開始映射，手動開啟也開始映射" : "Start at sign-in mapping, and map when opened by hand"
     };
 
+    public static string Description(StartupChoice choice, bool zh) => choice switch
+    {
+        StartupChoice.Off => zh ? "不隨 Windows 啟動，開啟程式時也不會自動開始映射" : "Does not start with Windows and does not map automatically",
+        StartupChoice.OnOpen => zh ? "不隨 Windows 啟動；手動開啟程式時自動開始映射" : "Does not start with Windows; mapping begins when you open the app",
+        StartupChoice.AtSignIn => zh ? "登入後縮在系統匣並開始映射；手動開啟程式不會自動映射" : "Starts in the tray and maps at sign-in; opening the app by hand does not map",
+        _ => zh ? "登入後縮在系統匣並開始映射；手動開啟程式時也會自動映射" : "Starts in the tray and maps at sign-in; opening the app by hand maps too"
+    };
+
     public static string Name(SteamChoice choice, bool zh) => choice switch
     {
-        SteamChoice.Leave => zh ? "不處理" : "Leave Steam alone",
-        SteamChoice.RestartIfRunning => zh ? "已開啟就重啟" : "Restart it if already running",
-        SteamChoice.StartIfNotRunning => zh ? "沒開就啟動" : "Start it if not running",
-        _ => zh ? "已開啟就重啟，沒開就啟動" : "Restart if running, start if not"
+        SteamChoice.Leave => zh ? "不處理 Steam" : "Leave Steam alone",
+        SteamChoice.RestartIfRunning => zh ? "Steam 已開啟就重啟" : "Restart Steam if running",
+        SteamChoice.StartIfNotRunning => zh ? "Steam 沒開就啟動" : "Start Steam if not running",
+        _ => zh ? "已開啟就重啟，沒開就啟動 Steam" : "Restart if running, start if not"
     };
 }
