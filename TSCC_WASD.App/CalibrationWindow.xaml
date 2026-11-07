@@ -18,7 +18,10 @@
             </ui:TitleBar.Icon>
         </ui:TitleBar>
     <StackPanel Grid.Row="1" Margin="24,8,24,24">
-        <TextBlock x:Name="StepTitle" Style="{StaticResource PageTitle}" FontSize="18" Margin="0,0,0,8"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock x:Name="StepTitle" Style="{StaticResource PageTitle}" FontSize="18" Margin="0"/>
+            <app:HelpTip Key="calib.steps"/>
+        </StackPanel>
         <TextBlock x:Name="StepText" Style="{StaticResource Muted}" FontSize="13" Margin="0,0,0,16"/>
         <Grid x:Name="RangePanel" Visibility="Collapsed" Margin="0,0,0,8">
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="24"/><ColumnDefinition/></Grid.ColumnDefinitions>
@@ -39,9 +42,10 @@
         </Grid>
         <TextBlock x:Name="RawText" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <ui:Button x:Name="ResetButton" Margin="0,0,8,0" Content="{app:T Zh=清除我的校準, En='Clear my calibration'}" Click="OnReset"/>
-            <ui:Button Margin="0,0,8,0" Content="{app:T Zh=取消, En=Cancel}" IsCancel="True" Click="OnCancel"/>
-            <ui:Button x:Name="NextButton" Appearance="Primary" Margin="0" IsDefault="True" Click="OnNext"/>
+            <ui:Button x:Name="ResetButton" app:HelpTip.Key="calib.reset" Margin="0" Content="{app:T Zh=清除我的校準, En='Clear my calibration'}" Click="OnReset"/>
+            <app:HelpTip Key="calib.reset" Margin="2,0,12,0"/>
+            <ui:Button x:Name="CancelButton" Margin="0,0,8,0" Content="{app:T Zh=取消, En=Cancel}" IsCancel="True" Click="OnCancel"/>
+            <ui:Button x:Name="NextButton" app:HelpTip.Key="calib.steps" Appearance="Primary" Margin="0" IsDefault="True" Click="OnNext"/>
         </StackPanel>
     </StackPanel>
     </Grid>

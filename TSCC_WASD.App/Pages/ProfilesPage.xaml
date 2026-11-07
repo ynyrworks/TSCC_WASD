@@ -20,28 +20,60 @@
         <StackPanel>
             <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBlock Style="{StaticResource PageTitle}" Margin="0" VerticalAlignment="Center" Text="{app:T Zh=設定檔, En='Profiles'}"/>
-                <Button Grid.Column="1" Margin="0,0,6,0" Content="{app:T Zh=新增, En=New}" Command="{Binding NewCommand}"
-                        ToolTip="{app:T Zh=新增設定檔, En='New profile'}"/>
-                <ui:DropDownButton Grid.Column="2" DataContextChanged="OnMoreActionsDataContextChanged" Content="⋯"
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource PageTitle}" Margin="0" VerticalAlignment="Center" Text="{app:T Zh=設定檔, En='Profiles'}"/>
+                    <app:HelpTip Key="profiles.list"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Margin="0" Content="{app:T Zh=新增, En=New}" Command="{Binding NewCommand}"
+                            AutomationProperties.Name="{app:T Zh=新增設定檔, En='New profile'}" app:HelpTip.Key="profiles.new"/>
+                    <app:HelpTip Key="profiles.new" Margin="2,0,6,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:DropDownButton app:HelpTip.Key="profiles.more" DataContextChanged="OnMoreActionsDataContextChanged" Content="⋯"
                                    AutomationProperties.Name="{app:T Zh='更多：移除、複製、匯入、匯出、重新載入、設定資料夾', En='More: remove, duplicate, import, export, reload, settings folder'}">
                     <ui:DropDownButton.Flyout>
                         <ContextMenu x:Name="MoreActionsMenu">
-                            <MenuItem Header="{app:T Zh=移除, En=Remove}" Command="{Binding DeleteCommand}"/>
-                            <MenuItem Header="{app:T Zh=複製, En=Duplicate}" Command="{Binding DuplicateCommand}"/>
+                            <MenuItem Command="{Binding DeleteCommand}" app:HelpTip.Key="profiles.remove" AutomationProperties.Name="{app:T Zh=移除, En=Remove}">
+                                <MenuItem.Header>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Text="{app:T Zh=移除, En=Remove}"/><app:HelpTip Key="profiles.remove" Focusable="False"/></StackPanel>
+                                </MenuItem.Header>
+                            </MenuItem>
+                            <MenuItem Command="{Binding DuplicateCommand}" app:HelpTip.Key="profiles.duplicate" AutomationProperties.Name="{app:T Zh=複製, En=Duplicate}">
+                                <MenuItem.Header>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Text="{app:T Zh=複製, En=Duplicate}"/><app:HelpTip Key="profiles.duplicate" Focusable="False"/></StackPanel>
+                                </MenuItem.Header>
+                            </MenuItem>
                             <Separator/>
-                            <MenuItem Header="{app:T Zh=匯入, En=Import}" Command="{Binding ImportCommand}"/>
-                            <MenuItem Header="{app:T Zh=匯出全部, En='Export all'}" Command="{Binding ExportCommand}"/>
+                            <MenuItem Command="{Binding ImportCommand}" app:HelpTip.Key="profiles.import" AutomationProperties.Name="{app:T Zh=匯入, En=Import}">
+                                <MenuItem.Header>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Text="{app:T Zh=匯入, En=Import}"/><app:HelpTip Key="profiles.import" Focusable="False"/></StackPanel>
+                                </MenuItem.Header>
+                            </MenuItem>
+                            <MenuItem Command="{Binding ExportCommand}" app:HelpTip.Key="profiles.export" AutomationProperties.Name="{app:T Zh=匯出全部, En='Export all'}">
+                                <MenuItem.Header>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Text="{app:T Zh=匯出全部, En='Export all'}"/><app:HelpTip Key="profiles.export" Focusable="False"/></StackPanel>
+                                </MenuItem.Header>
+                            </MenuItem>
                             <Separator/>
-                            <MenuItem Header="{app:T Zh=從磁碟重新載入, En='Reload from disk'}" Command="{Binding ReloadCommand}"
-                                      ToolTip="{app:T Zh='先儲存待寫入的修改，再從 profiles.json 重新讀取', En='Saves pending edits first, then re-reads profiles.json'}"/>
-                            <MenuItem Header="{app:T Zh=開啟設定資料夾, En='Open settings folder'}" Command="{Binding OpenProfilesCommand}"/>
+                            <MenuItem Command="{Binding ReloadCommand}" app:HelpTip.Key="profiles.reload" AutomationProperties.Name="{app:T Zh=從磁碟重新載入, En='Reload from disk'}">
+                                <MenuItem.Header>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Text="{app:T Zh=從磁碟重新載入, En='Reload from disk'}"/><app:HelpTip Key="profiles.reload" Focusable="False"/></StackPanel>
+                                </MenuItem.Header>
+                            </MenuItem>
+                            <MenuItem Command="{Binding OpenProfilesCommand}" app:HelpTip.Key="profiles.folder" AutomationProperties.Name="{app:T Zh=開啟設定資料夾, En='Open settings folder'}">
+                                <MenuItem.Header>
+                                    <StackPanel Orientation="Horizontal"><TextBlock Text="{app:T Zh=開啟設定資料夾, En='Open settings folder'}"/><app:HelpTip Key="profiles.folder" Focusable="False"/></StackPanel>
+                                </MenuItem.Header>
+                            </MenuItem>
                         </ContextMenu>
                     </ui:DropDownButton.Flyout>
                 </ui:DropDownButton>
+                    <app:HelpTip Key="profiles.more" Margin="2,0,0,0"/>
+                </StackPanel>
             </Grid>
             <!-- The list never scrolls on its own; the page does. -->
-            <ListBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" IsEnabled="{Binding CanEdit}"
+            <ListBox app:HelpTip.Key="profiles.list" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" IsEnabled="{Binding CanEdit}"
                      ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      HorizontalContentAlignment="Stretch" BorderThickness="0" Background="Transparent"
                      AutomationProperties.Name="{app:T Zh=設定檔, En=Profiles}">
@@ -104,47 +136,48 @@
                         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="16"/><ColumnDefinition/></Grid.ColumnDefinitions>
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=設定檔名稱, En='Profile name'}"/>
-                            <TextBox Text="{Binding SelectedProfile.Name, UpdateSourceTrigger=PropertyChanged}" MaxLength="100"
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=設定檔名稱, En='Profile name'}"/>
+                                <app:HelpTip Key="profiles.name"/>
+                            </StackPanel>
+                            <TextBox app:HelpTip.Key="profiles.name" Text="{Binding SelectedProfile.Name, UpdateSourceTrigger=PropertyChanged}" MaxLength="100"
                                      AutomationProperties.Name="{app:T Zh=設定檔名稱, En='Profile name'}"/>
                         </StackPanel>
                         <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,10">
-                            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=說明, En=Description}"/>
-                            <TextBox Text="{Binding SelectedProfile.Description, UpdateSourceTrigger=PropertyChanged}"
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=說明, En=Description}"/>
+                                <app:HelpTip Key="profiles.description"/>
+                            </StackPanel>
+                            <TextBox app:HelpTip.Key="profiles.description" Text="{Binding SelectedProfile.Description, UpdateSourceTrigger=PropertyChanged}"
                                      AutomationProperties.Name="{app:T Zh=設定檔說明, En='Profile description'}"/>
                         </StackPanel>
                         <StackPanel Grid.Row="1" Margin="0,0,0,10">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=遊戲程序, En='Game process'}"/>
-                                <TextBlock Style="{StaticResource HelpMark}">
-                                    <TextBlock.ToolTip>
-                                        <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='映射中遊戲到前景時自動切換到此設定檔，遊戲結束後切回。名稱不分大小寫，.exe 可有可無；留空則不使用。', En='While mapping, this profile is applied when the game comes to the foreground and switched back when it exits. The name is case-insensitive and .exe is optional; leave empty to disable.'}"/></ToolTip>
-                                    </TextBlock.ToolTip>
-                                </TextBlock>
+                                <app:HelpTip Key="profiles.process"/>
                             </StackPanel>
                             <DockPanel>
-                                <Button DockPanel.Dock="Right" Margin="6,0,0,0" Content="{app:T Zh=挑選…, En='Pick…'}"
+                                <Button DockPanel.Dock="Right" Margin="6,0,0,0" Content="{app:T Zh=挑選…, En='Pick…'}" app:HelpTip.Key="profiles.process"
                                         ToolTip="{app:T Zh=從執行中的程式挑選, En='Pick from running programs'}" Command="{Binding PickProcessCommand}"/>
-                                <TextBox Text="{Binding SelectedProfile.MatchProcessName, UpdateSourceTrigger=PropertyChanged}" MaxLength="260"
+                                <TextBox app:HelpTip.Key="profiles.process" Text="{Binding SelectedProfile.MatchProcessName, UpdateSourceTrigger=PropertyChanged}" MaxLength="260"
                                          AutomationProperties.Name="{app:T Zh=遊戲程序名稱, En='Game process name'}"/>
                             </DockPanel>
                         </StackPanel>
                         <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,10">
-                            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=輸入手把, En='Input controller'}"/>
-                            <ComboBox ItemsSource="{Binding InputOptions}" DisplayMemberPath="Name" SelectedValuePath="Type" HorizontalAlignment="Stretch"
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=輸入手把, En='Input controller'}"/>
+                                <app:HelpTip Key="profiles.input"/>
+                            </StackPanel>
+                            <ComboBox app:HelpTip.Key="profiles.input" ItemsSource="{Binding InputOptions}" DisplayMemberPath="Name" SelectedValuePath="Type" HorizontalAlignment="Stretch"
                                       SelectedValue="{Binding SelectedProfile.InputType, UpdateSourceTrigger=PropertyChanged}"
                                       AutomationProperties.Name="{app:T Zh=輸入手把, En='Input controller'}"/>
                         </StackPanel>
                         <StackPanel Grid.Row="2">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=輸出成, En='Output as'}"/>
-                                <TextBlock Style="{StaticResource HelpMark}">
-                                    <TextBlock.ToolTip>
-                                        <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='遊戲顯示哪種按鍵圖示取決於它看到的手把。Xbox 360 相容性最好；DualShock 4 才有 PS 圖示、PS 鍵、觸控板與體感。映射中切換會立即生效。', En='Games pick prompts from the controller they see. Xbox 360 is the most compatible; only DualShock 4 gives PS prompts, the PS button, touchpad and motion. Switching applies right away while mapping.'}"/></ToolTip>
-                                    </TextBlock.ToolTip>
-                                </TextBlock>
+                                <app:HelpTip Key="profiles.output"/>
                             </StackPanel>
-                            <ComboBox ItemsSource="{Binding OutputOptions}" DisplayMemberPath="Name" SelectedValuePath="Type" HorizontalAlignment="Stretch"
+                            <ComboBox app:HelpTip.Key="profiles.output" ItemsSource="{Binding OutputOptions}" DisplayMemberPath="Name" SelectedValuePath="Type" HorizontalAlignment="Stretch"
                                       SelectedValue="{Binding SelectedProfile.OutputType, UpdateSourceTrigger=PropertyChanged}"
                                       AutomationProperties.Name="{app:T Zh=輸出成, En='Output as'}"/>
                         </StackPanel>
@@ -158,52 +191,36 @@
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="{app:T Zh=對調 A/B 與 X/Y, En='Swap A/B and X/Y'}"/>
-                                <TextBlock Style="{StaticResource HelpMark}">
-                                    <TextBlock.ToolTip>
-                                        <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='任天堂習慣：右邊的鍵是確認。勾選後右側鍵送出 ✕／Xbox A、下方鍵送出 ○／Xbox B。NS2 Pro 也會改成依按鍵上的字母對應，而不是位置。', En='Nintendo habit: the right-hand button confirms. The right-hand button then sends Cross / Xbox A and the bottom one Circle / Xbox B. The NS2 Pro then follows the letters printed on its buttons instead of their positions.'}"/></ToolTip>
-                                    </TextBlock.ToolTip>
-                                </TextBlock>
+                                <app:HelpTip Key="profiles.swap"/>
                             </StackPanel>
-                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.SwapFaceButtons}"
+                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.SwapFaceButtons}" app:HelpTip.Key="profiles.swap"
                                              AutomationProperties.Name="{app:T Zh=對調 A/B 與 X/Y, En='Swap A/B and X/Y'}"/>
                         </Grid>
                         <Grid Margin="0,6">
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="{app:T Zh=隱藏實體手把（需 HidHide）, En='Hide physical controllers (needs HidHide)'}"/>
-                                <TextBlock Style="{StaticResource HelpMark}">
-                                    <TextBlock.ToolTip>
-                                        <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='讓遊戲只看到虛擬手把，避免按鍵圖示在 Xbox／PS 之間跳動。請先啟動映射再開遊戲；停止映射後自動還原。', En='Games then only see the virtual controller, so prompts stop flipping between Xbox and PS. Start mapping before the game; stopping restores everything.'}"/></ToolTip>
-                                    </TextBlock.ToolTip>
-                                </TextBlock>
+                                <app:HelpTip Key="profiles.hide"/>
                             </StackPanel>
-                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.HidePhysicalControllers}"
+                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.HidePhysicalControllers}" app:HelpTip.Key="profiles.hide"
                                              AutomationProperties.Name="{app:T Zh=隱藏實體手把, En='Hide physical controllers'}"/>
                         </Grid>
                         <Grid Margin="0,6">
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="{app:T Zh=把遊戲震動轉給實體手把, En='Forward game rumble to the physical controller'}"/>
-                                <TextBlock Style="{StaticResource HelpMark}">
-                                    <TextBlock.ToolTip>
-                                        <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='Xbox 鍵與 NS2 Home 鍵對應 PS 鍵、NS2 截圖鍵對應觸控板按下；NS2 陀螺儀會轉成 DS4 體感。', En='Xbox Guide and NS2 Home map to PS, NS2 Capture to touchpad click, and the NS2 gyro becomes DS4 motion.'}"/></ToolTip>
-                                    </TextBlock.ToolTip>
-                                </TextBlock>
+                                <app:HelpTip Key="profiles.rumble"/>
                             </StackPanel>
-                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.ForwardRumble}"
+                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.ForwardRumble}" app:HelpTip.Key="profiles.rumble"
                                              AutomationProperties.Name="{app:T Zh=轉發震動, En='Forward rumble'}"/>
                         </Grid>
                         <Grid Margin="0,6">
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="{app:T Zh='Xbox 的 View（Back）鍵當作觸控板按下', En='Use the Xbox View (Back) button as the touchpad click'}"/>
-                                <TextBlock Style="{StaticResource HelpMark}">
-                                    <TextBlock.ToolTip>
-                                        <ToolTip MaxWidth="340"><TextBlock TextWrapping="Wrap" Text="{app:T Zh='PS 遊戲常用觸控板開地圖或選單。取消勾選則 View 鍵送出 Share；NS2 Pro 不受影響（－鍵是 Share、截圖鍵是觸控板）。', En='PS games often open the map or menu with the touchpad. Unchecked, View sends Share. The NS2 Pro is unaffected (Minus is Share, Capture is the touchpad).'}"/></ToolTip>
-                                    </TextBlock.ToolTip>
-                                </TextBlock>
+                                <app:HelpTip Key="profiles.touchpad"/>
                             </StackPanel>
-                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.XboxBackAsTouchpad}"
+                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.XboxBackAsTouchpad}" app:HelpTip.Key="profiles.touchpad"
                                              AutomationProperties.Name="{app:T Zh=Xbox 的 View 鍵當作觸控板, En='Xbox View button as touchpad'}"/>
                         </Grid>
                     </StackPanel>
@@ -214,17 +231,23 @@
                     <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh='搖桿死區（0–0.95）', En='Stick dead zone (0–0.95)'}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Label}" Text="{app:T Zh='搖桿死區（0–0.95）', En='Stick dead zone (0–0.95)'}"/>
+                                <app:HelpTip Key="profiles.deadzone"/>
+                            </StackPanel>
                             <TextBlock Grid.Column="1" Margin="12,4,0,4" Text="{Binding SelectedProfile.DeadZone, StringFormat=F2}"/>
                         </Grid>
-                        <Slider Margin="0,0,0,10" Minimum="0" Maximum="0.95" TickFrequency="0.01" IsSnapToTickEnabled="True"
+                        <Slider app:HelpTip.Key="profiles.deadzone" Margin="0,0,0,10" Minimum="0" Maximum="0.95" TickFrequency="0.01" IsSnapToTickEnabled="True"
                                 Value="{Binding SelectedProfile.DeadZone}" AutomationProperties.Name="{app:T Zh=搖桿死區, En='Dead zone'}"/>
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh='目標輪詢頻率（30–500 Hz）', En='Target polling rate (30–500 Hz)'}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Label}" Text="{app:T Zh='目標輪詢頻率（30–500 Hz）', En='Target polling rate (30–500 Hz)'}"/>
+                                <app:HelpTip Key="profiles.polling"/>
+                            </StackPanel>
                             <TextBlock Grid.Column="1" Margin="12,4,0,4" Text="{Binding SelectedProfile.PollingRateHz, StringFormat='{}{0} Hz'}"/>
                         </Grid>
-                        <Slider Minimum="30" Maximum="500" TickFrequency="1" IsSnapToTickEnabled="True"
+                        <Slider app:HelpTip.Key="profiles.polling" Minimum="30" Maximum="500" TickFrequency="1" IsSnapToTickEnabled="True"
                                 Value="{Binding SelectedProfile.PollingRateHz}" AutomationProperties.Name="{app:T Zh=輪詢頻率, En='Polling rate'}"/>
                     </StackPanel>
                 </Border>
@@ -233,7 +256,9 @@
             <!-- Link rows -->
             <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,12">
                 <StackPanel>
-                    <Button Command="{Binding CalibrateCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" BorderThickness="0" Background="Transparent" Padding="16,10"
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Button app:HelpTip.Key="profiles.calibrate" Command="{Binding CalibrateCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" BorderThickness="0" Background="Transparent" Padding="16,10"
                             AutomationProperties.Name="{app:T Zh='校準 NS2 Pro 搖桿', En='Calibrate NS2 Pro sticks'}">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -244,7 +269,11 @@
                             <TextBlock Grid.Column="1" Text="›" FontSize="18" Margin="12,0,0,0" VerticalAlignment="Center"/>
                         </Grid>
                     </Button>
-                    <Button Command="{Binding OpenControllerTestCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" BorderThickness="0" Background="Transparent" Padding="16,10"
+                        <app:HelpTip Key="profiles.calibrate" Grid.Column="1" Margin="0,0,16,0"/>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Button app:HelpTip.Key="profiles.test" Command="{Binding OpenControllerTestCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" BorderThickness="0" Background="Transparent" Padding="16,10"
                             AutomationProperties.Name="{app:T Zh='手把測試與報告匯出', En='Controller test and report export'}">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -255,6 +284,8 @@
                             <TextBlock Grid.Column="1" Text="›" FontSize="18" Margin="12,0,0,0" VerticalAlignment="Center"/>
                         </Grid>
                     </Button>
+                        <app:HelpTip Key="profiles.test" Grid.Column="1" Margin="0,0,16,0"/>
+                    </Grid>
                 </StackPanel>
             </Border>
         </StackPanel>

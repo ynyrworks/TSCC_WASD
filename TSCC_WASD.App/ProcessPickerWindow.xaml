@@ -18,15 +18,18 @@
             </ui:TitleBar.Icon>
         </ui:TitleBar>
     <DockPanel Grid.Row="1" Margin="24,8,24,24">
-        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Label}" Text="{app:T Zh=篩選, En=Filter}"/>
-        <ui:TextBox x:Name="FilterBox" DockPanel.Dock="Top" Margin="0,0,0,8" TextChanged="OnFilterChanged"
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource Label}" Text="{app:T Zh=篩選, En=Filter}"/>
+            <app:HelpTip Key="picker.filter"/>
+        </StackPanel>
+        <ui:TextBox x:Name="FilterBox" app:HelpTip.Key="picker.filter" DockPanel.Dock="Top" Margin="0,0,0,8" TextChanged="OnFilterChanged"
                  AutomationProperties.Name="{app:T Zh=篩選, En=Filter}"/>
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <ui:Button Margin="0,0,8,0" Content="{app:T Zh=取消, En=Cancel}" IsCancel="True"/>
+            <ui:Button x:Name="CancelButton" Margin="0,0,8,0" Content="{app:T Zh=取消, En=Cancel}" IsCancel="True"/>
             <ui:Button x:Name="OkButton" Appearance="Primary" Margin="0" IsDefault="True" IsEnabled="False"
                     Content="{app:T Zh=選擇, En=Select}" Click="OnOk"/>
         </StackPanel>
-        <ListBox x:Name="ProcessList" SelectionChanged="OnSelectionChanged" MouseDoubleClick="OnDoubleClick"
+        <ListBox x:Name="ProcessList" app:HelpTip.Key="picker.filter" SelectionChanged="OnSelectionChanged" MouseDoubleClick="OnDoubleClick"
                  AutomationProperties.Name="{app:T Zh=執行中的程式, En='Running programs'}"/>
     </DockPanel>
     </Grid>

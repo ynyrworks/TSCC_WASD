@@ -48,9 +48,10 @@
                    Text="{app:T Zh='錄製 5 秒會收集手把的原始報告，並存成純文字檔。檔案包含診斷資訊（版本、系統、驅動程式狀態），上傳到 GitHub 前請先打開看過。不會自動上傳任何東西。', En='Recording captures 5 seconds of raw controller reports into a plain text file. The file includes diagnostics (versions, OS, driver status); please read it before uploading it to GitHub. Nothing is uploaded automatically.'}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <TextBlock x:Name="RecordStatus" VerticalAlignment="Center" Margin="0,0,12,0" Style="{StaticResource Muted}"/>
-            <ui:Button x:Name="RecordButton" Appearance="Primary" Margin="0,0,8,0"
+            <app:HelpTip Key="test.record" Margin="0,0,6,0"/>
+            <ui:Button x:Name="RecordButton" app:HelpTip.Key="test.record" Appearance="Primary" Margin="0,0,8,0"
                     Content="{app:T Zh='錄製 5 秒並儲存', En='Record 5 seconds and save'}" Click="OnRecord"/>
-            <ui:Button Content="{app:T Zh=關閉, En=Close}" IsCancel="True" Click="OnClose"/>
+            <ui:Button x:Name="CloseButton" Content="{app:T Zh=關閉, En=Close}" IsCancel="True" Click="OnClose"/>
         </StackPanel>
     </StackPanel>
     </Grid>
