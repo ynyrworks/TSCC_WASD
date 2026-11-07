@@ -48,7 +48,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         _coordinator = new MappingCoordinator(profileStore, () => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true));
         _settingsStore = settingsStore ?? new AppSettingsStore();
         Settings = _settingsStore.Load();
-        _saver = new ProfileAutoSaver(() => Profiles.Select(p => p.Snapshot()).ToList(), profiles => _coordinator.SaveProfiles(profiles),
+        _saver = new ProfileAutoSaver(CaptureProfiles, profiles => _coordinator.SaveProfiles(profiles),
             () => !_loadFailed, OnSaveReport, saveDelay ?? DefaultSaveDelay, SynchronizationContext.Current, IsMouseButtonDown);
         Profiles.CollectionChanged += OnProfilesChanged;
         StartCommand = Command(() => StartAsync(automatic: false, atSignIn: false), () => !IsRunning && SelectedProfile is not null);
@@ -799,6 +799,11 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 $"Could not read profiles; the file was kept. Open the settings folder, fix profiles.json and reload: {ex.Message}");
         }
         finally { _loading = false; }
+        _lastValid.Clear();
+        foreach (var profile in Profiles)
+        {
+            try { _lastValid[profile.Id] = profile.Snapshot(); } catch (ArgumentException) { }
+        }
         _saver.Reset(); // what is in memory now is what is on disk (or nothing may be saved at all)
         RaiseSaveStatus();
         DependencyStatus = DependencyChecker.BuildStatusText();
@@ -815,6 +820,33 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         L.T("目前的修改無法寫入磁碟（見設定檔頁的提示）。重新載入會捨棄這些修改，要繼續嗎？",
             "The current edits cannot be written to disk (see the note on the Profiles page). Reloading discards them. Continue?"),
         AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+
+    private readonly Dictionary<string, MappingProfile> _lastValid = new();
+
+    /// <summary>
+    /// Copies every valid profile. An invalid one is written as its last valid version (none yet: left out), so a bad value
+    /// in one profile never costs the edits made in the others; the message names the profile and the problem.
+    /// </summary>
+    private ProfileCapture CaptureProfiles()
+    {
+        var list = new List<MappingProfile>();
+        string? invalid = null;
+        foreach (var profile in Profiles.ToList())
+        {
+            try
+            {
+                var copy = profile.Snapshot();
+                _lastValid[profile.Id] = copy;
+                list.Add(copy);
+            }
+            catch (ArgumentException ex)
+            {
+                invalid ??= string.IsNullOrWhiteSpace(profile.Name) ? ex.Message : $"「{profile.Name}」：{ex.Message}";
+                if (_lastValid.TryGetValue(profile.Id, out var previous)) list.Add(previous);
+            }
+        }
+        return new ProfileCapture(list, invalid);
+    }
 
     private static bool IsMouseButtonDown()
     {

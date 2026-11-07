@@ -68,6 +68,8 @@ public partial class App : Application
             viewModel.ShowNotice(L.T($"已更新到 {viewModel.VersionText}。", $"Updated to {viewModel.VersionText}."));
         if (migrated)
             viewModel.ShowNotice(L.T("已從舊版 YnyrWASD 搬移設定檔、校準與程式設定。", "Profiles, calibration and settings were moved over from YnyrWASD."));
+        // Windows logoff or shutdown: get pending profile edits onto the disk before the session ends.
+        SessionEnding += (_, _) => viewModel.FlushProfiles();
         var window = new MainWindow(viewModel);
         MainWindow = window;
         _tray = new TrayIcon(viewModel, () => window.ShowFromTray(), () => window.Close());

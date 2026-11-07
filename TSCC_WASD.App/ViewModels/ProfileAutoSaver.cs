@@ -4,6 +4,9 @@ namespace TSCC_WASD.App.ViewModels;
 
 public enum ProfileSaveState { Saved, Pending, Saving, Invalid, Failed }
 
+/// <summary>What to write: every valid profile (an invalid one is replaced by its last valid version, or left out) and, if any profile was invalid, why.</summary>
+public sealed record ProfileCapture(IReadOnlyList<MappingProfile> Profiles, string? Invalid);
+
 /// <summary>
 /// Debounced, serialized auto-save of the profile list. Edits call <see cref="Touch"/>; the write happens after a quiet
 /// period (and never while a mouse button is held, so a slider drag writes once at its end). The snapshot is taken on the
@@ -12,7 +15,7 @@ public enum ProfileSaveState { Saved, Pending, Saving, Invalid, Failed }
 /// </summary>
 public sealed class ProfileAutoSaver : IDisposable
 {
-    private readonly Func<IReadOnlyList<MappingProfile>> _capture;
+    private readonly Func<ProfileCapture> _capture;
     private readonly Action<IReadOnlyList<MappingProfile>> _write;
     private readonly Func<bool> _canSave;
     private readonly Func<bool> _holdOff;
@@ -26,12 +29,12 @@ public sealed class ProfileAutoSaver : IDisposable
     private long _sequence;
     private long _written;
 
-    /// <param name="capture">Validated copy of every profile. Throws <see cref="ArgumentException"/> for invalid values.</param>
+    /// <param name="capture">Validated copies of the profiles; reports invalid ones instead of throwing.</param>
     /// <param name="write">Persists the copy (<c>ProfileStore.SaveProfiles</c>).</param>
     /// <param name="canSave">False while nothing may be written (profile file failed to load).</param>
     /// <param name="holdOff">True while saving should wait (a mouse button is down).</param>
     /// <param name="report">State changes, raised on <paramref name="context"/> (inline when it is null).</param>
-    public ProfileAutoSaver(Func<IReadOnlyList<MappingProfile>> capture, Action<IReadOnlyList<MappingProfile>> write,
+    public ProfileAutoSaver(Func<ProfileCapture> capture, Action<IReadOnlyList<MappingProfile>> write,
         Func<bool> canSave, Action<ProfileSaveState, string?> report, TimeSpan delay,
         SynchronizationContext? context = null, Func<bool>? holdOff = null)
     {
@@ -72,13 +75,12 @@ public sealed class ProfileAutoSaver : IDisposable
         if (!_canSave()) { _dirty = false; return true; }
         lock (_writeLock) { } // let a write already in flight finish; a failed one leaves the edits dirty
         if (!_dirty) return State is not ProfileSaveState.Invalid;
-        IReadOnlyList<MappingProfile> snapshot;
-        try { snapshot = _capture(); }
-        catch (ArgumentException ex) { _dirty = false; Report(ProfileSaveState.Invalid, ex.Message); return false; }
+        ProfileCapture capture = _capture();
         _dirty = false;
         long sequence = Interlocked.Increment(ref _sequence);
-        string? error = WriteSnapshot(snapshot, sequence);
+        string? error = capture.Profiles.Count > 0 ? WriteSnapshot(capture.Profiles, sequence) : null;
         if (error is not null) { Report(ProfileSaveState.Failed, error); return false; }
+        if (capture.Invalid is not null) { Report(ProfileSaveState.Invalid, capture.Invalid); return false; }
         Report(ProfileSaveState.Saved, null);
         return true;
     }
@@ -108,25 +110,25 @@ public sealed class ProfileAutoSaver : IDisposable
         bool held;
         try { held = _holdOff(); } catch { held = false; }
         if (held) { Arm(); return; }
-        IReadOnlyList<MappingProfile> snapshot;
-        try { snapshot = _capture(); }
-        catch (ArgumentException ex) { _dirty = false; Report(ProfileSaveState.Invalid, ex.Message); return; }
+        ProfileCapture capture;
+        try { capture = _capture(); }
         catch (InvalidOperationException) { Arm(); return; } // the list changed under the capture; try again shortly
         _dirty = false;
         long sequence = Interlocked.Increment(ref _sequence);
         Report(ProfileSaveState.Saving, null);
-        if (_context is null) Finish(snapshot, sequence);
-        else Task.Run(() => Finish(snapshot, sequence));
+        if (_context is null) Finish(capture, sequence);
+        else Task.Run(() => Finish(capture, sequence));
     }
 
-    private void Finish(IReadOnlyList<MappingProfile> snapshot, long sequence)
+    private void Finish(ProfileCapture capture, long sequence)
     {
-        string? error = WriteSnapshot(snapshot, sequence);
+        string? error = capture.Profiles.Count > 0 ? WriteSnapshot(capture.Profiles, sequence) : null;
         void Done()
         {
             if (_disposed) return;
             if (error is not null) Report(ProfileSaveState.Failed, error);
-            else if (!_dirty && sequence == Interlocked.Read(ref _sequence)) Report(ProfileSaveState.Saved, null);
+            else if (!_dirty && sequence == Interlocked.Read(ref _sequence))
+                Report(capture.Invalid is null ? ProfileSaveState.Saved : ProfileSaveState.Invalid, capture.Invalid);
         }
         if (_context is null) Done();
         else _context.Post(_ => Done(), null);

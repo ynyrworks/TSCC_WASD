@@ -41,7 +41,7 @@ public class ProfileAutoSaveTests : IDisposable
         public bool FailWrite;
         public MappingProfile Profile = new();
         public ProfileAutoSaver Create(int delayMs) => new(
-            () => new[] { Profile.Snapshot() },
+            () => new ProfileCapture(new[] { Profile.Snapshot() }, null),
             list =>
             {
                 if (FailWrite) throw new IOException("disk full");
@@ -172,6 +172,38 @@ public class ProfileAutoSaveTests : IDisposable
             Assert.True(vm.FlushProfiles());
             Assert.Equal(0.3, new ProfileStore(ProfilePath).LoadProfiles()[0].DeadZone);
             Assert.True(vm.SaveStatusIsSaved);
+        }
+        finally { await vm.DisposeAsync(); }
+    }
+
+    [Fact]
+    public async Task ValidEditsSurviveAFlushWhileAnotherProfileIsInvalid()
+    {
+        var vm = NewViewModel(delayMs: 60_000);
+        try
+        {
+            vm.NewCommand.Execute(null);
+            vm.SelectedProfile!.Name = "Second";
+            Assert.True(vm.FlushProfiles());
+            var first = vm.Profiles[0];
+            double savedDeadZone = first.DeadZone;
+            first.DeadZone = 2;           // invalid
+            first.Name = "Renamed first"; // valid on its own, but the profile as a whole is not
+            vm.SelectedProfile.Description = "Edited second";
+            vm.SelectedProfile.PollingRateHz = 240;
+            Assert.False(vm.FlushProfiles());
+            var stored = new ProfileStore(ProfilePath).LoadProfiles();
+            Assert.Equal(2, stored.Count);
+            Assert.Equal("Edited second", stored[1].Description);
+            Assert.Equal(240, stored[1].PollingRateHz);
+            Assert.Equal(savedDeadZone, stored[0].DeadZone); // last valid version of the invalid profile
+            Assert.NotEqual("Renamed first", stored[0].Name);
+            Assert.True(vm.SaveStatusIsError);
+            Assert.Contains("Renamed first", vm.SaveStatusText);
+            Assert.Contains(TSCC_WASD.Core.L.T("死區必須介於 0–0.95。", "Dead zone must be 0–0.95."), vm.SaveStatusText);
+            first.DeadZone = 0.2;
+            Assert.True(vm.FlushProfiles());
+            Assert.Equal("Renamed first", new ProfileStore(ProfilePath).LoadProfiles()[0].Name);
         }
         finally { await vm.DisposeAsync(); }
     }
