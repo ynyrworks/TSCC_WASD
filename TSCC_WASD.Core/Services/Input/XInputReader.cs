@@ -15,7 +15,7 @@ public interface IXInputSlotFilter
 }
 
 /// <summary>Reads the first available XInput slot (0–3) using the Windows inbox API.</summary>
-public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonOption, IXInputSlotFilter, IBatterySource
+public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonOption, IXInputSlotFilter, IBatterySource, IControllerIdentity
 {
     private volatile int _excludedSlot = -1;
 
@@ -169,6 +169,10 @@ public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonO
     }
 
     public BatteryStatus Battery { get { lock (_batteryGate) return _battery; } }
+
+    /// <summary>XInput has no serial and the slot is not stable, so only the model identifies it.</summary>
+    public ControllerId? Identity { get { lock (_batteryGate) return _batterySlot >= 0 ? XInputId : null; } }
+    private static readonly ControllerId XInputId = new(ControllerId.XInput, null);
 
     private void ClearBattery()
     {
