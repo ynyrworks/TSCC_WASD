@@ -26,17 +26,17 @@
             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="24"/><ColumnDefinition/></Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="{app:T Zh=左搖桿, En='Left stick'}" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBlock Text="{app:T Zh=右, En=Right}" FontSize="12"/><ProgressBar x:Name="L0" Margin="0,2,0,6"/>
-                <TextBlock Text="{app:T Zh=左, En=Left}" FontSize="12"/><ProgressBar x:Name="L1" Margin="0,2,0,6"/>
-                <TextBlock Text="{app:T Zh=上, En=Up}" FontSize="12"/><ProgressBar x:Name="L2" Margin="0,2,0,6"/>
-                <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="L3" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=右, En=Right}" FontSize="12"/><ProgressBar x:Name="L0" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=左, En=Left}" FontSize="12"/><ProgressBar x:Name="L1" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=上, En=Up}" FontSize="12"/><ProgressBar x:Name="L2" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="L3" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
             </StackPanel>
             <StackPanel Grid.Column="2">
                 <TextBlock Text="{app:T Zh=右搖桿, En='Right stick'}" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                <TextBlock Text="{app:T Zh=右, En=Right}" FontSize="12"/><ProgressBar x:Name="R0" Margin="0,2,0,6"/>
-                <TextBlock Text="{app:T Zh=左, En=Left}" FontSize="12"/><ProgressBar x:Name="R1" Margin="0,2,0,6"/>
-                <TextBlock Text="{app:T Zh=上, En=Up}" FontSize="12"/><ProgressBar x:Name="R2" Margin="0,2,0,6"/>
-                <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="R3" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=右, En=Right}" FontSize="12"/><ProgressBar x:Name="R0" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=左, En=Left}" FontSize="12"/><ProgressBar x:Name="R1" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=上, En=Up}" FontSize="12"/><ProgressBar x:Name="R2" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
+                <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="R3" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
             </StackPanel>
         </Grid>
         <TextBlock x:Name="RawText" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
