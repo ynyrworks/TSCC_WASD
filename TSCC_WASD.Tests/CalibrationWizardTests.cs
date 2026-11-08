@@ -16,6 +16,7 @@ internal sealed class CalibrationKit : IDisposable
     public readonly StickCalibrationStore Store;
     public Gamepad Pad;
     public bool Available = true;
+    public long NowMs;
 
     public CalibrationKit()
     {
@@ -25,7 +26,8 @@ internal sealed class CalibrationKit : IDisposable
     }
 
     public CalibrationWizardModel Model(ControllerId id, string name = "Test pad") =>
-        new(id, name, () => new MappingSession.InputSnapshot(false, Available, new State { Gamepad = Pad }), Store, Ns2);
+        new(id, name, () => new MappingSession.InputSnapshot(false, Available, new State { Gamepad = Pad }),
+            Store, Ns2, () => NowMs);
 
     public void Dispose() => TempDir.Delete(Dir);
 
@@ -209,5 +211,109 @@ public class CalibrationWizardTests
     {
         foreach (var model in new[] { ControllerId.Ns2Pro, ControllerId.DualShock4, ControllerId.DualSense, ControllerId.SwitchPro, ControllerId.XInput })
             Assert.False(string.IsNullOrWhiteSpace(CalibrationWindow.ModelName(new ControllerId(model))));
+    }
+
+    private static CalibrationWizardModel StartMeasuring(CalibrationKit kit, Gamepad rest)
+    {
+        var model = kit.Model(new ControllerId(ControllerId.SwitchPro));
+        kit.Pad = rest;
+        model.Tick();
+        model.Advance();
+        return model;
+    }
+
+    [Fact]
+    public void Identical_readings_at_a_plausible_center_complete_and_save()
+    {
+        using var kit = new CalibrationKit();
+        var id = new ControllerId(ControllerId.DualSense);
+        var model = kit.Model(id);
+        kit.Pad = CalibrationKit.Stick(-1600, -3800, 0, 0);
+        model.Tick();
+        model.Advance();
+        for (int i = 0; i < GenericStickCalibrator.CenterSamplesNeeded; i++) model.Tick();
+        Assert.Equal(CalibrationWizardModel.Step.Range, model.State);
+        foreach (var pad in new[] { CalibrationKit.Stick(18000, 0, 20000, 0), CalibrationKit.Stick(-20000, 0, -20000, 0),
+            CalibrationKit.Stick(0, 20000, 0, 20000), CalibrationKit.Stick(0, -20000, 0, -20000) })
+        {
+            kit.Pad = pad;
+            model.Tick();
+        }
+        Assert.True(model.Advance());
+        Assert.True(kit.Store.TryGet(id, out var saved));
+        Assert.Equal(-1600, saved.Left.X.Center);
+        Assert.Equal(-3800, saved.Left.Y.Center);
+    }
+
+    [Fact]
+    public void Unavailable_for_two_seconds_shows_no_data_and_adds_no_samples()
+    {
+        using var kit = new CalibrationKit();
+        var model = StartMeasuring(kit, CalibrationKit.Stick(0, 0, 0, 0));
+        kit.Available = false;
+        kit.NowMs = 1000;
+        for (int i = 0; i < 100; i++) model.Tick();
+        Assert.False(model.NoReports);
+        kit.NowMs = 2500;
+        for (int i = 0; i < 100; i++) model.Tick();
+        Assert.True(model.NoReports);
+        Assert.Equal(CalibrationWizardModel.Step.MeasuringCenter, model.State);
+        kit.Available = true;
+        for (int i = 0; i < GenericStickCalibrator.CenterSamplesNeeded - 1; i++) model.Tick();
+        Assert.Equal(CalibrationWizardModel.Step.MeasuringCenter, model.State);
+        Assert.False(model.NoReports);
+        model.Tick();
+        Assert.Equal(CalibrationWizardModel.Step.Range, model.State);
+    }
+
+    [Fact]
+    public void Noisy_center_samples_restart_the_step()
+    {
+        using var kit = new CalibrationKit();
+        var model = StartMeasuring(kit, default);
+        for (int i = 0; i < GenericStickCalibrator.CenterSamplesNeeded; i++)
+        {
+            kit.Pad = CalibrationKit.Stick(i % 2 == 0 ? -2000 : 2000, 0, 0, 0);
+            model.Tick();
+        }
+        Assert.Equal(CalibrationWizardModel.Step.MeasuringCenter, model.State);
+        Assert.Equal(CenterCheck.Unsteady, model.CenterProblem);
+    }
+
+    [Fact]
+    public void Off_center_rest_is_refused_and_nothing_is_saved()
+    {
+        using var kit = new CalibrationKit();
+        var id = new ControllerId(ControllerId.SwitchPro);
+        var model = StartMeasuring(kit, CalibrationKit.Stick(-9876, -16901, 0, 0));
+        for (int i = 0; i < GenericStickCalibrator.CenterSamplesNeeded; i++) model.Tick();
+        Assert.Equal(CalibrationWizardModel.Step.MeasuringCenter, model.State);
+        Assert.Equal(CenterCheck.OffCenter, model.CenterProblem);
+        Assert.False(kit.Store.TryGet(id, out _));
+    }
+
+    [Fact]
+    public void Normal_rest_with_small_noise_succeeds_and_saves()
+    {
+        using var kit = new CalibrationKit();
+        var id = new ControllerId(ControllerId.SwitchPro);
+        var model = StartMeasuring(kit, default);
+        for (int i = 0; i < GenericStickCalibrator.CenterSamplesNeeded; i++)
+        {
+            kit.Pad = CalibrationKit.Stick(-1600 + i % 5 - 2, -3800 + i % 7 - 3, 10, -10);
+            model.Tick();
+        }
+        Assert.Equal(CalibrationWizardModel.Step.Range, model.State);
+        Assert.Equal(CenterCheck.Ok, model.CenterProblem);
+        foreach (var pad in new[] { CalibrationKit.Stick(18000, 0, 20000, 0), CalibrationKit.Stick(-20000, 0, -20000, 0),
+            CalibrationKit.Stick(0, 20000, 0, 20000), CalibrationKit.Stick(0, -20000, 0, -20000) })
+        {
+            kit.Pad = pad;
+            model.Tick();
+        }
+        Assert.True(model.Advance());
+        Assert.True(kit.Store.TryGet(id, out var saved));
+        Assert.InRange(saved.Left.X.Center, -1605, -1595);
+        Assert.InRange(saved.Left.Y.Center, -3805, -3795);
     }
 }

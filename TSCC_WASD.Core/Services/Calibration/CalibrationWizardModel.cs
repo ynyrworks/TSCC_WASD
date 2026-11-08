@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using TSCC_WASD.Core.Services.Input;
 using TSCC_WASD.Core.Services.Mapping;
 
@@ -18,10 +19,16 @@ public sealed class CalibrationWizardModel : IDisposable
     private GenericStickCalibrator _calibrator = new();
     private Switch2StickCalibration? _oldNs2Left, _oldNs2Right;
     private bool _restoreNs2, _disposed;
+    private readonly Func<long> _nowMs;
+    private long _lastAvailableMs;
+    /// <summary>Input unavailable for this long during a step counts as "the controller is not sending data".</summary>
+    public const int NoInputMs = 2000;
 
     public CalibrationWizardModel(ControllerId identity, string controllerName, Func<MappingSession.InputSnapshot?> source,
-        StickCalibrationStore store, Switch2CalibrationCache ns2Cache)
+        StickCalibrationStore store, Switch2CalibrationCache ns2Cache, Func<long>? nowMs = null)
     {
+        _nowMs = nowMs ?? (() => Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency);
+        _lastAvailableMs = _nowMs();
         Identity = identity;
         ControllerName = controllerName;
         _source = source;
@@ -46,6 +53,12 @@ public sealed class CalibrationWizardModel : IDisposable
     /// <summary>Latest uncalibrated sticks for display, valid while <see cref="InputAvailable"/>.</summary>
     public Gamepad Sticks { get; private set; }
 
+    /// <summary>Why the centre step last restarted (cleared when a centre was accepted or the step is left).</summary>
+    public CenterCheck CenterProblem { get; private set; }
+
+    /// <summary>True while measuring or circling and the reader reported no data for about 2 seconds.</summary>
+    public bool NoReports { get; private set; }
+
     public IReadOnlyList<double> Progress => _calibrator.Progress;
     public bool CanAdvance => _step switch
     {
@@ -66,6 +79,9 @@ public sealed class CalibrationWizardModel : IDisposable
         if (_disposed || _step == Step.Saved) return;
         var snapshot = _source();
         InputAvailable = snapshot is { Available: true };
+        long now = _nowMs();
+        if (InputAvailable) _lastAvailableMs = now;
+        NoReports = _step is Step.MeasuringCenter or Step.Range && now - _lastAvailableMs >= NoInputMs;
         if (!InputAvailable) return;
         var pad = snapshot!.State.Gamepad;
         Sticks = pad;
@@ -73,7 +89,12 @@ public sealed class CalibrationWizardModel : IDisposable
         {
             case Step.MeasuringCenter:
                 _calibrator.AddCenterSample(pad);
-                if (_calibrator.CenterReady) _step = Step.Range;
+                if (_calibrator.CenterReady)
+                {
+                    CenterProblem = _calibrator.CheckCenter();
+                    if (CenterProblem == CenterCheck.Ok) _step = Step.Range;
+                    else _calibrator = new GenericStickCalibrator();
+                }
                 break;
             case Step.Range:
                 _calibrator.AddRangeSample(pad);
@@ -89,6 +110,8 @@ public sealed class CalibrationWizardModel : IDisposable
         {
             _calibrator = new GenericStickCalibrator();
             _step = Step.MeasuringCenter;
+            CenterProblem = CenterCheck.Ok;
+            _lastAvailableMs = _nowMs();
             return false;
         }
         SaveFailed = false;
