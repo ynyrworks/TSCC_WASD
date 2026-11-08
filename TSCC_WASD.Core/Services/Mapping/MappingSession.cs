@@ -251,6 +251,8 @@ public sealed class MappingSession : IAsyncDisposable
             var id = source.Identity;
             int version = _calibrations.Version;
             if (version == _calibrationVersion && Equals(id, _calibrationId)) return _calibration;
+            if (id is not null && !Equals(id, _calibrationId)) _calibrations.AdoptLegacy(id); // once per connect, not per sample
+            version = _calibrations.Version;
             _calibrationVersion = version;
             _calibrationId = id;
             _calibration = id is not null && _calibrations.TryGet(id, out var found) ? found : null;

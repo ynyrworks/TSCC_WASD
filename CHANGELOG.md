@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: a stick calibration of a Bluetooth Switch Pro, DualShock 4 or DualSense is now kept when the controller is
+  paired again. It is saved under the controller's Bluetooth address instead of a Windows id that changes on every
+  pairing; calibrations saved by earlier versions are found and moved to the new key when the controller connects.
+
 ## 1.1.1
 
 **Fixes stick calibration saving a wrong center.** If you calibrated with 1.1.0 and a stick now drifts on its own, open

@@ -41,6 +41,31 @@ public static partial class HidDevice
     }
 
     /// <summary>
+    /// Bluetooth address (12 lowercase hex digits) of a classic Bluetooth HID device: walks up from the HID instance id
+    /// to its <c>BTHENUM\</c> parent, whose id ends in <c>…&amp;BCCE25C5FF8E_C00000000</c>. Null for USB, Bluetooth LE,
+    /// unknown parents or malformed ids.
+    /// </summary>
+    internal static string? BluetoothAddress(string instanceId, Func<string, string?> parentOf)
+    {
+        string? current = instanceId;
+        for (int level = 0; level < 4; level++)
+        {
+            try { current = parentOf(current); }
+            catch { return null; }
+            if (current is null) return null;
+            if (current.StartsWith(@"BTHENUM\", StringComparison.OrdinalIgnoreCase))
+            {
+                var match = BthEnumAddress().Match(current);
+                return match.Success ? match.Groups[1].Value.ToLowerInvariant() : null;
+            }
+        }
+        return null;
+    }
+
+    [System.Text.RegularExpressions.GeneratedRegex("[&_]([0-9a-f]{12})_c[0-9a-f]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+    private static partial System.Text.RegularExpressions.Regex BthEnumAddress();
+
+    /// <summary>
     /// Reads VID/PID from a HID interface path. USB: <c>hid#vid_054c&amp;pid_05c4…</c>.
     /// Bluetooth: <c>hid#{00001124-…}_vid&amp;0002054c_pid&amp;05c4…</c> (the 0002 prefix is the Bluetooth vendor source).
     /// </summary>

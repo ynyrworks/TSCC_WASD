@@ -115,7 +115,7 @@ public sealed class CalibrationWizardModel : IDisposable
             return false;
         }
         SaveFailed = false;
-        if (!_store.Save(Identity.PreferredKey, _calibrator.Result()))
+        if (!_store.Save(Identity, _calibrator.Result()))
         {
             SaveFailed = true;
             return false;
@@ -133,7 +133,8 @@ public sealed class CalibrationWizardModel : IDisposable
     public bool Clear()
     {
         bool removed = false;
-        if (Identity.DeviceKey is { } deviceKey && _store.TryGet(deviceKey, out _)) removed = _store.Clear(deviceKey);
+        var deviceKeys = new[] { Identity.DeviceKey, Identity.LegacyDeviceKey }.OfType<string>().ToList();
+        if (deviceKeys.Any(key => _store.TryGet(key, out _))) removed = _store.Clear(deviceKeys);
         else removed = _store.Clear(Identity.ModelKey);
         if (Identity.Model == ControllerId.Ns2Pro && (_restoreNs2 || _ns2Cache.TryLoadUser(out _, out _)))
         {

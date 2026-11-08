@@ -17,13 +17,16 @@ public sealed class StickCalibrationStore
 
     private readonly string _path;
     private readonly Switch2CalibrationCache _ns2Cache;
+    private readonly Func<string, string?> _parentOf;
     private readonly object _gate = new();
     private volatile Dictionary<string, StickCalibrationSet> _entries = [];
     private int _version;
     private bool _badFileLogged;
 
-    public StickCalibrationStore(string? path = null, Switch2CalibrationCache? ns2Cache = null)
+    public StickCalibrationStore(string? path = null, Switch2CalibrationCache? ns2Cache = null,
+        Func<string, string?>? parentOf = null)
     {
+        _parentOf = parentOf ?? WindowsDevicePaths.ParentOf;
         _path = Path.GetFullPath(path ?? AppPaths.File("stick-calibration.json"));
         _ns2Cache = ns2Cache ?? new Switch2CalibrationCache();
         Reload(raiseEvent: false);
@@ -57,12 +60,19 @@ public sealed class StickCalibrationStore
     /// For an NS2 Pro the older user calibration in <c>ns2-calibration.json</c> is cleared so the two never stack.
     /// Returns false (and changes nothing) when the calibration is invalid or the file cannot be written.
     /// </summary>
-    public bool Save(string key, StickCalibrationSet calibration)
+    public bool Save(string key, StickCalibrationSet calibration) => Save(key, calibration, null);
+
+    /// <summary>Saves under <see cref="ControllerId.PreferredKey"/> and removes the identity's legacy key in the same write.</summary>
+    public bool Save(ControllerId identity, StickCalibrationSet calibration) =>
+        Save(identity.PreferredKey, calibration, identity.LegacyDeviceKey);
+
+    private bool Save(string key, StickCalibrationSet calibration, string? legacyKey)
     {
         if (string.IsNullOrWhiteSpace(key) || calibration is null || !calibration.IsValid) return false;
         lock (_gate)
         {
             var next = new Dictionary<string, StickCalibrationSet>(_entries) { [key] = calibration };
+            if (legacyKey is not null && legacyKey != key) next.Remove(legacyKey);
             if (!Write(next)) return false;
             _entries = next;
             if (ControllerId.ModelOfKey(key) == ControllerId.Ns2Pro) ClearOldNs2();
@@ -91,6 +101,62 @@ public sealed class StickCalibrationStore
             if (!_entries.ContainsKey(key)) return false;
             var next = new Dictionary<string, StickCalibrationSet>(_entries);
             next.Remove(key);
+            if (!Write(next)) return false;
+            _entries = next;
+            Interlocked.Increment(ref _version);
+        }
+        Changed?.Invoke();
+        return true;
+    }
+
+    /// <summary>Removes several entries in one write. Returns true when at least one existed and the file was written.</summary>
+    public bool Clear(IEnumerable<string> keys)
+    {
+        lock (_gate)
+        {
+            var next = new Dictionary<string, StickCalibrationSet>(_entries);
+            bool any = false;
+            foreach (string key in keys) any |= next.Remove(key);
+            if (!any || !Write(next)) return false;
+            _entries = next;
+            Interlocked.Increment(ref _version);
+        }
+        Changed?.Invoke();
+        return true;
+    }
+
+    /// <summary>
+    /// Call once when a controller connects (not per lookup). If the controller is keyed by its Bluetooth address, old
+    /// entries of the same model keyed by a HID instance id whose parent has that same address (left behind by earlier
+    /// pairings) are merged into the address key: the one for the current instance id if there is one, otherwise the
+    /// last one in the file is copied there unless the address key already has an entry. All of them are then removed,
+    /// in one write. Entries of other addresses, or whose address cannot be resolved, are left alone.
+    /// Returns true when the file changed.
+    /// </summary>
+    public bool AdoptLegacy(ControllerId identity)
+    {
+        if (identity.DeviceKey is not { } newKey || identity.LegacyDeviceId is null || string.IsNullOrWhiteSpace(identity.DeviceId)) return false;
+        string address = identity.DeviceId.Trim().ToLowerInvariant();
+        string prefix = identity.Model + "#";
+        string? currentLegacy = identity.LegacyDeviceKey;
+        lock (_gate)
+        {
+            var old = new List<string>();
+            foreach (string key in _entries.Keys)
+            {
+                if (!key.StartsWith(prefix, StringComparison.Ordinal) || key == newKey) continue;
+                string instance = key[prefix.Length..];
+                if (!instance.StartsWith(@"hid\", StringComparison.OrdinalIgnoreCase)) continue;
+                if (key == currentLegacy || HidDevice.BluetoothAddress(instance, _parentOf) == address) old.Add(key);
+            }
+            if (old.Count == 0) return false;
+            var next = new Dictionary<string, StickCalibrationSet>(_entries);
+            if (!next.ContainsKey(newKey))
+            {
+                string source = currentLegacy is not null && old.Contains(currentLegacy) ? currentLegacy : old[^1];
+                next[newKey] = _entries[source];
+            }
+            foreach (string key in old) next.Remove(key);
             if (!Write(next)) return false;
             _entries = next;
             Interlocked.Increment(ref _version);
