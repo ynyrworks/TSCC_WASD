@@ -14,3 +14,9 @@ public interface IVirtualController : IDisposable
     void PushState(State state, double deadZone, MotionSample? motion = null);
     void Disconnect();
 }
+
+/// <summary>A virtual controller that can show the physical controller's battery.</summary>
+public interface IBatterySink
+{
+    BatteryStatus Battery { set; }
+}
