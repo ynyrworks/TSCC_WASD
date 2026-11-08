@@ -42,6 +42,10 @@ It relies on two free drivers: **ViGEmBus** (creates the virtual controller) and
 controller so games do not see both). Both are projects by Nefarius; TSCC_WASD installs them for you and
 configures HidHide by itself while it maps.
 
+**Steam is not required.** The virtual controller is a system-wide Windows device, so games from Epic, the Xbox app,
+the EA app, emulators or games started directly all see it. The Steam features in the app (Restart Steam, auto reconnect)
+only keep Steam from grabbing the real controller; ignore them if you do not use Steam.
+
 **What it does not do:** arbitrary button remapping, macros, touchpad surface, keyboard or mouse input,
 DualSense output, overlays. Whether PS prompts appear still depends on the game: a game that only draws
 Xbox artwork shows Xbox artwork whatever controller you use. There is no telemetry and no background service;
