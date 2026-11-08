@@ -31,6 +31,15 @@ button input, HidHide setup, game recognition or long-running stability.
 
 ## Manual hardware validation
 
+### 1.0.0 — in-app update to the published release, 2026-11-08
+
+Maintainer's PC. *Check for updates* in an earlier installed version (0.99.1 or 0.9.2; which one was not recorded)
+found the published 1.0.0, verified and installed `TSCC_WASD-1.0.0-win-x64.zip` and restarted.
+About showed 1.0.0 as the stable channel, existing profiles were kept and mapping worked. **Passed.**
+
+1.0.0 was released early by the maintainer's decision; see [RC-CHECKLIST.md](RC-CHECKLIST.md) for the conditions
+that were not met and the checks that are still not recorded (Xbox over USB and Bluetooth).
+
 ### 0.99.0 problem and the 0.99.1 fixes, 2026-11-04
 
 Maintainer's PC: Windows 11 26100 (zh-TW), HidHide 1.2.98, ViGEmBus 1.21.442, NS2 Pro over USB, Steam
