@@ -145,7 +145,7 @@ internal static class WindowsDevicePaths
     }
 
     /// <summary>DEVPKEY_Device_Parent: unlike CM_Get_Parent, it keeps the last parent of a device that is not present.</summary>
-    private static string? ParentOf(string deviceId)
+    internal static string? ParentOf(string deviceId)
     {
         if (CM_Locate_DevNodeW(out uint node, deviceId, LocatePhantom) != 0) return null;
         var key = new DevPropKey { FormatId = new Guid("4340a6c5-93fa-4706-972c-7b648008a5a7"), PropertyId = 8 };

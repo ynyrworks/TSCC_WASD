@@ -78,7 +78,7 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
                         throw new IOException(L.T("等待 DualShock 4／DualSense 連線（USB 或藍牙）。", "Waiting for a DualShock 4 / DualSense (USB or Bluetooth)."));
                     var device = found[0];
                     bool dualSense = PlayStationReport.IsDualSense(device.ProductId);
-                    _identity = new ControllerId(dualSense ? ControllerId.DualSense : ControllerId.DualShock4, HidDevice.InstanceId(device.Path));
+                    _identity = ControllerId.ForHid(dualSense ? ControllerId.DualSense : ControllerId.DualShock4, device.Path, device.Bluetooth);
                     string name = (dualSense ? "DualSense" : "DualShock 4") + (device.Bluetooth ? L.T("（藍牙）", " (Bluetooth)") : " (USB)");
 
                     using var stream = HidDevice.OpenRead(device.Path, out int inputLength);

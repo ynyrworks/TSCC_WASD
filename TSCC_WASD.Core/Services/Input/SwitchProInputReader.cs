@@ -65,7 +65,7 @@ public sealed class SwitchProInputReader : IInputReader, IBatterySource, IContro
                     if (found.Count == 0)
                         throw new IOException(L.T("等待 Switch Pro 手把連線（USB 或藍牙）。", "Waiting for a Switch Pro Controller (USB or Bluetooth)."));
                     var device = found[0];
-                    _identity = new ControllerId(ControllerId.SwitchPro, HidDevice.InstanceId(device.Path));
+                    _identity = ControllerId.ForHid(ControllerId.SwitchPro, device.Path, device.Bluetooth);
                     string name = L.T("Switch Pro 手把", "Switch Pro Controller") + (device.Bluetooth ? L.T("（藍牙）", " (Bluetooth)") : " (USB)");
                     using var stream = HidDevice.OpenRead(device.Path, out int inputLength);
                     using var output = HidDevice.TryOpenWrite(device.Path, out int outputLength);
