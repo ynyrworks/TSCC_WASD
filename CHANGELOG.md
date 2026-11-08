@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.1
+
+**Fixes stick calibration saving a wrong center.** If you calibrated with 1.1.0 and a stick now drifts on its own, open
+*Calibrate sticks* and calibrate again, or click *Clear calibration*. **Not code-signed:** compare the ZIP with its `.sha256` file first.
+
+- Fixed: the "release the sticks" step could save a center far from the real one, so a released stick kept moving
+  (seen on a Switch Pro over Bluetooth). It counted the last reading again on every tick even when the controller sent
+  nothing new, did not check that the readings were steady and did not check that the center was plausible.
+  It now uses only new readings from the controller, starts the step again if the sticks move or the center is far
+  from the middle, and says so in the wizard. If no readings arrive, the wizard says the controller is not sending data.
+
 ## 1.1.0
 
 **A new interface.** Everything 1.0 does still works the same way; what changed is where things are, plus stick calibration
