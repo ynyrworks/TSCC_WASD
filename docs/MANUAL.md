@@ -121,6 +121,10 @@ Home shows what is happening now and keeps the everyday controls.
   *Mapping: games see a virtual DualShock 4* (or Xbox 360), or *Paused: games see a virtual … with nothing pressed*.
   Under it are the controller in use (name and connection, USB or Bluetooth) and, while mapping runs, the buttons you press.
   The **?** explains what to do when no controller is found.
+  Next to the controller is its battery: *Battery Full / Medium / Low / Critical / Empty*, with *· Charging* while it charges;
+  *Wired* when the connection reports no battery (for example a wired Xbox), and *Battery —* while mapping runs but no reading
+  has arrived yet. With DualShock 4 output the virtual controller reports the same battery to games; without a reading it
+  reports cable connected and full, as before.
 - **Start mapping / Stop mapping.** The big button creates the virtual controller and feeds your controller's input
   to it; start it before the game. If a driver is missing the app first offers to install it. While mapping runs the
   button reads **Stop mapping**.

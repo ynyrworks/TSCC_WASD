@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.1.0
+
+**A new interface.** Everything 1.0 does still works the same way; what changed is where things are, plus stick calibration
+for every controller and the controller's battery. The [user manual](https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/MANUAL.md)
+(also in [Chinese](https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/MANUAL.zh-TW.md)) describes the new layout.
+The 1.0 promise is unchanged. **Not code-signed:** SmartScreen may warn. Compare the ZIP with its `.sha256` file first.
+
+- **New main window** with a navigation pane and four pages: Home, Profiles, App settings and About & help. It follows the
+  Windows light or dark theme. The separate About window is gone; its content is on the About & help page.
+- **Home** shows the controller in use, its connection, battery and live input, the output games see, the profile and
+  three everyday switches.
+- **Profiles** are edited on their own page and saved automatically. A profile that is valid is saved even when another
+  one is not.
+- **App settings** are rearranged into three groups with plain drop-downs.
+- **First-run tour** that points at the real controls; replay it from About & help. Every control has a **?** with a short
+  explanation in both languages.
+- **Stick calibration for every controller:** Xbox, DualShock 4, DualSense, the original Switch Pro and the NS2 Pro over USB
+  or Bluetooth (it was NS2 Pro over USB only). Open it from the Profiles page or the Home controller card; mapping must be
+  running. It is saved per controller when the controller can be told apart, otherwise per model. Cancel keeps the earlier
+  calibration; **Clear calibration** removes it.
+- **Battery:** Home shows the controller's battery level and charging. With DualShock 4 output the virtual controller
+  reports the same battery to games; when there is no reading it reports cable connected and full, as before.
+- The manual now says plainly that Steam is not required: the virtual controller works with any launcher or game.
+- Uses [WPF-UI](https://github.com/lepoco/wpfui) 4.3.0 (MIT) for the window and theme; see THIRD-PARTY-NOTICES.
+
 ## 1.0.0
 
 **The first official release.** It builds on the 0.99.x release candidates and adds a full
