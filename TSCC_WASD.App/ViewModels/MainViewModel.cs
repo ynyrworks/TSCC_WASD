@@ -8,6 +8,7 @@ using Microsoft.Win32;
 using TSCC_WASD.Core;
 using TSCC_WASD.Core.Models;
 using TSCC_WASD.Core.Services;
+using TSCC_WASD.Core.Services.Calibration;
 using TSCC_WASD.Core.Services.Input;
 using TSCC_WASD.Core.Services.Mapping;
 using TSCC_WASD.Core.Services.Setup;
@@ -26,8 +27,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _autoSelecting;
     private int _autoSwitchTicks;
     private MappingProfile? _selectedProfile;
-    private string _statusMessage = L.T("選擇設定檔後啟動映射。", "Choose a profile and start mapping.");
-    private string _inputSummary = L.T("尚未啟動映射", "Mapping not started");
+    private string _statusMessage = L.T("選擇設定檔後開始映射。", "Choose a profile and start mapping.");
+    private string _inputSummary = L.T("尚未開始映射", "Mapping not started");
     private bool _isRunning, _isPaused, _busy, _closing, _loadFailed, _updating;
     private CancellationTokenSource? _updateCts;
     private double _updateProgress;
@@ -166,13 +167,22 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         });
         CalibrateCommand = Command(() =>
         {
-            // The wizard reads the controller through its own shared HID handle, so mapping can keep running;
-            // a running mapping applies the saved calibration immediately.
-            var window = new CalibrationWindow { Owner = Application.Current?.MainWindow };
+            // The wizard reads the mapping session's uncalibrated input, so mapping keeps running;
+            // the session applies the saved (or cleared) calibration at once.
+            var owner = Application.Current?.MainWindow;
+            if (_coordinator.Identity is not { } identity)
+            {
+                AppDialog.Show(L.T("還沒有讀到手把，請確認手把已連接後再試。", "No controller is being read yet. Connect one and try again."), "TSCC_WASD");
+                return Task.CompletedTask;
+            }
+            string name = _controller?.Name is { Length: > 0 } known ? known : CalibrationWindow.ModelName(identity);
+            var model = new CalibrationWizardModel(identity, name, () => _coordinator.LatestUncalibratedInput,
+                StickCalibrationStore.Shared, new Switch2CalibrationCache());
+            var window = new CalibrationWindow(model) { Owner = owner };
             if (window.ShowDialog() == true)
                 StatusMessage = L.T("已儲存並套用你的搖桿校準。", "Your stick calibration was saved and applied.");
             return Task.CompletedTask;
-        });
+        }, () => IsRunning);
         OpenControllerTestCommand = Command(() =>
         {
             if (_controllerTestWindow is { } existing)
@@ -737,7 +747,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         StatusMessage = stillMissing
             ? L.T("仍偵測不到部分驅動程式。若安裝程式要求重新開機，請重開機後再開啟 TSCC_WASD。",
                 "Some drivers are still not detected. If an installer asked for a restart, restart Windows and open TSCC_WASD again.")
-            : L.T("驅動程式安裝完成。若安裝程式要求重新開機，請先重開機再啟動映射。",
+            : L.T("驅動程式安裝完成。若安裝程式要求重新開機，請先重開機再開始映射。",
                 "Drivers installed. If an installer asked for a restart, restart Windows before mapping.");
     }
 

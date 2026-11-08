@@ -109,6 +109,8 @@ public sealed class MappingSession : IAsyncDisposable
     /// The calibration wizard feeds <see cref="GenericStickCalibrator"/> from this.
     /// </summary>
     public InputSnapshot? LatestUncalibratedInput => _lastUncalibrated;
+    /// <summary>The controller being read, or null when the reader has no identity or none is connected.</summary>
+    public ControllerId? Identity { get { try { return (_input as IControllerIdentity)?.Identity; } catch { return null; } } }
     /// <summary>The input reader's own status text, e.g. which controller is being read.</summary>
     public string InputStatus => _input.Status;
 

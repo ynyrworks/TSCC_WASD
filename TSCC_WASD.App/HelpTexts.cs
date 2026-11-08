@@ -14,6 +14,9 @@ public static class HelpTexts
         ["home.controller"] = (
             "目前的映射狀態與使用中的輸入手把。映射中會即時顯示按下的按鍵；找不到手把時請接上支援的手把：Xbox、Switch Pro、NS2 Pro（USB，或藍牙：按住 Sync 鍵，不需 Windows 配對）、DualShock 4、DualSense。",
             "The mapping state and the controller in use. While mapping runs it shows the buttons you press. If none is found, connect a supported one: Xbox, Switch Pro, NS2 Pro (USB, or Bluetooth: hold Sync, no Windows pairing), DualShock 4 or DualSense."),
+        ["home.calibrate"] = (
+            "校準目前使用的手把的搖桿（Xbox、PlayStation、Switch Pro、NS2 Pro 都可以）。需先開始映射；儲存後立即套用。",
+            "Calibrates the sticks of the controller in use (Xbox, PlayStation, Switch Pro or NS2 Pro). Start mapping first; applies as soon as you save."),
         ["home.main"] = (
             "開始映射：建立虛擬手把，並把實體手把的輸入送給它。請先開始映射、再開遊戲。缺少驅動程式時會先詢問是否安裝。映射中此鈕會變成「停止映射」。",
             "Starts mapping: creates the virtual controller and feeds your controller's input to it. Start it before the game. If a driver is missing the app first offers to install it. While mapping runs this button becomes Stop mapping."),
@@ -39,7 +42,7 @@ public static class HelpTexts
             "Steam 先於映射啟動時會握住實體手把，遊戲就同時看到真假兩支，按鍵圖示在 Xbox／PS 間跳動。映射開始後按這裡重新啟動 Steam，讓它只看到虛擬手把（映射中才可使用）。",
             "If Steam was running before mapping started it holds the physical controller, so games see both and prompts flip between Xbox and PS. After mapping has started, restart Steam here so it sees only the virtual controller (available while mapping)."),
         ["home.hide"] = (
-            "讓遊戲只看到虛擬手把，避免按鍵圖示在 Xbox／PS 之間跳動。需要安裝 HidHide。請先啟動映射再開遊戲（已開著的遊戲要重開）；停止映射後自動還原。",
+            "讓遊戲只看到虛擬手把，避免按鍵圖示在 Xbox／PS 之間跳動。需要安裝 HidHide。請先開始映射再開遊戲（已開著的遊戲要重開）；停止映射後自動還原。",
             "Games then only see the virtual controller, so prompts stop flipping between Xbox and PS. Needs HidHide. Start mapping before the game (restart a game that was already running); stopping restores everything."),
         ["home.rumble"] = (
             "遊戲送出的震動會傳到你手上的實體手把。NS2 Pro 的震動需要 USB；原版 Switch Pro 目前沒有震動。",
@@ -95,7 +98,7 @@ public static class HelpTexts
             "任天堂習慣：右邊的鍵是確認。勾選後右側鍵送出 ✕／Xbox A、下方鍵送出 ○／Xbox B。NS2 Pro 也會改成依按鍵上的字母對應，而不是位置。",
             "Nintendo habit: the right-hand button confirms. The right-hand button then sends Cross / Xbox A and the bottom one Circle / Xbox B. The NS2 Pro then follows the letters printed on its buttons instead of their positions."),
         ["profiles.hide"] = (
-            "讓遊戲只看到虛擬手把，避免按鍵圖示在 Xbox／PS 之間跳動。需要安裝 HidHide。請先啟動映射再開遊戲；停止映射後自動還原。預設開啟。",
+            "讓遊戲只看到虛擬手把，避免按鍵圖示在 Xbox／PS 之間跳動。需要安裝 HidHide。請先開始映射再開遊戲；停止映射後自動還原。預設開啟。",
             "Games then only see the virtual controller, so prompts stop flipping between Xbox and PS. Needs HidHide. Start mapping before the game; stopping restores everything. On by default."),
         ["profiles.rumble"] = (
             "遊戲送給虛擬手把的震動會傳到 Xbox、NS2 Pro、DualShock 4 或 DualSense 實體手把。NS2 Pro 的震動需要 USB；原版 Switch Pro 目前沒有震動。",
@@ -110,19 +113,19 @@ public static class HelpTexts
             "目標輪詢頻率（30–500 Hz，預設 125）：每秒讀取手把並更新虛擬手把的次數。這是目標值，不是即時保證；一般不必更動。",
             "Target polling rate (30–500 Hz, default 125): how often the controller is read and the virtual one updated. It is a target, not a real-time guarantee; you rarely need to change it."),
         ["profiles.calibrate"] = (
-            "推到底卻只像輕推、或放開時會飄移時使用。需要 USB；映射中也可以校準，儲存後立即套用。",
-            "Use this if a full push feels like a light one or the stick drifts at rest. Needs USB; works while mapping and applies as soon as you save."),
+            "推到底卻只像輕推、或放開時會飄移時使用，適用於目前使用的手把。需先開始映射；儲存後立即套用。",
+            "Use this if a full push feels like a light one or the stick drifts at rest, for the controller in use. Start mapping first; applies as soon as you save."),
         ["profiles.test"] = (
             "查看手把的即時輸入，確認程式讀得到手把；也可錄製 5 秒原始報告供回報問題。",
             "Shows live controller input so you can confirm the app reads it, and can record a 5 second raw report for a bug report."),
 
         // ---- Settings ----
         ["settings.startup"] = (
-            "登入 Windows 後縮在系統匣直接映射，搭配「自動開始映射時的 Steam」就不必再手動重啟 Steam。「每次開啟程式就自動開始映射」也在這裡選：手動開啟程式時是否自動開始映射。登入後沒看到視窗是正常的，請從系統匣圖示開啟。",
-            "Runs in the notification area right after sign-in and starts mapping; with the Steam option below you never need to restart Steam by hand. Whether the app also begins mapping whenever you open it by hand is chosen here too. Seeing no window after sign-in is normal; open it from the tray icon."),
+            "登入 Windows 後縮在系統匣直接映射，搭配「自動開始映射時的 Steam」就不必再手動重啟 Steam。選項有：不自動啟動、只在手動開啟程式時開始映射、登入時啟動並縮在系統匣開始映射、以及登入時啟動且手動開啟也開始映射。登入後沒看到視窗是正常的，請從系統匣圖示開啟。",
+            "Runs in the notification area right after sign-in and starts mapping; with the Steam option below you never need to restart Steam by hand. The choices are: do nothing; map when you open the app by hand; start at sign-in in the tray and map; or start at sign-in and also map when opened by hand. Seeing no window after sign-in is normal; open it from the tray icon."),
         ["settings.steam"] = (
-            "只在自動開始映射時套用。建議同時在 Steam 設定關閉「電腦開機時執行 Steam」，讓 Steam 一律在隱藏手把之後才啟動。手動按「開始」時請改用「重新啟動 Steam」按鈕。",
-            "Applies only when mapping starts automatically. Also turn off Steam’s own “Run Steam when my computer starts” so Steam always starts after the controllers are hidden. When you start by hand, use the Restart Steam button instead."),
+            "只在自動開始映射時套用。建議同時在 Steam 設定關閉「電腦開機時執行 Steam」，讓 Steam 一律在隱藏手把之後才啟動。手動按「開始映射」時請改用「重新啟動 Steam」按鈕。",
+            "Applies only when mapping starts automatically. Also turn off Steam’s own “Run Steam when my computer starts” so Steam always starts after the controllers are hidden. When you press Start mapping by hand, use the Restart Steam button instead."),
         ["settings.reconnect"] = (
             "USB 手把被 Steam 握住時，自動把該 USB 埠斷電再接上一、兩秒，手把回來時已對 Steam 隱藏，不必重啟 Steam。設定需要一次管理員權限；藍牙手把無法這樣處理。程式更新後要再按一次「設定」。「移除」會刪除這項設定。",
             "When Steam holds a USB controller, the app power-cycles its USB port for a second or two and the controller returns already hidden from Steam, so Steam need not restart. Needs administrator rights once; Bluetooth controllers cannot be handled this way. After an app update click Set up once more. Remove deletes the setup."),
@@ -133,8 +136,8 @@ public static class HelpTexts
             "實驗性：不只微軟手把，8BitDo、PowerA 等相容 XInput 的手把也會隱藏；可能連帶包含方向盤或大型搖桿，裝置不見時請關閉。每個被隱藏的裝置都會寫進日誌。",
             "Experimental: hides XInput-compatible pads such as 8BitDo and PowerA, not only Microsoft’s. May also include steering wheels or large joysticks, so turn it off if a device disappears. Every hidden device is written to the log."),
         ["settings.tray"] = (
-            "開啟後，最小化會把視窗收進系統匣；雙擊圖示可再打開，右鍵選單有顯示視窗、開始、暫停、停止與結束。綠點代表映射中，橘點代表暫停。",
-            "When on, minimizing tucks the window into the notification area; double-click the icon to open it again, the right-click menu has Show window, Start, Pause, Stop and Exit. A green dot means mapping, orange means paused."),
+            "開啟後，最小化會把視窗收進系統匣；雙擊圖示可再打開，右鍵選單有顯示視窗、開始映射、暫停、停止映射與結束。綠點代表映射中，橘點代表暫停。",
+            "When on, minimizing tucks the window into the notification area; double-click the icon to open it again, the right-click menu has Show window, Start mapping, Pause, Stop mapping and Exit. A green dot means mapping, orange means paused."),
         ["settings.updates"] = (
             "只會連到 GitHub 查詢最新版本；沒勾選時，只有按「檢查更新」才會連網。沒有你的同意不會下載或安裝任何東西。",
             "Only contacts GitHub for the latest version; otherwise the network is used only when you click Check for updates. Nothing is downloaded or installed without your consent."),
@@ -176,11 +179,11 @@ public static class HelpTexts
 
         // ---- Sub-windows ----
         ["calib.steps"] = (
-            "用於 NS2 Pro 搖桿推到底卻像輕推、或放開會飄移時，需要 USB。步驟 1：把手把放在桌上、不碰搖桿，按「下一步」。步驟 2：兩支搖桿各沿邊緣慢慢轉 3 圈，每個方向的進度條都滿了就按「儲存」。",
-            "For an NS2 Pro whose full push feels light or whose stick drifts; needs USB. Step 1: put the controller down without touching the sticks and click Next. Step 2: circle each stick slowly three times at the edge; once every direction’s bar is full, click Save."),
+            "用於搖桿推到底卻像輕推、或放開會飄移時。步驟 1：把手把放在桌上、不碰搖桿，按「下一步」。步驟 2：兩支搖桿各沿邊緣慢慢轉 3 圈，每個方向的進度條都滿了就按「儲存」。",
+            "For a stick whose full push feels light or that drifts at rest. Step 1: put the controller down without touching the sticks and click Next. Step 2: circle each stick slowly three times at the edge; once every direction’s bar is full, click Save."),
         ["calib.reset"] = (
-            "刪除你自己做的校準，之後改用手把原廠校準或自動學習。你的校準不管 Steam 開不開都優先使用。",
-            "Deletes your own calibration; the factory calibration or automatic learning is used instead. Your calibration takes priority whether Steam is open or not."),
+            "刪除這支手把已儲存的校準（會先詢問），之後改用原廠校準或自動學習；映射中立即生效。",
+            "Deletes the saved calibration of this controller (after asking); the factory calibration or automatic learning is used instead. Takes effect at once while mapping."),
         ["test.record"] = (
             "錄製 5 秒會收集手把的原始報告並存成純文字檔。檔案包含診斷資訊（版本、系統、驅動程式狀態），上傳到 GitHub 前請先打開看過。不會自動上傳任何東西。",
             "Captures 5 seconds of raw controller reports into a plain text file. The file includes diagnostics (versions, OS, driver status); read it before uploading it to GitHub. Nothing is uploaded automatically."),

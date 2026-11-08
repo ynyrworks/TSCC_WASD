@@ -201,7 +201,7 @@ public class DesktopTests
             try
             {
                 // Without an NS2 Pro attached the wizard waits on its first step; it must still load.
-                window = new CalibrationWindow();
+                window = CalibrationKit.Window();
                 var rangePanel = (FrameworkElement)window.FindName("RangePanel");
                 var content = (FrameworkElement)window.Content;
                 window.Content = null;

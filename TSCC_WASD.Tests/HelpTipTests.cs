@@ -91,7 +91,7 @@ public class HelpTipTests
 
             var windows = new Window[]
             {
-                new CalibrationWindow(),
+                CalibrationKit.Window(),
                 new ControllerTestWindow(),
                 new ProcessPickerWindow([new ProcessPickerWindow.ProcessEntry("notepad", "Untitled")]),
             };
