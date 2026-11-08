@@ -156,7 +156,7 @@
                     <Grid Margin="0,6">
                         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{app:T Zh=把遊戲震動轉給實體手把, En='Forward game rumble to the controller'}"/>
+                            <TextBlock Text="{app:T Zh=把遊戲震動轉給實體手把, En='Forward game rumble to the physical controller'}"/>
                             <app:HelpTip Key="home.rumble"/>
                         </StackPanel>
                         <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding SelectedProfile.ForwardRumble}" app:HelpTip.Key="home.rumble"

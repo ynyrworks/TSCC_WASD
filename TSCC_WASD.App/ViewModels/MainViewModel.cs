@@ -27,8 +27,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _autoSelecting;
     private int _autoSwitchTicks;
     private MappingProfile? _selectedProfile;
-    private string _statusMessage = L.T("選擇設定檔後啟動映射。", "Choose a profile and start mapping.");
-    private string _inputSummary = L.T("尚未啟動映射", "Mapping not started");
+    private string _statusMessage = L.T("選擇設定檔後開始映射。", "Choose a profile and start mapping.");
+    private string _inputSummary = L.T("尚未開始映射", "Mapping not started");
     private bool _isRunning, _isPaused, _busy, _closing, _loadFailed, _updating;
     private CancellationTokenSource? _updateCts;
     private double _updateProgress;
@@ -650,8 +650,6 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public string OutputTitle => HomeText.OutputName(CurrentOutput);
     public string OutputDetail => HomeText.OutputDetail(CurrentOutput, L.Chinese);
     public string FooterText => HomeText.Footer(IsRunning, IsRunning && _coordinator.HidingSince is not null, L.Chinese, _hiddenCount);
-    /// <summary>The calibration entry points work only while mapping runs (the wizard needs the live input).</summary>
-    public bool CanCalibrate => IsRunning;
     public bool AutoSwitchApplies => AutoProfileSwitchRule.HasAnyMatch(Profiles);
 
     /// <summary>
@@ -673,7 +671,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         foreach (var name in new[] { nameof(MainButtonText), nameof(MainCommand), nameof(StatusLine), nameof(CurrentOutput), nameof(OutputTitle),
                                      nameof(OutputDetail), nameof(FooterText), nameof(ControllerName), nameof(BatteryText), nameof(HasBatteryText),
-                                     nameof(AutoSwitchApplies), nameof(CanCalibrate) })
+                                     nameof(AutoSwitchApplies) })
             RaisePropertyChanged(name);
     }
 
@@ -749,7 +747,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         StatusMessage = stillMissing
             ? L.T("仍偵測不到部分驅動程式。若安裝程式要求重新開機，請重開機後再開啟 TSCC_WASD。",
                 "Some drivers are still not detected. If an installer asked for a restart, restart Windows and open TSCC_WASD again.")
-            : L.T("驅動程式安裝完成。若安裝程式要求重新開機，請先重開機再啟動映射。",
+            : L.T("驅動程式安裝完成。若安裝程式要求重新開機，請先重開機再開始映射。",
                 "Drivers installed. If an installer asked for a restart, restart Windows before mapping.");
     }
 

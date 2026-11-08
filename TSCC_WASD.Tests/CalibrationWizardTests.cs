@@ -163,6 +163,25 @@ public class CalibrationWizardTests
     }
 
     [Fact]
+    public void ClearKeepsTheModelEntryWhenTheControllerHasItsOwnDeviceEntry()
+    {
+        using var kit = new CalibrationKit();
+        var set = new StickCalibrationSet(new(new(0, 30000, 30000), new(0, 30000, 30000)), new(new(0, 30000, 30000), new(0, 30000, 30000)));
+        var otherPad = new ControllerId(ControllerId.SwitchPro, "CC:DD");
+        kit.Store.Save("switchpro", set);
+        kit.Store.Save(Switch.PreferredKey, set);
+        using (var model = kit.Model(Switch))
+            Assert.True(model.Clear());
+        Assert.False(kit.Store.TryGet(Switch.PreferredKey, out _));
+        Assert.True(kit.Store.TryGet("switchpro", out _));
+        Assert.True(kit.Store.TryGet(otherPad, out _)); // falls back to the model entry
+        // A controller with no device entry clears the model entry.
+        using (var model = kit.Model(otherPad))
+            Assert.True(model.Clear());
+        Assert.False(kit.Store.TryGet("switchpro", out _));
+    }
+
+    [Fact]
     public void ClearThenCancelDoesNotRestoreAnNs2UserCalibration()
     {
         using var kit = new CalibrationKit();
@@ -180,7 +199,6 @@ public class CalibrationWizardTests
         try
         {
             Assert.False(vm.IsRunning);
-            Assert.False(vm.CanCalibrate);
             Assert.False(vm.CalibrateCommand.CanExecute(null));
         }
         finally { await vm.DisposeAsync(); }

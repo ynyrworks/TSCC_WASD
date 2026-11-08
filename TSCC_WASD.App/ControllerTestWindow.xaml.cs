@@ -56,7 +56,7 @@ public partial class ControllerTestWindow : Wpf.Ui.Controls.FluentWindow
             ? L.T($"目前來源：{_status()}", $"Current source: {_status()}")
             : L.T("請先開始映射", "Start mapping first");
         ReasonText.Text = !running
-            ? L.T("測試頁顯示映射中讀到的輸入；映射沒有執行時沒有資料可看。請回主視窗按「啟動映射」。", "This page shows the input read while mapping. With mapping stopped there is nothing to show; click Start in the main window.")
+            ? L.T("測試頁顯示映射中讀到的輸入；映射沒有執行時沒有資料可看。請回主視窗按「開始映射」。", "This page shows the input read while mapping. With mapping stopped there is nothing to show; click Start mapping in the main window.")
             : snapshot is null ? L.T("尚未收到輸入", "No input yet")
             : snapshot.Paused ? L.T("映射已暫停，因此顯示為放開所有按鍵。", "Mapping is paused, so everything shows as released.")
             : !snapshot.Available ? L.T("尚未收到有效輸入。", "No valid input yet.") : "";

@@ -103,13 +103,15 @@ public sealed class CalibrationWizardModel : IDisposable
     }
 
     /// <summary>
-    /// Removes the stored calibration of this controller (device and model entries, and an old NS2 Pro one).
+    /// Removes the stored calibration of this controller: its own device entry when it has one (other controllers of the
+    /// same model keep theirs), otherwise the model entry; plus an old NS2 Pro user calibration.
     /// Takes effect at once; a later cancel does not bring it back. Returns true when something was removed.
     /// </summary>
     public bool Clear()
     {
         bool removed = false;
-        foreach (string key in Identity.LookupKeys()) removed |= _store.Clear(key);
+        if (Identity.DeviceKey is { } deviceKey && _store.TryGet(deviceKey, out _)) removed = _store.Clear(deviceKey);
+        else removed = _store.Clear(Identity.ModelKey);
         if (Identity.Model == ControllerId.Ns2Pro && (_restoreNs2 || _ns2Cache.TryLoadUser(out _, out _)))
         {
             _ns2Cache.ClearUser();

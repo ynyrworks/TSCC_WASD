@@ -20,7 +20,7 @@ public sealed class TrayIcon : IDisposable
     public TrayIcon(MainViewModel viewModel, Action show, Action exit)
     {
         _viewModel = viewModel;
-        _start = new Forms.ToolStripMenuItem(L.T("啟動映射", "Start mapping"), null, (_, _) => Run(viewModel.StartCommand));
+        _start = new Forms.ToolStripMenuItem(L.T("開始映射", "Start mapping"), null, (_, _) => Run(viewModel.StartCommand));
         _pause = new Forms.ToolStripMenuItem(L.T("暫停", "Pause"), null, (_, _) => Run(viewModel.PauseCommand));
         _stop = new Forms.ToolStripMenuItem(L.T("停止映射", "Stop mapping"), null, (_, _) => Run(viewModel.StopCommand));
         var menu = new Forms.ContextMenuStrip();

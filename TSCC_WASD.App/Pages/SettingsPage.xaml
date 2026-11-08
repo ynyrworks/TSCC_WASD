@@ -31,7 +31,7 @@
                                 <TextBlock Text="{app:T Zh='自動開始映射時的 Steam', En='Steam on automatic start'}" TextWrapping="Wrap"/>
                                 <app:HelpTip Key="settings.steam"/>
                             </StackPanel>
-                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='只在登入或開啟程式而自動開始映射時套用；手動按「開始」時請改用「重新啟動 Steam」按鈕。', En='Applies only when mapping starts automatically (at sign-in or when the app opens). When you press Start by hand, use the Restart Steam button instead.'}"/>
+                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='只在登入或開啟程式而自動開始映射時套用；手動按「開始映射」時請改用「重新啟動 Steam」按鈕。', En='Applies only when mapping starts automatically (at sign-in or when the app opens). When you press Start mapping by hand, use the Restart Steam button instead.'}"/>
                         </StackPanel>
                         <ComboBox Grid.Column="1" Width="260" ItemsSource="{Binding SteamOptions}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SteamChoice}" app:HelpTip.Key="settings.steam" AutomationProperties.Name="{app:T Zh='自動開始映射時的 Steam', En='Steam on automatic start'}"/>
                     </Grid>

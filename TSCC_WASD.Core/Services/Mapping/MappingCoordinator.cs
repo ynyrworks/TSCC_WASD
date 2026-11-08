@@ -61,7 +61,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
     /// this app hid itself, not ones that were already hidden.
     /// </summary>
     public int? HiddenInterfaceCount => _hider?.HiddenCount;
-    public string InputSummary => _session?.InputSummary ?? L.T("尚未啟動映射", "Mapping not started");
+    public string InputSummary => _session?.InputSummary ?? L.T("尚未開始映射", "Mapping not started");
 
     public async Task<(bool started, string message)> StartAsync(MappingProfile profile, Action<string>? statusCallback = null)
     {
@@ -113,7 +113,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
         var session = new MappingSession(snapshot, input, output, _statusCallback);
         if (!session.TryStart())
         {
-            string message = session.LastError ?? L.T("無法啟動映射。", "Could not start mapping.");
+            string message = session.LastError ?? L.T("無法開始映射。", "Could not start mapping.");
             await session.DisposeAsync().ConfigureAwait(false);
             return message;
         }
