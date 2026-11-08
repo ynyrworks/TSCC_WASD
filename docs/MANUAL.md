@@ -43,7 +43,7 @@ controller so games do not see both). Both are projects by Nefarius; TSCC_WASD i
 configures HidHide by itself while it maps.
 
 **Steam is not required.** The virtual controller is a system-wide Windows device, so games from Epic, the Xbox app,
-the EA app, emulators or games started directly all see it. The Steam features in the app (Restart Steam, auto reconnect)
+the EA app, emulators or games started directly all see it. The Steam features in the app (Restart Steam, automatic reconnect)
 only keep Steam from grabbing the real controller; ignore them if you do not use Steam.
 
 **What it does not do:** arbitrary button remapping, macros, touchpad surface, keyboard or mouse input,
