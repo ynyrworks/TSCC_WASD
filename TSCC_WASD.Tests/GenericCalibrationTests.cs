@@ -327,6 +327,42 @@ public class GenericCalibrationTests
     }
 
     [Fact]
+    public async Task SessionAdoptsAnOldBluetoothKeyOnceWhenTheControllerConnects()
+    {
+        const string old4 = @"hid\{00001124-0000-1000-8000-00805f9b34fb}_vid&0002057e_pid&2009\c&6767fcd&4&0000";
+        const string new7 = @"hid\{00001124-0000-1000-8000-00805f9b34fb}_vid&0002057e_pid&2009\c&6767fcd&7&0000";
+        const string parent = @"BTHENUM\{00001124-0000-1000-8000-00805f9b34fb}_VID&0002057e_PID&2009\9&2a1b3c4d&0&BCCE25C5FF8E_C00000000";
+        string path = TempFile();
+        var calibration = new StickCalibrationSet(new(new(1000, 10000, 10000), AxisCalibration.Identity), new(new(5000, 10000, 10000), AxisCalibration.Identity));
+        new StickCalibrationStore(path, TempCache()).Save("switchpro#" + old4, calibration);
+
+        var store = new StickCalibrationStore(path, TempCache(), id => id.Equals(old4, StringComparison.OrdinalIgnoreCase) ? parent : null);
+        var id = new ControllerId(ControllerId.SwitchPro, "bcce25c5ff8e", new7);
+        Assert.False(store.TryGet(id, out _)); // before connect: lookups alone do not find the old key
+        var input = new FakeIdentityInput(id, Pad(1000, -1000, 5000, 0));
+        var output = new RecordingOutput();
+        await using var session = new MappingSession(new MappingProfile(), input, output, calibrations: store);
+        Assert.True(session.TryStart());
+
+        await WaitFor(() => output.Last.Gamepad.LeftThumbY == -1000); // first sample pushed (the default state has Y 0)
+        Assert.Equal(0, output.Last.Gamepad.LeftThumbX); // calibration applied (raw 1000)
+        Assert.Equal(0, output.Last.Gamepad.RightThumbX); // raw 5000
+
+        string text = File.ReadAllText(path);
+        Assert.Contains("switchpro#bcce25c5ff8e", text);
+        Assert.DoesNotContain(@"hid\\", text);
+        Assert.DoesNotContain("c&6767fcd", text);
+
+        // Many more samples: no further adopt write.
+        int version = store.Version;
+        string before = File.ReadAllText(path);
+        await Task.Delay(100);
+        Assert.Equal(version, store.Version);
+        Assert.Equal(before, File.ReadAllText(path));
+        Assert.Equal(0, output.Last.Gamepad.LeftThumbX);
+    }
+
+    [Fact]
     public async Task SessionLeavesAControllerWithoutIdentityOrCalibrationUntouched()
     {
         var store = new StickCalibrationStore(TempFile(), TempCache());
