@@ -31,6 +31,20 @@ button input, HidHide setup, game recognition or long-running stability.
 
 ## Manual hardware validation
 
+### Unreleased — 1.1 interface, stick calibration and DS4 battery, 2026-11-08
+
+Release build of the local branch `feat/ui-1.1` (after `fix/cal-progress`), run by the maintainer on their PC
+with Steam installed. Connection types (USB or Bluetooth) for the calibration runs were not recorded.
+
+| Check | Result |
+| --- | --- |
+| Calibration wizard on a Switch Pro: step 2 direction bars fill as each stick reaches the edge (input above 10000) | Passed after the progress-bar fix; before it the bars stayed almost empty |
+| Calibration wizard on Xbox and NS2 Pro: full flow, save | Passed |
+| NS2 Pro: Cancel keeps the earlier calibration; Clear calibration removes it | Passed |
+| Light and dark theme; 100 / 125 / 150 % display scaling; first-run tour | Passed |
+| Virtual DS4 battery seen by Steam and games | **Not verified, parked:** Steam lists the virtual DS4 as a USB PS4 Controller and showed no battery level, so it cannot be checked there. The app's own battery display works. Covered by unit tests only |
+| Clear calibration when both a per-controller and a per-model entry exist | Not tested on hardware; known limitation: the first Clear removes the per-controller entry, a second one the per-model entry |
+
 ### 0.99.0 problem and the 0.99.1 fixes, 2026-11-04
 
 Maintainer's PC: Windows 11 26100 (zh-TW), HidHide 1.2.98, ViGEmBus 1.21.442, NS2 Pro over USB, Steam
