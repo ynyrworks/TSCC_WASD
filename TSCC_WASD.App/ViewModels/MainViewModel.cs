@@ -8,6 +8,7 @@ using Microsoft.Win32;
 using TSCC_WASD.Core;
 using TSCC_WASD.Core.Models;
 using TSCC_WASD.Core.Services;
+using TSCC_WASD.Core.Services.Calibration;
 using TSCC_WASD.Core.Services.Input;
 using TSCC_WASD.Core.Services.Mapping;
 using TSCC_WASD.Core.Services.Setup;
@@ -166,13 +167,22 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         });
         CalibrateCommand = Command(() =>
         {
-            // The wizard reads the controller through its own shared HID handle, so mapping can keep running;
-            // a running mapping applies the saved calibration immediately.
-            var window = new CalibrationWindow { Owner = Application.Current?.MainWindow };
+            // The wizard reads the mapping session's uncalibrated input, so mapping keeps running;
+            // the session applies the saved (or cleared) calibration at once.
+            var owner = Application.Current?.MainWindow;
+            if (_coordinator.Identity is not { } identity)
+            {
+                AppDialog.Show(L.T("還沒有讀到手把，請確認手把已連接後再試。", "No controller is being read yet. Connect one and try again."), "TSCC_WASD");
+                return Task.CompletedTask;
+            }
+            string name = _controller?.Name is { Length: > 0 } known ? known : CalibrationWindow.ModelName(identity);
+            var model = new CalibrationWizardModel(identity, name, () => _coordinator.LatestUncalibratedInput,
+                StickCalibrationStore.Shared, new Switch2CalibrationCache());
+            var window = new CalibrationWindow(model) { Owner = owner };
             if (window.ShowDialog() == true)
                 StatusMessage = L.T("已儲存並套用你的搖桿校準。", "Your stick calibration was saved and applied.");
             return Task.CompletedTask;
-        });
+        }, () => IsRunning);
         OpenControllerTestCommand = Command(() =>
         {
             if (_controllerTestWindow is { } existing)
@@ -640,6 +650,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public string OutputTitle => HomeText.OutputName(CurrentOutput);
     public string OutputDetail => HomeText.OutputDetail(CurrentOutput, L.Chinese);
     public string FooterText => HomeText.Footer(IsRunning, IsRunning && _coordinator.HidingSince is not null, L.Chinese, _hiddenCount);
+    /// <summary>The calibration entry points work only while mapping runs (the wizard needs the live input).</summary>
+    public bool CanCalibrate => IsRunning;
     public bool AutoSwitchApplies => AutoProfileSwitchRule.HasAnyMatch(Profiles);
 
     /// <summary>
@@ -661,7 +673,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     {
         foreach (var name in new[] { nameof(MainButtonText), nameof(MainCommand), nameof(StatusLine), nameof(CurrentOutput), nameof(OutputTitle),
                                      nameof(OutputDetail), nameof(FooterText), nameof(ControllerName), nameof(BatteryText), nameof(HasBatteryText),
-                                     nameof(AutoSwitchApplies) })
+                                     nameof(AutoSwitchApplies), nameof(CanCalibrate) })
             RaisePropertyChanged(name);
     }
 

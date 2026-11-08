@@ -44,7 +44,11 @@
                             <app:HelpTip Key="home.controller"/>
                         </StackPanel>
                         <TextBlock Text="{Binding ControllerName}" TextWrapping="Wrap" Margin="22,0,0,2"/>
-                        <!-- Stick calibration status goes here once the calibration branch lands. -->
+                        <StackPanel Orientation="Horizontal" Margin="22,2,0,2">
+                            <ui:Button Command="{Binding CalibrateCommand}" Padding="8,2" FontSize="12" Margin="0" app:HelpTip.Key="home.calibrate"
+                                       Content="{app:T Zh=校準搖桿, En='Calibrate sticks'}"/>
+                            <app:HelpTip Key="home.calibrate" Margin="2,0,0,0"/>
+                        </StackPanel>
                         <!-- Live input summary (buttons, sticks); only while mapping runs. -->
                         <TextBlock x:Name="InputSummaryText" Text="{Binding InputSummary}" ToolTip="{Binding InputSummary}"
                                    TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="22,4,0,0">

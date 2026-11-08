@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:app="clr-namespace:TSCC_WASD.App"
-        Title="{app:T Zh='校準 NS2 Pro 搖桿', En='Calibrate NS2 Pro sticks'}"
         Icon="Assets/TSCC_WASD.ico" Width="560" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica">
@@ -12,7 +11,7 @@
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <ui:TitleBar Title="{app:T Zh='校準 NS2 Pro 搖桿', En='Calibrate NS2 Pro sticks'}" ShowMaximize="False" ShowMinimize="False">
+        <ui:TitleBar x:Name="WindowTitleBar" ShowMaximize="False" ShowMinimize="False">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon Source="Assets/TSCC_WASD.ico"/>
             </ui:TitleBar.Icon>
@@ -42,7 +41,7 @@
         </Grid>
         <TextBlock x:Name="RawText" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <ui:Button x:Name="ResetButton" app:HelpTip.Key="calib.reset" Margin="0" Content="{app:T Zh=清除我的校準, En='Clear my calibration'}" Click="OnReset"/>
+            <ui:Button x:Name="ResetButton" app:HelpTip.Key="calib.reset" Margin="0" Content="{app:T Zh=清除校準, En='Clear calibration'}" Click="OnReset"/>
             <app:HelpTip Key="calib.reset" Margin="2,0,12,0"/>
             <ui:Button x:Name="CancelButton" Margin="0,0,8,0" Content="{app:T Zh=取消, En=Cancel}" IsCancel="True" Click="OnCancel"/>
             <ui:Button x:Name="NextButton" app:HelpTip.Key="calib.steps" Appearance="Primary" Margin="0" IsDefault="True" Click="OnNext"/>

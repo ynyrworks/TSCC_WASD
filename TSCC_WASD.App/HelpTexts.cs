@@ -14,6 +14,9 @@ public static class HelpTexts
         ["home.controller"] = (
             "目前的映射狀態與使用中的輸入手把。映射中會即時顯示按下的按鍵；找不到手把時請接上支援的手把：Xbox、Switch Pro、NS2 Pro（USB，或藍牙：按住 Sync 鍵，不需 Windows 配對）、DualShock 4、DualSense。",
             "The mapping state and the controller in use. While mapping runs it shows the buttons you press. If none is found, connect a supported one: Xbox, Switch Pro, NS2 Pro (USB, or Bluetooth: hold Sync, no Windows pairing), DualShock 4 or DualSense."),
+        ["home.calibrate"] = (
+            "校準目前使用的手把的搖桿（Xbox、PlayStation、Switch Pro、NS2 Pro 都可以）。需先開始映射；儲存後立即套用。",
+            "Calibrates the sticks of the controller in use (Xbox, PlayStation, Switch Pro or NS2 Pro). Start mapping first; applies as soon as you save."),
         ["home.main"] = (
             "開始映射：建立虛擬手把，並把實體手把的輸入送給它。請先開始映射、再開遊戲。缺少驅動程式時會先詢問是否安裝。映射中此鈕會變成「停止映射」。",
             "Starts mapping: creates the virtual controller and feeds your controller's input to it. Start it before the game. If a driver is missing the app first offers to install it. While mapping runs this button becomes Stop mapping."),
@@ -110,8 +113,8 @@ public static class HelpTexts
             "目標輪詢頻率（30–500 Hz，預設 125）：每秒讀取手把並更新虛擬手把的次數。這是目標值，不是即時保證；一般不必更動。",
             "Target polling rate (30–500 Hz, default 125): how often the controller is read and the virtual one updated. It is a target, not a real-time guarantee; you rarely need to change it."),
         ["profiles.calibrate"] = (
-            "推到底卻只像輕推、或放開時會飄移時使用。需要 USB；映射中也可以校準，儲存後立即套用。",
-            "Use this if a full push feels like a light one or the stick drifts at rest. Needs USB; works while mapping and applies as soon as you save."),
+            "推到底卻只像輕推、或放開時會飄移時使用，適用於目前使用的手把。需先開始映射；儲存後立即套用。",
+            "Use this if a full push feels like a light one or the stick drifts at rest, for the controller in use. Start mapping first; applies as soon as you save."),
         ["profiles.test"] = (
             "查看手把的即時輸入，確認程式讀得到手把；也可錄製 5 秒原始報告供回報問題。",
             "Shows live controller input so you can confirm the app reads it, and can record a 5 second raw report for a bug report."),
@@ -176,11 +179,11 @@ public static class HelpTexts
 
         // ---- Sub-windows ----
         ["calib.steps"] = (
-            "用於 NS2 Pro 搖桿推到底卻像輕推、或放開會飄移時，需要 USB。步驟 1：把手把放在桌上、不碰搖桿，按「下一步」。步驟 2：兩支搖桿各沿邊緣慢慢轉 3 圈，每個方向的進度條都滿了就按「儲存」。",
-            "For an NS2 Pro whose full push feels light or whose stick drifts; needs USB. Step 1: put the controller down without touching the sticks and click Next. Step 2: circle each stick slowly three times at the edge; once every direction’s bar is full, click Save."),
+            "用於搖桿推到底卻像輕推、或放開會飄移時。步驟 1：把手把放在桌上、不碰搖桿，按「下一步」。步驟 2：兩支搖桿各沿邊緣慢慢轉 3 圈，每個方向的進度條都滿了就按「儲存」。",
+            "For a stick whose full push feels light or that drifts at rest. Step 1: put the controller down without touching the sticks and click Next. Step 2: circle each stick slowly three times at the edge; once every direction’s bar is full, click Save."),
         ["calib.reset"] = (
-            "刪除你自己做的校準，之後改用手把原廠校準或自動學習。你的校準不管 Steam 開不開都優先使用。",
-            "Deletes your own calibration; the factory calibration or automatic learning is used instead. Your calibration takes priority whether Steam is open or not."),
+            "刪除這支手把已儲存的校準（會先詢問），之後改用原廠校準或自動學習；映射中立即生效。",
+            "Deletes the saved calibration of this controller (after asking); the factory calibration or automatic learning is used instead. Takes effect at once while mapping."),
         ["test.record"] = (
             "錄製 5 秒會收集手把的原始報告並存成純文字檔。檔案包含診斷資訊（版本、系統、驅動程式狀態），上傳到 GitHub 前請先打開看過。不會自動上傳任何東西。",
             "Captures 5 seconds of raw controller reports into a plain text file. The file includes diagnostics (versions, OS, driver status); read it before uploading it to GitHub. Nothing is uploaded automatically."),

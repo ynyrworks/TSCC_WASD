@@ -259,12 +259,12 @@
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <Button app:HelpTip.Key="profiles.calibrate" Command="{Binding CalibrateCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" BorderThickness="0" Background="Transparent" Padding="16,10"
-                            AutomationProperties.Name="{app:T Zh='校準 NS2 Pro 搖桿', En='Calibrate NS2 Pro sticks'}">
+                            AutomationProperties.Name="{app:T Zh='校準搖桿', En='Calibrate sticks'}">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="{app:T Zh='校準 NS2 Pro 搖桿', En='Calibrate NS2 Pro sticks'}"/>
-                                <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='推到底卻只像輕推、或放開時會飄移時使用；映射中也可以校準，儲存後立即套用。', En='Use this if a full push feels like a light one or the stick drifts at rest. Works while mapping; applies as soon as you save.'}"/>
+                                <TextBlock Text="{app:T Zh='校準搖桿', En='Calibrate sticks'}"/>
+                                <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='推到底卻只像輕推、或放開時會飄移時使用，適用於目前使用的手把。需先開始映射；儲存後立即套用。', En='Use this if a full push feels like a light one or the stick drifts at rest, for the controller in use. Start mapping first; applies as soon as you save.'}"/>
                             </StackPanel>
                             <TextBlock Grid.Column="1" Text="›" FontSize="18" Margin="12,0,0,0" VerticalAlignment="Center"/>
                         </Grid>

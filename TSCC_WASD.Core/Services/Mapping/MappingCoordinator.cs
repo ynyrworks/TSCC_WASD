@@ -45,6 +45,10 @@ public sealed class MappingCoordinator : IAsyncDisposable
     public string? LastError => _session?.LastError;
     public MappingSession.InputSnapshot? LatestInput => _session?.LatestInput;
     public string? InputStatus => _session?.InputStatus;
+    /// <summary>Latest reading before the stick calibration is applied (for the calibration wizard); null when not mapping.</summary>
+    public MappingSession.InputSnapshot? LatestUncalibratedInput => _session?.LatestUncalibratedInput;
+    /// <summary>Identity of the controller being read, for the calibration wizard; null when not mapping or unknown.</summary>
+    public ControllerId? Identity => _session?.Identity;
 
     /// <summary>Battery of the active reader; null when not mapping. Safe to call from any thread.</summary>
     public BatteryStatus? Battery => _session?.Battery;
