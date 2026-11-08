@@ -18,14 +18,14 @@ public class AppIconTests
     }
 
     [Theory]
-    [InlineData("MainWindow.xaml")]
-    [InlineData("AboutWindow.xaml")]
+    [InlineData("Pages/HomePage.xaml")]
+    [InlineData("Pages/AboutPage.xaml")]
     public void HeaderImageUsesSharpPng(string xaml)
     {
         var text = File.ReadAllText(Path.Combine(AppDir(), xaml));
-        var m = Regex.Match(text, "<Image Source=\"(Assets/TSCC_WASD[^\"]*)\"[^>]*>");
+        var m = Regex.Match(text, "<Image Source=\"(/TSCC_WASD;component/Assets/TSCC_WASD[^\"]*)\"[^>]*>");
         Assert.True(m.Success);
-        Assert.Equal(Png, m.Groups[1].Value);
+        Assert.Equal("/TSCC_WASD;component/" + Png, m.Groups[1].Value);
         Assert.Contains("BitmapScalingMode=\"HighQuality\"", m.Value);
     }
 

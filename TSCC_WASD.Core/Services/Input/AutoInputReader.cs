@@ -6,7 +6,7 @@ namespace TSCC_WASD.Core.Services.Input;
 /// The active source only changes when it disconnects or the other one receives deliberate input,
 /// so an idle controller that still streams neutral reports never steals control.
 /// </summary>
-public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget, IXboxBackButtonOption, IXInputSlotFilter
+public sealed class AutoInputReader : IInputReader, IMotionSource, IBatterySource, IControllerIdentity, IRumbleTarget, IXboxBackButtonOption, IXInputSlotFilter
 {
     public int? ExcludedSlot
     {
@@ -126,6 +126,12 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
     /// <summary>Name of the source currently being mapped, or null while none is available.</summary>
     public string? ActiveSource => _active < 0 ? null : _names[_active];
 
+    /// <summary>The reader currently in use, or null while none is available. A snapshot; may change right after.</summary>
+    public IInputReader? ActiveReader
+    {
+        get { int active = _active; return active < 0 ? null : _sources[active]; }
+    }
+
     public bool TryGetState(out State state)
     {
         Span<bool> available = stackalloc bool[_sources.Length];
@@ -158,6 +164,30 @@ public sealed class AutoInputReader : IInputReader, IMotionSource, IRumbleTarget
         motion = default;
         int active = _active;
         return active >= 0 && _sources[active] is IMotionSource source && source.TryGetMotion(out motion);
+    }
+
+    /// <summary>Battery of the source currently in use; unknown while none is active.</summary>
+    public BatteryStatus Battery
+    {
+        get
+        {
+            int active = _active;
+            if (active < 0 || _sources[active] is not IBatterySource source) return BatteryStatus.Unknown;
+            try { return source.Battery; }
+            catch { return BatteryStatus.Unknown; }
+        }
+    }
+
+    /// <summary>Identity of the source currently in use; null while none is active or it cannot say.</summary>
+    public ControllerId? Identity
+    {
+        get
+        {
+            int active = _active;
+            if (active < 0 || _sources[active] is not IControllerIdentity source) return null;
+            try { return source.Identity; }
+            catch { return null; }
+        }
     }
 
     public void SetRumble(byte large, byte small)

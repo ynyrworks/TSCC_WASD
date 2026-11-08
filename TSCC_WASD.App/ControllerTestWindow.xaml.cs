@@ -11,7 +11,7 @@ using TSCC_WASD.Core.Services.Mapping;
 namespace TSCC_WASD.App;
 
 /// <summary>Live view of the latest mapped input, plus a short raw-report recording saved to a file the user picks.</summary>
-public partial class ControllerTestWindow : Window
+public partial class ControllerTestWindow : Wpf.Ui.Controls.FluentWindow
 {
     private readonly Func<MappingSession.InputSnapshot?> _latest;
     private readonly Func<bool> _isRunning;
@@ -35,9 +35,10 @@ public partial class ControllerTestWindow : Window
             var chip = new Border
             {
                 Margin = new Thickness(2), Padding = new Thickness(2, 4, 2, 4), CornerRadius = new CornerRadius(4),
-                Background = (Brush)FindResource("RaisedBrush"),
                 Child = new TextBlock { Text = flag.ToString(), FontSize = 11, TextAlignment = TextAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis }
             };
+            chip.SetResourceReference(Border.BackgroundProperty, "ControlFillColorDefaultBrush");
+            ((TextBlock)chip.Child).SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorPrimaryBrush");
             _chips[flag] = chip;
             ButtonGrid.Children.Add(chip);
         }
@@ -55,13 +56,17 @@ public partial class ControllerTestWindow : Window
             ? L.T($"目前來源：{_status()}", $"Current source: {_status()}")
             : L.T("請先開始映射", "Start mapping first");
         ReasonText.Text = !running
-            ? L.T("測試頁顯示映射中讀到的輸入；映射沒有執行時沒有資料可看。請回主視窗按「啟動映射」。", "This page shows the input read while mapping. With mapping stopped there is nothing to show; click Start in the main window.")
+            ? L.T("測試頁顯示映射中讀到的輸入；映射沒有執行時沒有資料可看。請回主視窗按「開始映射」。", "This page shows the input read while mapping. With mapping stopped there is nothing to show; click Start mapping in the main window.")
             : snapshot is null ? L.T("尚未收到輸入", "No input yet")
             : snapshot.Paused ? L.T("映射已暫停，因此顯示為放開所有按鍵。", "Mapping is paused, so everything shows as released.")
             : !snapshot.Available ? L.T("尚未收到有效輸入。", "No valid input yet.") : "";
         var gamepad = snapshot is { Paused: false, Available: true } ? snapshot.State.Gamepad : default;
         foreach (var (flag, chip) in _chips)
-            chip.Background = (Brush)FindResource(gamepad.Buttons.HasFlag(flag) ? "AccentBrush" : "RaisedBrush");
+        {
+            bool down = gamepad.Buttons.HasFlag(flag);
+            chip.SetResourceReference(Border.BackgroundProperty, down ? "AccentFillColorDefaultBrush" : "ControlFillColorDefaultBrush");
+            ((TextBlock)chip.Child).SetResourceReference(TextBlock.ForegroundProperty, down ? "TextOnAccentFillColorPrimaryBrush" : "TextFillColorPrimaryBrush");
+        }
         Place(LeftDot, gamepad.LeftThumbX, gamepad.LeftThumbY);
         Place(RightDot, gamepad.RightThumbX, gamepad.RightThumbY);
         LeftValue.Text = $"({gamepad.LeftThumbX}, {gamepad.LeftThumbY})";

@@ -45,7 +45,23 @@ public sealed class MappingCoordinator : IAsyncDisposable
     public string? LastError => _session?.LastError;
     public MappingSession.InputSnapshot? LatestInput => _session?.LatestInput;
     public string? InputStatus => _session?.InputStatus;
-    public string InputSummary => _session?.InputSummary ?? L.T("尚未啟動映射", "Mapping not started");
+    /// <summary>Latest reading before the stick calibration is applied (for the calibration wizard); null when not mapping.</summary>
+    public MappingSession.InputSnapshot? LatestUncalibratedInput => _session?.LatestUncalibratedInput;
+    /// <summary>Identity of the controller being read, for the calibration wizard; null when not mapping or unknown.</summary>
+    public ControllerId? Identity => _session?.Identity;
+
+    /// <summary>Battery of the active reader; null when not mapping. Safe to call from any thread.</summary>
+    public BatteryStatus? Battery => _session?.Battery;
+
+    /// <summary>The controller being read; null when not mapping or none connected.</summary>
+    public ControllerInfo? Controller => _session?.Controller;
+
+    /// <summary>
+    /// How many controller interfaces HidHide hid for this session; null when not hiding. Counts the interfaces
+    /// this app hid itself, not ones that were already hidden.
+    /// </summary>
+    public int? HiddenInterfaceCount => _hider?.HiddenCount;
+    public string InputSummary => _session?.InputSummary ?? L.T("尚未開始映射", "Mapping not started");
 
     public async Task<(bool started, string message)> StartAsync(MappingProfile profile, Action<string>? statusCallback = null)
     {
@@ -97,7 +113,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
         var session = new MappingSession(snapshot, input, output, _statusCallback);
         if (!session.TryStart())
         {
-            string message = session.LastError ?? L.T("無法啟動映射。", "Could not start mapping.");
+            string message = session.LastError ?? L.T("無法開始映射。", "Could not start mapping.");
             await session.DisposeAsync().ConfigureAwait(false);
             return message;
         }

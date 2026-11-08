@@ -15,14 +15,13 @@ The [user manual](MANUAL.md) ([中文](MANUAL.zh-TW.md)) walks through the commo
 | Waiting for controller | Confirm the controller is connected (NS2 Pro over USB); if hiding was configured manually, check HidHide's allowed executable path |
 | Duplicate presses / prompts flicker Xbox↔PS | Install HidHide and keep "hide physical controllers while mapping" on; start mapping before the game; restart Steam if it started first (TSCC_WASD offers this); stop other mappers |
 | Steam still sees the real controller after automatic reconnect | Bluetooth controllers can't be cycled: turn the controller off and on. On a USB hub that refuses port cycling, replug the cable or click **Restart Steam** |
-| Automatic reconnect needs setting up again | TSCC_WASD was updated; the helper copy must match the running version. Click **App settings → Set up automatic reconnect** once |
-| A game refuses to start or kicks you while mapping (TSCC_WASD warns about EA Javelin) | Some anti-cheat rejects virtual controllers: click **Stop**, close TSCC_WASD and play that game with the physical controller or Steam Input |
-| Want Xbox prompts instead | Set **Output as → Xbox 360** in the profile; it applies while mapping |
+| Automatic reconnect needs setting up again | TSCC_WASD was updated; the helper copy must match the running version. Click **Set up** under *Automatic reconnect* on the **App settings** page once |
+| A game refuses to start or kicks you while mapping (TSCC_WASD warns about EA Javelin) | Some anti-cheat rejects virtual controllers: click **Release everything (Stop)**, close TSCC_WASD and play that game with the physical controller or Steam Input |
+| Want Xbox prompts instead | Set **Output as → Xbox 360** on the **Profiles** page; it applies while mapping |
 | Still seeing Xbox icons | Confirm native DS4/game artwork support and review Steam Input settings |
-| Settings fail to load | Preserve broken JSON, restore `.bak` or fix validation errors, then reload |
-| Settings lost after exit | Save all before closing; edits and imports are not auto-saved |
+| Settings fail to load | Preserve broken JSON, restore `.bak` or fix validation errors, then use **Reload from disk** on the **Profiles** page |
 | Wrong controller selected | Auto-detect follows the last controller pressed; XInput uses the first available slot |
-| Mapping stops unexpectedly | Mapping retries on its own; use **About → Copy diagnostics** and attach today's log from **About → Open log folder** to an issue |
+| Mapping stops unexpectedly | Mapping retries on its own; use **About & help → Copy diagnostics** and attach today's log from **About & help → Open log folder** to an issue |
 | Controller invisible to games after a crash | Relaunch TSCC_WASD once; it restores the HidHide settings it changed |
 
 To remove TSCC_WASD, close it and delete its extracted directory. Settings remain

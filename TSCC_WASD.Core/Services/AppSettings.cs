@@ -43,6 +43,9 @@ public sealed class AppSettings
     /// </summary>
     public bool HideThirdPartyXInput { get; set; } = true;
 
+    /// <summary>The first-run guided tour was finished or skipped. A settings.json without this key shows the tour once.</summary>
+    public bool TourCompleted { get; set; }
+
     public string? LastProfileId { get; set; }
 }
 

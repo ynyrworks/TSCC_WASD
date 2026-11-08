@@ -1,3 +1,6 @@
+using TSCC_WASD.Core;
+using System.IO;
+using TSCC_WASD.Core.Services;
 using Xunit;
 using TSCC_WASD.Core.Models;
 using TSCC_WASD.Core.Services.Input;
@@ -110,6 +113,121 @@ public class MappingSessionTests
             return true;
         }
         public void Dispose() { }
+    }
+
+    private sealed class BatteryInput(BatteryStatus battery) : IInputReader, IBatterySource, IControllerInfoSource
+    {
+        public BatteryStatus Battery => battery;
+        public ControllerInfo? Controller { get; init; } = new("NS2 Pro", ControllerConnection.Usb);
+        public bool TryGetState(out State state) { state = default; return true; }
+        public void Dispose() { }
+    }
+
+    [Fact]
+    public async Task SessionExposesBatteryAndControllerOnlyWhileRunning()
+    {
+        var output = new FakeOutput();
+        await using var session = new MappingSession(new MappingProfile(), new BatteryInput(BatteryStatus.Of(BatteryLevel.Low, true)), output);
+        Assert.Null(session.Battery);
+        Assert.Null(session.Controller);
+        Assert.True(session.TryStart());
+        Assert.Equal(BatteryStatus.Of(BatteryLevel.Low, true), session.Battery);
+        Assert.Equal(new ControllerInfo("NS2 Pro", ControllerConnection.Usb), session.Controller);
+        await session.StopAsync();
+        Assert.Null(session.Battery);
+        Assert.Null(session.Controller);
+    }
+
+    [Fact]
+    public async Task SessionBatteryIsUnknownWithoutAReadingOrASource()
+    {
+        await using var unknown = new MappingSession(new MappingProfile(), new BatteryInput(BatteryStatus.Unknown), new FakeOutput());
+        Assert.True(unknown.TryStart());
+        Assert.Equal(BatteryStatus.Unknown, unknown.Battery);
+        await using var plain = new MappingSession(new MappingProfile(), new FakeInput(), new FakeOutput());
+        Assert.True(plain.TryStart());
+        Assert.Equal(BatteryStatus.Unknown, plain.Battery);
+        Assert.Null(plain.Controller);
+    }
+
+    [Fact]
+    public async Task SessionDescribesTheActiveSourceOfAnAutoReader()
+    {
+        var idle = new BatteryInput(BatteryStatus.Of(BatteryLevel.Full, false)) { Controller = new("Idle", ControllerConnection.Unknown) };
+        var active = new BatteryInput(BatteryStatus.Of(BatteryLevel.Medium, false)) { Controller = new("DualSense", ControllerConnection.Bluetooth) };
+        var auto = new AutoInputReader([new Unavailable(idle), active], ["A", "B"]);
+        await using var session = new MappingSession(new MappingProfile(), auto, new FakeOutput());
+        Assert.True(session.TryStart());
+        await WaitUntilAsync(() => session.Controller is not null);
+        Assert.Equal(new ControllerInfo("DualSense", ControllerConnection.Bluetooth), session.Controller);
+        Assert.Equal(BatteryStatus.Of(BatteryLevel.Medium, false), session.Battery);
+    }
+
+    private sealed class Unavailable(IInputReader inner) : IInputReader, IControllerInfoSource
+    {
+        public ControllerInfo? Controller => (inner as IControllerInfoSource)?.Controller;
+        public bool TryGetState(out State state) { state = default; return false; }
+        public void Dispose() { }
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        for (int i = 0; i < 200 && !condition(); i++) await Task.Delay(25);
+        Assert.True(condition());
+    }
+
+    [Theory]
+    [InlineData("DualSense (USB)", ControllerConnection.Usb)]
+    [InlineData("DualShock 4（藍牙）", ControllerConnection.Bluetooth)]
+    [InlineData("Switch Pro Controller (Bluetooth)", ControllerConnection.Bluetooth)]
+    [InlineData("等待 DualShock 4／DualSense 連線（USB 或藍牙）。", ControllerConnection.Unknown)]
+    [InlineData("Looking for a Switch Pro Controller...", ControllerConnection.Unknown)]
+    public void ConnectionIsReadFromTheReaderStatus(string status, ControllerConnection expected) =>
+        Assert.Equal(expected, ControllerInfo.ConnectionFromStatus(status));
+
+    [Theory]
+    [InlineData(typeof(Switch2InputReader), "", "NS2 Pro", ControllerConnection.Usb)]
+    [InlineData(typeof(Switch2BleInputReader), "", "NS2 Pro", ControllerConnection.Bluetooth)]
+    [InlineData(typeof(PlayStationInputReader), "DualShock 4 (USB)", "DualShock 4", ControllerConnection.Usb)]
+    [InlineData(typeof(PlayStationInputReader), "DualSense (Bluetooth)", "DualSense", ControllerConnection.Bluetooth)]
+    [InlineData(typeof(PlayStationInputReader), "DualSense（藍牙）", "DualSense", ControllerConnection.Bluetooth)]
+    [InlineData(typeof(PlayStationInputReader), "Looking for a DualShock 4 / DualSense...", "DualShock 4／DualSense", ControllerConnection.Unknown)]
+    [InlineData(typeof(SwitchProInputReader), "Switch Pro Controller (USB)", "Switch Pro", ControllerConnection.Usb)]
+    [InlineData(typeof(SwitchProInputReader), "Switch Pro 手把（藍牙）", "Switch Pro", ControllerConnection.Bluetooth)]
+    public void DescribeMapsReaderTypesToNameAndConnection(Type type, string status, string name, ControllerConnection connection) =>
+        Assert.Equal(new ControllerInfo(name, connection), ControllerInfo.Describe(type, status));
+
+    [Fact]
+    public void DescribeKnowsXInputReaderAndNothingElse()
+    {
+        using var xbox = new XInputReader((uint _, out State state) => { state = default; return 1167u; },
+            (_, _, _) => { }, () => 0);
+        var info = ControllerInfo.Describe(xbox);
+        Assert.Equal(L.T("Xbox 手把", "Xbox controller"), info!.Name);
+        Assert.Equal(ControllerConnection.Unknown, info.Connection);
+        Assert.Null(ControllerInfo.Describe((IInputReader?)null));
+        Assert.Null(ControllerInfo.Describe(new FakeInput()));
+    }
+
+    [Fact]
+    public void DescribeFollowsTheActiveReaderOfAnAutoReader()
+    {
+        using var xbox = new XInputReader((uint index, out State state) => { state = default; return index == 0 ? 0u : 1167u; },
+            (_, _, _) => { }, () => 0);
+        using var auto = new AutoInputReader([new Unavailable(new FakeInput()), xbox], ["A", "B"]);
+        Assert.Null(ControllerInfo.Describe(auto.ActiveReader));
+        Assert.True(auto.TryGetState(out _));
+        Assert.Same(xbox, auto.ActiveReader);
+        Assert.Equal(L.T("Xbox 手把", "Xbox controller"), ControllerInfo.Describe(auto.ActiveReader)!.Name);
+    }
+
+    [Fact]
+    public void CoordinatorExposesNothingWhileNotMapping()
+    {
+        var coordinator = new MappingCoordinator(new ProfileStore(Path.Combine(Path.GetTempPath(), "tscc-none-" + Guid.NewGuid().ToString("N"), "p.json")), () => null);
+        Assert.Null(coordinator.Battery);
+        Assert.Null(coordinator.Controller);
+        Assert.Null(coordinator.HiddenInterfaceCount);
     }
 
     private sealed class FakeInput : IInputReader

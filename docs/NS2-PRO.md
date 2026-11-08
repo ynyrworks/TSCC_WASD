@@ -9,9 +9,9 @@ the VID/PID filter, so the mapper does not feed its own output back as input.
 ## 使用方式
 
 1. 接上 NS2 Pro 的 USB 線，開啟 **0.4.0** 或更新版本。
-2. 新增或選擇設定檔，「輸入手把」維持 **自動偵測**（或指定只用 NS2 Pro）。
-3. 按「儲存全部」，再按「啟動映射」。
-4. 底部應顯示「映射運作中：NS2 Pro … → DualShock 4」。
+2. 在「設定檔」頁新增或選擇設定檔，「輸入手把」維持 **自動偵測**（或指定只用 NS2 Pro）；修改會自動儲存。
+3. 回到「首頁」按「開始映射」。
+4. 首頁應顯示「映射中：遊戲看到虛擬 DualShock 4」，手把卡片顯示 NS2 Pro。
    按鍵及搖桿數字會即時更新。
 
 ### Steam 開著：HID 共用模式（使用者已確認虛擬 PS4 收到輸入）
@@ -19,9 +19,9 @@ the VID/PID filter, so the mapper does not feed its own output back as input.
 Steam 若占用 USB 控制介面，程式會讀取 Steam 已初始化的 HID 報告，
 不會關閉 Steam 或更換驅動。此時讀不到原廠搖桿校準，程式會依序使用：
 
-0. **你的校準（最優先）**：按「校準 NS2 Pro 搖桿」（映射中也可以，儲存後立即套用），先放開搖桿量中心，
+0. **你的校準（最優先）**：按「校準搖桿」（映射中也可以，儲存後立即套用），先放開搖桿量中心，
    再把兩支搖桿沿邊緣轉圈推到底，八個方向的進度條滿了就能儲存。不論 Steam 開不開都使用這份校準，
-   也不會被原廠校準覆蓋；精靈裡可以「清除我的校準」。
+   也不會被原廠校準覆蓋；精靈裡可以「清除校準」。
 1. **已記住的原廠校準**：只要曾在 Steam 關閉時開過一次映射，校準就會存在
    `%APPDATA%\TSCC_WASD\ns2-calibration.json`，之後 Steam 開著也會沿用。**建議做一次。**
 2. **自動學習搖桿行程**：從保守範圍開始，搖桿推得更遠就自動放寬；每個方向推到底一次後，
@@ -72,7 +72,7 @@ See [validation record](VALIDATION.md) for what was actually exercised.
 
 NS2 Pro 的藍牙是藍牙 LE（BLE）。Windows 不會把它當成手把，所以 TSCC_WASD 用 WinRT 的 GATT API 自己連線：
 
-1. 拔掉 USB 線，「輸入手把」選 **自動偵測** 或 **只用 NS2 Pro（藍牙）**，按「啟動映射」。
+1. 拔掉 USB 線，「輸入手把」選 **自動偵測** 或 **只用 NS2 Pro（藍牙）**，按「開始映射」。
 2. 按住手把頂端的 **Sync** 鍵，直到燈號開始跑。約 1–2 秒後狀態會顯示「NS2 Pro（藍牙，原廠校準）」。
 3. 手把關機或斷線後，再按住一次 Sync 即可重新連線。
 
@@ -80,7 +80,7 @@ NS2 Pro 的藍牙是藍牙 LE（BLE）。Windows 不會把它當成手把，所�
 - 輸入報告就是 USB 報告 0x05 少了報告 ID，按鍵、搖桿、體感共用同一個解析器；震動封包與 USB 相同但沒有報告 ID。
 - 回報頻率約 67 次／秒（Windows 11，已要求 ThroughputOptimized 連線參數），低於 USB。
 - Windows 與 Steam 都看不到藍牙連線的 NS2 Pro，因此不需要 HidHide，也不會有 Steam 先握住手把的問題。
-- 「校準 NS2 Pro 搖桿」精靈目前只支援 USB；藍牙會使用手把內的原廠或使用者校準，或你先前用 USB 存下的校準。
+- 「校準搖桿」精靈目前只支援 USB；藍牙會使用手把內的原廠或使用者校準，或你先前用 USB 存下的校準。
 
 偵錯工具：`dotnet run --project tools/Ns2BleProbe -c Release`（加上 `--rumble` 測試震動，`--reader` 改用 TSCC_WASD
 自己的讀取程式）會列出廣播、GATT 服務、校準與每秒報告數。它不會寫入手把；`--pair` 會把這台電腦寫入手把的配對資訊，

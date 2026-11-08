@@ -1,0 +1,204 @@
+<Page x:Class="TSCC_WASD.App.Pages.AboutPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:app="clr-namespace:TSCC_WASD.App"
+      Title="{app:T Zh=關於與說明, En='About &amp; help'}" Background="Transparent" Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Page.Resources>
+        <ResourceDictionary Source="../Themes/Shell.xaml"/>
+    </Page.Resources>
+    <!-- No ScrollViewer here: the navigation view's content presenter already scrolls the page. -->
+    <StackPanel Margin="24,8,24,24">
+        <TextBlock Style="{StaticResource PageTitle}" Margin="0,0,0,8" Text="{app:T Zh=關於與說明, En='About &amp; help'}"/>
+        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="/TSCC_WASD;component/Assets/TSCC_WASD_256.png" Width="48" Height="48" Margin="0,0,16,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="TSCC_WASD" FontSize="20" FontWeight="SemiBold"/>
+                    <TextBlock Style="{StaticResource Muted}" FontSize="13" Text="{Binding VersionLine}"/>
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"
+                               Text="{app:T Zh='讓遊戲把 Xbox 或 Nintendo Switch 2 Pro 手把當成 DualShock 4，顯示 PS 按鍵圖示。', En='Makes games see an Xbox or Nintendo Switch 2 Pro controller as a DualShock 4, so they show PS prompts.'}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh=更新, En=Updates}"/>
+        <Border Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
+            <StackPanel>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='檢查更新', En='Check for updates'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.update"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" Text="{Binding StatusMessage}" AutomationProperties.LiveSetting="Polite"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.update" Margin="8,0,0,0" Content="{app:T Zh='檢查更新', En='Check for updates'}" Command="{Binding CheckUpdatesCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5,0,8">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDownloadingUpdate}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding UpdateProgressText}" Style="{StaticResource Muted}" Margin="0,0,0,4"/>
+                        <ProgressBar Value="{Binding UpdateProgress, Mode=OneWay}" Minimum="0" Maximum="1" Height="6"
+                                     AutomationProperties.Name="{app:T Zh=更新下載進度, En='Update download progress'}"/>
+                    </StackPanel>
+                    <Button x:Name="CancelUpdateButton" Grid.Column="1" Content="{app:T Zh=取消, En=Cancel}" Command="{Binding CancelUpdateCommand}"
+                            Margin="12,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh=說明, En=Help}"/>
+        <Border x:Name="HelpCard" Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
+            <StackPanel>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='使用手冊', En='User manual'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.manual"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.manual" Margin="8,0,0,0" Content="{app:T Zh='使用手冊', En='User manual'}" Command="{Binding OpenHelpCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='新手導覽', En='Guided tour'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.tour"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='再看一次首次啟動時的簡短導覽', En='Replay the short tour shown on first launch'}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.tour" x:Name="ReplayTourButton" Margin="8,0,0,0" Content="{app:T Zh='重新顯示導覽', En='Show the tour again'}" Command="{Binding ReplayTourCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='回報問題', En='Report an issue'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.report"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.report" Margin="8,0,0,0" Content="{app:T Zh='回報問題', En='Report an issue'}" Command="{Binding ReportIssueCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='複製診斷資訊', En='Copy diagnostics'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.diagnostics"/>
+                        </StackPanel>
+                    <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='版本、驅動程式與手把狀態，貼到問題回報中', En='Versions, drivers and controller state, for a bug report'}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.diagnostics" Margin="8,0,0,0" Content="{app:T Zh='複製診斷資訊', En='Copy diagnostics'}" Command="{Binding CopyDiagnosticsCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='開啟日誌資料夾', En='Open log folder'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.logs"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.logs" Margin="8,0,0,0" Content="{app:T Zh='開啟日誌資料夾', En='Open log folder'}" Command="{Binding OpenLogsCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh='尚未簽章', En='Unsigned'}"/>
+        <Border Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
+            <StackPanel>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='尚未簽章', En='Not code-signed yet'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.unsigned"/>
+                        </StackPanel>
+                    <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='此程式還沒有程式碼簽章，Windows 可能顯示未知發行者的提醒。下載後請比對發行頁上的 SHA-256。', En='This app is not code-signed yet, so Windows may warn about an unknown publisher. Check your download against the SHA-256 on the release page.'}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.unsigned" Margin="8,0,0,0" Content="{app:T Zh='簽章政策', En='Code-signing policy'}" Command="{Binding SigningPolicyCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh=法律資訊, En=Legal}"/>
+        <Border Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
+            <StackPanel>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="TSCC" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.github"/>
+                        </StackPanel>
+                    <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='TSCC＝Triangle、Square、Cross、Circle（三角形、正方形、叉叉、圓形）。', En='TSCC = Triangle, Square, Cross, Circle.'}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.github" Margin="8,0,0,0" Content="{app:T Zh='GitHub', En='GitHub'}" Command="{Binding OpenRepoCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='授權', En='Licence'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.notices"/>
+                        </StackPanel>
+                    <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='MIT 授權開源。NS2 Pro 協定部分改作自 SDL（zlib 授權）。使用 ViGEmBus 與 HidHide（另行安裝）。', En='Open source under the MIT License. NS2 Pro protocol portions are adapted from SDL (zlib). Uses ViGEmBus and HidHide (installed separately).'}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.notices" Margin="8,0,0,0" Content="{app:T Zh='第三方聲明', En='Third-party notices'}" Command="{Binding ThirdPartyNoticesCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <TextBlock Text="{app:T Zh='商標', En='Trademarks'}" TextWrapping="Wrap"/>
+                    <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='PlayStation、DualShock、Xbox、Nintendo Switch、Steam 為各自所有者的商標，本專案與其無關聯。', En='PlayStation, DualShock, Xbox, Nintendo Switch and Steam are trademarks of their owners; this project is not affiliated with them.'}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+        <TextBlock Style="{StaticResource Label}" FontWeight="SemiBold" Margin="2,4,0,4" Text="{app:T Zh=支持, En=Support}"/>
+        <Border Style="{StaticResource Card}" Padding="16,2" Margin="0,0,0,8">
+            <StackPanel>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{app:T Zh='支持作者', En='Support the author'}" TextWrapping="Wrap"/>
+                            <app:HelpTip Key="about.support"/>
+                        </StackPanel>
+                    <TextBlock Style="{StaticResource Muted}" Text="{app:T Zh='TSCC_WASD 免費且開源。如果它幫上忙，歡迎請作者喝杯咖啡。', En='TSCC_WASD is free and open source. If it helps you, you can buy the author a coffee.'}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button app:HelpTip.Key="about.support" Margin="8,0,0,0" Content="{app:T Zh='☕ 在 Ko-fi 支持', En='☕ Support on Ko-fi'}" Command="{Binding SupportCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</Page>

@@ -2,6 +2,7 @@ using System.Windows;
 using TSCC_WASD.App.ViewModels;
 using TSCC_WASD.Core;
 using TSCC_WASD.Core.Services;
+using Wpf.Ui.Appearance;
 
 namespace TSCC_WASD.App;
 
@@ -33,6 +34,7 @@ public partial class App : Application
             return;
         }
         base.OnStartup(e);
+        ApplicationThemeManager.ApplySystemTheme(); // MainWindow registers the SystemThemeWatcher that follows later changes.
         RegisterCrashHandlers();
         AppLog.Prune();
         AppLog.Info($"TSCC_WASD {UpdateChecker.CurrentVersion.ToString(3)} starting; args: {string.Join(' ', e.Args)}");
@@ -41,7 +43,7 @@ public partial class App : Application
         if (Mutex.TryOpenExisting(@"Local\" + AppPaths.LegacyName + ".Desktop", out var legacyInstance))
         {
             legacyInstance.Dispose();
-            MessageBox.Show(L.T("舊版 YnyrWASD 仍在執行，請先關閉它再開啟 TSCC_WASD。",
+            AppDialog.Show(L.T("舊版 YnyrWASD 仍在執行，請先關閉它再開啟 TSCC_WASD。",
                 "The old YnyrWASD is still running. Close it before opening TSCC_WASD."), AppPaths.Name);
             Shutdown();
             return;
@@ -66,6 +68,8 @@ public partial class App : Application
             viewModel.ShowNotice(L.T($"已更新到 {viewModel.VersionText}。", $"Updated to {viewModel.VersionText}."));
         if (migrated)
             viewModel.ShowNotice(L.T("已從舊版 YnyrWASD 搬移設定檔、校準與程式設定。", "Profiles, calibration and settings were moved over from YnyrWASD."));
+        // Windows logoff or shutdown: get pending profile edits onto the disk before the session ends.
+        SessionEnding += (_, _) => viewModel.FlushProfiles();
         var window = new MainWindow(viewModel);
         MainWindow = window;
         _tray = new TrayIcon(viewModel, () => window.ShowFromTray(), () => window.Close());
@@ -79,13 +83,14 @@ public partial class App : Application
             _tray.ShowBalloon(L.T("TSCC_WASD 已在背景執行。", "TSCC_WASD is running in the background."));
         else
             window.Show();
-        _ = StartAsync(viewModel, atSignIn);
+        _ = StartAsync(viewModel, window, atSignIn);
     }
 
-    private static async Task StartAsync(MainViewModel viewModel, bool atSignIn)
+    private static async Task StartAsync(MainViewModel viewModel, MainWindow window, bool atSignIn)
     {
         // A silent sign-in launch never pops up installers; mapping reports the missing driver instead.
         if (!atSignIn) await viewModel.OfferMissingDriversAsync();
+        window.AllowTour(); // the launch prompts are over: the tour may open now
         await viewModel.AutoStartAsync(atSignIn);
         if (viewModel.CheckUpdatesOnStartup) await viewModel.CheckUpdatesAsync(quiet: true);
     }
@@ -97,10 +102,11 @@ public partial class App : Application
             AppLog.Error("Unhandled UI exception", args.Exception);
             // Keep running: the mapper and HidHide restore live outside the failed UI action.
             args.Handled = true;
+            using var modal = AppDialog.ModalScope(); // the tour must not open over this box
             MessageBox.Show(L.T($"發生未預期的錯誤：{args.Exception.Message}\n\n詳細內容已寫入日誌：\n{AppLog.CurrentFile}\n\n" +
-                    "回報問題時請附上日誌（關於 → 開啟日誌資料夾）。",
+                    "回報問題時請附上日誌（關於與說明 → 開啟日誌資料夾）。",
                     $"An unexpected error occurred: {args.Exception.Message}\n\nDetails were written to the log:\n{AppLog.CurrentFile}\n\n" +
-                    "Please attach the log when reporting the problem (About → Open log folder)."),
+                    "Please attach the log when reporting the problem (About & help → Open log folder)."),
                 AppPaths.Name, MessageBoxButton.OK, MessageBoxImage.Error);
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>

@@ -5,6 +5,7 @@ using TSCC_WASD.Core.Services.Input;
 
 namespace TSCC_WASD.Tests;
 
+[Collection(WpfUiCollection.Name)]
 public class ReportCaptureTests
 {
     [Fact]
@@ -88,7 +89,7 @@ public class ReportCaptureTests
             {
                 var window = new ControllerTestWindow();
                 Assert.Contains(TSCC_WASD.Core.L.T("請先開始映射", "Start mapping first"), ((System.Windows.Controls.TextBlock)window.FindName("SourceText")).Text);
-                window.Close();
+                window.Close(); ThemeEventCleanup.DropSubscribers();
                 done.SetResult();
             }
             catch (Exception ex) { done.SetException(ex); }

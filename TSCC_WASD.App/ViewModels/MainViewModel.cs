@@ -8,6 +8,8 @@ using Microsoft.Win32;
 using TSCC_WASD.Core;
 using TSCC_WASD.Core.Models;
 using TSCC_WASD.Core.Services;
+using TSCC_WASD.Core.Services.Calibration;
+using TSCC_WASD.Core.Services.Input;
 using TSCC_WASD.Core.Services.Mapping;
 using TSCC_WASD.Core.Services.Setup;
 
@@ -17,6 +19,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 {
     private readonly MappingCoordinator _coordinator;
     private readonly AppSettingsStore _settingsStore;
+    private readonly Action<bool, string> _startupWriter;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(250) };
     private readonly List<AsyncRelayCommand> _commands = new();
     private readonly AutoProfileSwitchRule _autoSwitch = new();
@@ -24,8 +27,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private bool _autoSelecting;
     private int _autoSwitchTicks;
     private MappingProfile? _selectedProfile;
-    private string _statusMessage = L.T("選擇設定檔後啟動映射。", "Choose a profile and start mapping.");
-    private string _inputSummary = L.T("尚未啟動映射", "Mapping not started");
+    private string _statusMessage = L.T("選擇設定檔後開始映射。", "Choose a profile and start mapping.");
+    private string _inputSummary = L.T("尚未開始映射", "Mapping not started");
     private bool _isRunning, _isPaused, _busy, _closing, _loadFailed, _updating;
     private CancellationTokenSource? _updateCts;
     private double _updateProgress;
@@ -34,12 +37,24 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private DateTime? _hiddenSince;
     private string _dependencyStatus = DependencyChecker.BuildStatusText();
 
-    public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null,
-        Func<HidHideGuard?>? hidHideFactory = null)
+    private readonly ProfileAutoSaver _saver;
+    private bool _loading;
+    private ProfileSaveState _saveState = ProfileSaveState.Saved;
+    private string? _saveError;
+
+    /// <summary>Quiet period after the last profile edit before it is written to disk.</summary>
+    public static readonly TimeSpan DefaultSaveDelay = TimeSpan.FromMilliseconds(800);
+
+    public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null, TimeSpan? saveDelay = null,
+        Action<bool, string>? startupWriter = null, Func<HidHideGuard?>? hidHideFactory = null)
     {
+        _startupWriter = startupWriter ?? StartupRegistration.Set;
         _coordinator = new MappingCoordinator(profileStore, hidHideFactory ?? (() => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true)));
         _settingsStore = settingsStore ?? new AppSettingsStore();
         Settings = _settingsStore.Load();
+        _saver = new ProfileAutoSaver(CaptureProfiles, profiles => _coordinator.SaveProfiles(profiles),
+            () => !_loadFailed, OnSaveReport, saveDelay ?? DefaultSaveDelay, SynchronizationContext.Current, IsMouseButtonDown);
+        Profiles.CollectionChanged += OnProfilesChanged;
         StartCommand = Command(() => StartAsync(automatic: false, atSignIn: false), () => !IsRunning && SelectedProfile is not null);
         StopCommand = Command(StopAsync, () => IsRunning);
         PauseCommand = Command(() =>
@@ -65,8 +80,23 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 : L.T("沒有移除自動重新連接工具（已取消或失敗）。", "The automatic reconnect helper was not removed (cancelled or failed).");
         }, () => ControllerReconnector.IsPresent);
         RestartSteamCommand = Command(() => RestartSteamAsync(silent: false), () => IsRunning);
-        ReloadCommand = Command(() => { Reload(); return Task.CompletedTask; }, () => !IsRunning);
-        SaveCommand = Command(() => { Save(); return Task.CompletedTask; }, () => !_loadFailed);
+        ReloadCommand = Command(() =>
+        {
+            // Pending edits go to disk first; if they cannot be written, ask before they are thrown away.
+            if (!_saver.Flush() && !ConfirmDiscardUnsaved()) return Task.CompletedTask;
+            Reload();
+            return Task.CompletedTask;
+        }, () => !IsRunning);
+        DuplicateCommand = Command(() =>
+        {
+            if (SelectedProfile is null) return Task.CompletedTask;
+            var copy = SelectedProfile.Snapshot();
+            copy.Id = Guid.NewGuid().ToString();
+            copy.Name = Truncate(L.T($"{copy.Name} 的副本", $"Copy of {copy.Name}"), 100);
+            Profiles.Add(copy);
+            SelectedProfile = copy;
+            return Task.CompletedTask;
+        }, () => !_loadFailed && SelectedProfile is not null);
         NewCommand = Command(() =>
         {
             var profile = new MappingProfile { Name = L.T("新設定檔", "New profile") };
@@ -78,7 +108,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         {
             if (SelectedProfile is not null) Profiles.Remove(SelectedProfile);
             SelectedProfile = Profiles.FirstOrDefault();
-            StatusMessage = L.T("已移除，按儲存套用至磁碟。", "Removed. Click Save all to apply.");
+            StatusMessage = L.T("已移除。", "Removed.");
             return Task.CompletedTask;
         }, () => !IsRunning && !_loadFailed && Profiles.Count > 1 && SelectedProfile is not null);
         ImportCommand = Command(() =>
@@ -93,7 +123,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                     Profiles.Add(profile);
                 }
                 SelectedProfile = Profiles.Last();
-                StatusMessage = L.T("匯入完成，按儲存套用至磁碟。", "Imported. Click Save all to apply.");
+                StatusMessage = L.T("匯入完成。", "Imported.");
             }
             return Task.CompletedTask;
         }, () => !IsRunning && !_loadFailed);
@@ -117,6 +147,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             }
             if (ConfirmDriverInstall(missing)) await InstallDriversAsync(missing);
         }, () => !IsRunning);
+        ReplayTourCommand = new RelayCommand(() => TourRequested?.Invoke());
         CopyDiagnosticsCommand = Command(() =>
         {
             Clipboard.SetText(DiagnosticReport.Build(InputSummary, IsRunning) + $"Log: {AppLog.CurrentFile}{Environment.NewLine}");
@@ -136,13 +167,22 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         });
         CalibrateCommand = Command(() =>
         {
-            // The wizard reads the controller through its own shared HID handle, so mapping can keep running;
-            // a running mapping applies the saved calibration immediately.
-            var window = new CalibrationWindow { Owner = Application.Current?.MainWindow };
+            // The wizard reads the mapping session's uncalibrated input, so mapping keeps running;
+            // the session applies the saved (or cleared) calibration at once.
+            var owner = Application.Current?.MainWindow;
+            if (_coordinator.Identity is not { } identity)
+            {
+                AppDialog.Show(L.T("還沒有讀到手把，請確認手把已連接後再試。", "No controller is being read yet. Connect one and try again."), "TSCC_WASD");
+                return Task.CompletedTask;
+            }
+            string name = _controller?.Name is { Length: > 0 } known ? known : CalibrationWindow.ModelName(identity);
+            var model = new CalibrationWizardModel(identity, name, () => _coordinator.LatestUncalibratedInput,
+                StickCalibrationStore.Shared, new Switch2CalibrationCache());
+            var window = new CalibrationWindow(model) { Owner = owner };
             if (window.ShowDialog() == true)
                 StatusMessage = L.T("已儲存並套用你的搖桿校準。", "Your stick calibration was saved and applied.");
             return Task.CompletedTask;
-        });
+        }, () => IsRunning);
         OpenControllerTestCommand = Command(() =>
         {
             if (_controllerTestWindow is { } existing)
@@ -173,11 +213,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             OpenUrl(AboutInfo.HelpUrl(L.Chinese));
             return Task.CompletedTask;
         });
-        AboutCommand = Command(() =>
-        {
-            new AboutWindow { Owner = Application.Current?.MainWindow, DataContext = this }.ShowDialog();
-            return Task.CompletedTask;
-        });
+        ReportIssueCommand = Command(() => OpenLink(AboutInfo.IssuesUrl));
+        OpenRepoCommand = Command(() => OpenLink(AboutInfo.RepoUrl));
+        SigningPolicyCommand = Command(() => OpenLink(AboutInfo.SigningPolicyUrl));
+        ThirdPartyNoticesCommand = Command(() => OpenLink(AboutInfo.ThirdPartyNoticesUrl));
         OpenProfilesCommand = Command(() =>
         {
             var path = AppPaths.DataDirectory;
@@ -187,6 +226,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         });
         Reload();
         if (_coordinator.RecoverHiddenControllers() is { } recovered) StatusMessage = recovered;
+        BatterySource = () => _coordinator.Battery ?? BatteryStatus.Unknown;
+        ControllerSource = () => _coordinator.Controller;
+        HiddenCountSource = () => _coordinator.HiddenInterfaceCount;
         _timer.Tick += OnTick;
         _timer.Start();
     }
@@ -244,7 +286,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (!SetField(ref _selectedProfile, value)) return;
             if (previous is not null) previous.PropertyChanged -= OnSelectedProfileEdited;
             if (value is not null) value.PropertyChanged += OnSelectedProfileEdited;
+            if (!IsRunning && previous?.InputType != value?.InputType) { _controller = null; Battery = BatteryStatus.Unknown; }
             NotifyState();
+            RaiseHomeState();
             if (!_autoSelecting) _autoSwitch.NotifyManualSelection();
             if (IsRunning && value is not null) _ = ApplyLiveAsync(value, switched: true, automatic: _autoSelecting, previousOutput: previous?.OutputType);
         }
@@ -252,6 +296,8 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private void OnSelectedProfileEdited(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (!IsRunning && e.PropertyName == nameof(MappingProfile.InputType)) { _controller = null; Battery = BatteryStatus.Unknown; }
+        RaiseHomeState();
         if (IsRunning && sender is MappingProfile profile) _ = ApplyLiveAsync(profile, switched: false);
     }
 
@@ -292,7 +338,20 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     }
     public string StatusMessage { get => _statusMessage; private set => SetField(ref _statusMessage, value); }
     public string InputSummary { get => _inputSummary; private set => SetField(ref _inputSummary, value); }
-    public string DependencyStatus { get => _dependencyStatus; private set => SetField(ref _dependencyStatus, value); }
+    public string DependencyStatus
+    {
+        get => _dependencyStatus;
+        private set { if (SetField(ref _dependencyStatus, value)) RaisePropertyChanged(nameof(DriverSummary)); }
+    }
+    /// <summary>One line for the settings page, for example "ViGEmBus ✓ 已安裝 · HidHide ✗ 未安裝".</summary>
+    public string DriverSummary
+    {
+        get
+        {
+            string One(string name, bool ok) => $"{name} {(ok ? "✓" : "✗")} {(ok ? L.T("已安裝", "installed") : L.T("未安裝", "not installed"))}";
+            return $"{One("ViGEmBus", DependencyChecker.IsViGEmInstalled())} · {One("HidHide", DependencyChecker.IsHidHideInstalled())}";
+        }
+    }
     public bool IsRunning
     {
         get => _isRunning;
@@ -301,6 +360,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             if (!SetField(ref _isRunning, value)) return;
             if (!value) IsPaused = false;
             RaisePropertyChanged(nameof(StatusTitle));
+            RaiseHomeState();
             NotifyState();
         }
     }
@@ -313,6 +373,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             _coordinator.Paused = value;
             RaisePropertyChanged(nameof(StatusTitle));
             RaisePropertyChanged(nameof(PauseButtonText));
+            RaiseHomeState();
         }
     }
 
@@ -349,23 +410,74 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public AppSettings Settings { get; }
 
+    /// <summary>Writes the Windows start-up entry first; the setting changes only if that worked. False (with a message) otherwise.</summary>
+    private bool TrySetStartWithWindows(bool value)
+    {
+        if (Settings.StartWithWindows == value) return true;
+        try
+        {
+            _startupWriter(value, Environment.ProcessPath ?? throw new InvalidOperationException());
+            Settings.StartWithWindows = value;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = L.T($"無法變更開機啟動：{ex.Message}", $"Could not change sign-in launch: {ex.Message}");
+            return false;
+        }
+    }
+
     public bool StartWithWindows
     {
         get => Settings.StartWithWindows;
         set
         {
-            if (Settings.StartWithWindows == value) return;
-            try
+            if (TrySetStartWithWindows(value)) SaveSettings();
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(StartupChoice));
+            RaisePropertyChanged(nameof(StartupDescription));
+        }
+    }
+    public StartupChoice StartupChoice
+    {
+        get => SettingChoices.GetStartup(Settings.StartWithWindows, Settings.StartMappingOnLaunch);
+        set
+        {
+            var (signIn, onOpen) = SettingChoices.Apply(value);
+            // Both values change together or not at all: if the Run key cannot be written nothing is applied.
+            if (TrySetStartWithWindows(signIn))
             {
-                StartupRegistration.Set(value, Environment.ProcessPath ?? throw new InvalidOperationException());
-                Settings.StartWithWindows = value;
+                Settings.StartMappingOnLaunch = onOpen;
                 SaveSettings();
             }
-            catch (Exception ex) { StatusMessage = L.T($"無法變更開機啟動：{ex.Message}", $"Could not change sign-in launch: {ex.Message}"); }
+            RaisePropertyChanged(nameof(StartWithWindows));
+            RaisePropertyChanged(nameof(StartMappingOnLaunch));
+            RaisePropertyChanged();
+            RaisePropertyChanged(nameof(StartupDescription));
+        }
+    }
+    public string StartupDescription => SettingChoices.Description(StartupChoice, L.Chinese);
+    public SteamChoice SteamChoice
+    {
+        get => SettingChoices.GetSteam(Settings.ManageSteam, Settings.LaunchSteamAfterAutoStart);
+        set
+        {
+            var (manage, launch) = SettingChoices.Apply(value);
+            ManageSteam = manage;
+            LaunchSteamAfterAutoStart = launch;
             RaisePropertyChanged();
         }
     }
-    public bool StartMappingOnLaunch { get => Settings.StartMappingOnLaunch; set => SetSetting(() => Settings.StartMappingOnLaunch = value); }
+    public IReadOnlyList<ChoiceOption<StartupChoice>> StartupOptions { get; } =
+        Enum.GetValues<StartupChoice>().Select(c => new ChoiceOption<StartupChoice>(c, SettingChoices.Name(c, L.Chinese))).ToList();
+    public IReadOnlyList<ChoiceOption<SteamChoice>> SteamOptions { get; } =
+        Enum.GetValues<SteamChoice>().Select(c => new ChoiceOption<SteamChoice>(c, SettingChoices.Name(c, L.Chinese))).ToList();
+    public sealed record ChoiceOption<T>(T Value, string Name);
+    public bool StartMappingOnLaunch
+    {
+        get => Settings.StartMappingOnLaunch;
+        set { SetSetting(() => Settings.StartMappingOnLaunch = value); RaisePropertyChanged(nameof(StartupChoice)); RaisePropertyChanged(nameof(StartupDescription)); }
+    }
     public bool MinimizeToTray { get => Settings.MinimizeToTray; set => SetSetting(() => Settings.MinimizeToTray = value); }
     public bool ManageSteam { get => Settings.ManageSteam; set => SetSetting(() => Settings.ManageSteam = value); }
     public bool LaunchSteamAfterAutoStart { get => Settings.LaunchSteamAfterAutoStart; set => SetSetting(() => Settings.LaunchSteamAfterAutoStart = value); }
@@ -404,12 +516,25 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand RemoveReconnectCommand { get; }
     public ICommand RestartSteamCommand { get; }
     public ICommand ReloadCommand { get; }
-    public ICommand SaveCommand { get; }
+    public ICommand DuplicateCommand { get; }
     public ICommand NewCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand ImportCommand { get; }
     public ICommand ExportCommand { get; }
     public ICommand InstallDepsCommand { get; }
+    public ICommand ReplayTourCommand { get; }
+
+    /// <summary>Asks the window to (re)start the guided tour.</summary>
+    public event Action? TourRequested;
+    public bool TourCompleted => Settings.TourCompleted;
+
+    /// <summary>Skipping and finishing the tour both end here; it is the only setting the tour changes.</summary>
+    public void MarkTourCompleted()
+    {
+        if (Settings.TourCompleted) return;
+        Settings.TourCompleted = true;
+        SaveSettings();
+    }
     public ICommand OpenProfilesCommand { get; }
     public ICommand CalibrateCommand { get; }
     private ControllerTestWindow? _controllerTestWindow;
@@ -418,14 +543,137 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public ICommand CheckUpdatesCommand { get; }
     public ICommand CancelUpdateCommand { get; }
     public ICommand OpenHelpCommand { get; }
-    public ICommand AboutCommand { get; }
+    public ICommand ReportIssueCommand { get; }
+    public ICommand OpenRepoCommand { get; }
+    public ICommand SigningPolicyCommand { get; }
+    public ICommand ThirdPartyNoticesCommand { get; }
     public ICommand CopyDiagnosticsCommand { get; }
     public ICommand OpenLogsCommand { get; }
     public ICommand SupportCommand { get; }
 
     public const string KoFiUrl = "https://ko-fi.com/ynyr5566";
 
+    /// <summary>The About page header line: version and stable/preview channel.</summary>
+    public string VersionLine => AboutInfo.VersionLine(AboutInfo.CurrentVersionText, L.Chinese);
+
+    private static Task OpenLink(string url)
+    {
+        OpenUrl(url);
+        return Task.CompletedTask;
+    }
+
     public string VersionText => $"v{UpdateChecker.CurrentVersion.ToString(3)}";
+
+    private BatteryStatus _battery;
+    private ControllerInfo? _controller;
+    private int? _hiddenCount;
+    private int _batteryReading;
+
+    /// <summary>
+    /// Where the Home page reads the battery of the physical controller. Called off the UI thread, about once a second
+    /// while mapping. Defaults to the coordinator; unknown when not mapping.
+    /// </summary>
+    public Func<BatteryStatus>? BatterySource { get; set; }
+
+    /// <summary>Name and connection of the controller being read (null = none). Same threading as <see cref="BatterySource"/>.</summary>
+    public Func<ControllerInfo?>? ControllerSource { get; set; }
+
+    /// <summary>Interfaces HidHide hid for this session (null = not hiding). Same threading as <see cref="BatterySource"/>.</summary>
+    public Func<int?>? HiddenCountSource { get; set; }
+
+    /// <summary>Last known battery; kept after mapping stops.</summary>
+    public BatteryStatus Battery
+    {
+        get => _battery;
+        private set { if (!SetField(ref _battery, value)) return; RaisePropertyChanged(nameof(BatteryText)); RaisePropertyChanged(nameof(HasBatteryText)); RaisePropertyChanged(nameof(ControllerName)); }
+    }
+
+    /// <summary>Last known controller; kept after mapping stops.</summary>
+    public ControllerInfo? Controller => _controller;
+
+    private void PollBattery()
+    {
+        var battery = BatterySource;
+        var controller = ControllerSource;
+        var hidden = HiddenCountSource;
+        if (battery is null && controller is null && hidden is null) return;
+        if (Interlocked.Exchange(ref _batteryReading, 1) == 1) return;
+        var context = TaskScheduler.FromCurrentSynchronizationContext();
+        Task.Run(() =>
+        {
+            BatteryStatus status = BatteryStatus.Unknown;
+            ControllerInfo? info = null;
+            int? count = null;
+            try { if (battery is not null) status = battery(); } catch { }
+            try { info = controller?.Invoke(); } catch { }
+            try { count = hidden?.Invoke(); } catch { }
+            return (status, info, count);
+        }).ContinueWith(task =>
+        {
+            Volatile.Write(ref _batteryReading, 0);
+            if (_closing || task.IsFaulted) return;
+            var (status, info, count) = task.Result;
+            Battery = status;
+            _hiddenCount = count;
+            ApplyPoll(info, IsRunning);
+        }, context);
+    }
+
+    /// <summary>
+    /// While mapping, no controller (pad disconnected) clears the card's controller and battery reading;
+    /// once mapping stops the last values stay. UI thread only.
+    /// </summary>
+    /// <summary>Forgets the last known controller and battery (a new mapping starts, or the input type changed while stopped).</summary>
+    internal void ClearLastKnown()
+    {
+        _controller = null;
+        Battery = BatteryStatus.Unknown;
+        RaiseHomeState();
+    }
+
+    internal void ApplyPoll(ControllerInfo? info, bool running)
+    {
+        if (info is not null) _controller = info;
+        else if (running) { _controller = null; Battery = BatteryStatus.Unknown; }
+        RaiseHomeState();
+    }
+
+    public string BatteryText => HomeText.Battery(Battery, IsRunning, L.Chinese);
+    public bool HasBatteryText => BatteryText.Length > 0;
+
+    /// <summary>Main button of the controller card: starts while stopped, stops while mapping.</summary>
+    public string MainButtonText => HomeText.MainButton(IsRunning, L.Chinese);
+    public ICommand MainCommand => IsRunning ? StopCommand : StartCommand;
+
+    public OutputControllerType CurrentOutput => SelectedProfile?.OutputType ?? OutputControllerType.DualShock4;
+    public string StatusLine => HomeText.StatusLine(IsRunning, IsPaused, CurrentOutput, L.Chinese);
+    public string OutputTitle => HomeText.OutputName(CurrentOutput);
+    public string OutputDetail => HomeText.OutputDetail(CurrentOutput, L.Chinese);
+    public string FooterText => HomeText.Footer(IsRunning, IsRunning && _coordinator.HidingSince is not null, L.Chinese, _hiddenCount);
+    public bool AutoSwitchApplies => AutoProfileSwitchRule.HasAnyMatch(Profiles);
+
+    /// <summary>
+    /// Controller card line, "NS2 Pro · USB · 電量 低 · 充電中". Name and connection come from the active reader
+    /// (last known after mapping stops), else the reader's status while mapping, else the profile's input choice.
+    /// </summary>
+    public string ControllerName
+    {
+        get
+        {
+            string name = _controller is { } info ? HomeText.Controller(info, L.Chinese)
+                : IsRunning && !string.IsNullOrWhiteSpace(_coordinator.InputStatus) ? _coordinator.InputStatus!
+                : InputOptions.FirstOrDefault(o => o.Type == SelectedProfile?.InputType)?.Name ?? "";
+            return HomeText.ControllerLine(name, BatteryText);
+        }
+    }
+
+    private void RaiseHomeState()
+    {
+        foreach (var name in new[] { nameof(MainButtonText), nameof(MainCommand), nameof(StatusLine), nameof(CurrentOutput), nameof(OutputTitle),
+                                     nameof(OutputDetail), nameof(FooterText), nameof(ControllerName), nameof(BatteryText), nameof(HasBatteryText),
+                                     nameof(AutoSwitchApplies) })
+            RaisePropertyChanged(name);
+    }
 
     /// <summary>Headline of the status card.</summary>
     public string StatusTitle => !IsRunning ? L.T("已停止", "Stopped") : IsPaused ? L.T("已暫停", "Paused") : L.T("映射中", "Mapping");
@@ -462,7 +710,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         var source = packages.All(DriverInstaller.IsBundled)
             ? L.T("將執行程式資料夾 drivers 內附的 Nefarius 官方安裝程式", "The official Nefarius installers in the drivers folder will run")
             : L.T("將從 GitHub 下載 Nefarius 官方安裝程式", "The official Nefarius installers will be downloaded from GitHub");
-        var answer = MessageBox.Show(
+        var answer = AppDialog.Show(
             L.T($"尚未安裝下列免費驅動程式：\n\n{lines}\n\n要現在安裝嗎？{source}，執行前會核對 SHA-256。" +
                 "Windows 會要求管理員權限，安裝後可能需要重新開機。\n解除安裝：Windows 設定 → 應用程式。",
                 $"These free drivers are not installed:\n\n{lines}\n\nInstall them now? {source}; each is checked against its SHA-256 first. " +
@@ -499,7 +747,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         StatusMessage = stillMissing
             ? L.T("仍偵測不到部分驅動程式。若安裝程式要求重新開機，請重開機後再開啟 TSCC_WASD。",
                 "Some drivers are still not detected. If an installer asked for a restart, restart Windows and open TSCC_WASD again.")
-            : L.T("驅動程式安裝完成。若安裝程式要求重新開機，請先重開機再啟動映射。",
+            : L.T("驅動程式安裝完成。若安裝程式要求重新開機，請先重開機再開始映射。",
                 "Drivers installed. If an installer asked for a restart, restart Windows before mapping.");
     }
 
@@ -530,7 +778,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         if (package is null || problem is not null)
         {
             // Can't install from here; the release page still has the download.
-            var open = MessageBox.Show(
+            var open = AppDialog.Show(
                 L.T($"有新版本 {latest.Tag}（目前 {VersionText}）。{problem}\n\n要開啟下載頁嗎？",
                     $"{latest.Tag} is available (you have {VersionText}). {problem}\n\nOpen the download page?"),
                 AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Information);
@@ -538,7 +786,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return;
         }
         string size = package.Zip.Size > 0 ? $"{package.Zip.Size / 1048576.0:0.0} MB" : "?";
-        var answer = MessageBox.Show(
+        var answer = AppDialog.Show(
             L.T($"有新版本 {latest.Tag}（目前 {VersionText}）。要下載並安裝嗎？\n\n" +
                 $"將從 TSCC_WASD 的 GitHub 發行版下載 {package.Zip.Name}（{size}），安裝前會核對 SHA-256 與數位簽章。",
                 $"{latest.Tag} is available (you have {VersionText}). Download and install it?\n\n" +
@@ -576,7 +824,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             catch (UpdateVerificationException ex)
             {
                 StatusMessage = L.T($"更新未通過驗證：{ex.Message}", $"The update failed verification: {ex.Message}");
-                MessageBox.Show(ex.Message, AppPaths.Name, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppDialog.Show(ex.Message, AppPaths.Name, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException
@@ -587,7 +835,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             }
             finally { UpdateProgressText = null; }
 
-            var install = MessageBox.Show(
+            var install = AppDialog.Show(
                 L.T($"已下載並驗證 {tag}。要現在安裝並重新啟動 TSCC_WASD 嗎？" +
                     (IsRunning ? "\n\n會先停止映射並還原 HidHide 設定，再更新程式。" : ""),
                     $"{tag} is downloaded and verified. Install it and restart TSCC_WASD now?" +
@@ -633,6 +881,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     private void Reload()
     {
+        _loading = true;
         try
         {
             var profiles = _coordinator.LoadProfiles();
@@ -650,16 +899,109 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             StatusMessage = L.T($"無法讀取設定檔，原始檔案已保留。請開啟設定資料夾修正 profiles.json 後重新載入：{ex.Message}",
                 $"Could not read profiles; the file was kept. Open the settings folder, fix profiles.json and reload: {ex.Message}");
         }
+        finally { _loading = false; }
+        _lastValid.Clear();
+        foreach (var profile in Profiles)
+        {
+            try { _lastValid[profile.Id] = profile.Snapshot(); } catch (ArgumentException) { }
+        }
+        _saver.Reset(); // what is in memory now is what is on disk (or nothing may be saved at all)
+        RaiseSaveStatus();
         DependencyStatus = DependencyChecker.BuildStatusText();
         NotifyState();
     }
 
-    private void Save()
+    // ---- Profile auto-save ----
+
+    /// <summary>Writes pending profile edits now (window hides to the tray, app exits, reload). True when nothing is left unsaved.</summary>
+    public bool FlushProfiles() => _saver.Flush();
+
+    /// <summary>Asks before unwritable edits are discarded by a reload. Replaceable so tests need no dialog.</summary>
+    internal Func<bool> ConfirmDiscardUnsaved { get; set; } = () => AppDialog.Show(
+        L.T("目前的修改無法寫入磁碟（見設定檔頁的提示）。重新載入會捨棄這些修改，要繼續嗎？",
+            "The current edits cannot be written to disk (see the note on the Profiles page). Reloading discards them. Continue?"),
+        AppPaths.Name, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+
+    private readonly Dictionary<string, MappingProfile> _lastValid = new();
+
+    /// <summary>
+    /// Copies every valid profile. An invalid one is written as its last valid version (none yet: left out), so a bad value
+    /// in one profile never costs the edits made in the others; the message names the profile and the problem.
+    /// </summary>
+    private ProfileCapture CaptureProfiles()
     {
-        _coordinator.SaveProfiles(Profiles);
-        StatusMessage = L.T("設定已儲存，前一版保留為 profiles.json.bak。", "Saved. The previous version is kept as profiles.json.bak.");
-        System.Windows.Data.CollectionViewSource.GetDefaultView(Profiles).Refresh();
+        var list = new List<MappingProfile>();
+        string? invalid = null;
+        foreach (var profile in Profiles.ToList())
+        {
+            try
+            {
+                var copy = profile.Snapshot();
+                _lastValid[profile.Id] = copy;
+                list.Add(copy);
+            }
+            catch (ArgumentException ex)
+            {
+                invalid ??= string.IsNullOrWhiteSpace(profile.Name) ? ex.Message : $"「{profile.Name}」：{ex.Message}";
+                if (_lastValid.TryGetValue(profile.Id, out var previous)) list.Add(previous);
+            }
+        }
+        return new ProfileCapture(list, invalid);
     }
+
+    private static bool IsMouseButtonDown()
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        return dispatcher is not null && dispatcher.CheckAccess() && Mouse.LeftButton == MouseButtonState.Pressed;
+    }
+
+    private static string Truncate(string text, int length) => text.Length <= length ? text : text[..length];
+
+    private void OnProfilesChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null) foreach (MappingProfile profile in e.OldItems) profile.PropertyChanged -= OnProfileEdited;
+        if (e.NewItems is not null) foreach (MappingProfile profile in e.NewItems) profile.PropertyChanged += OnProfileEdited;
+        if (!_loading && e.Action is System.Collections.Specialized.NotifyCollectionChangedAction.Add
+                or System.Collections.Specialized.NotifyCollectionChangedAction.Remove) _saver.Touch();
+    }
+
+    private void OnProfileEdited(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (!_loading) _saver.Touch();
+    }
+
+    private void OnSaveReport(ProfileSaveState state, string? error)
+    {
+        _saveState = state;
+        _saveError = error;
+        if (state == ProfileSaveState.Failed)
+        {
+            AppLog.Warn($"Could not save profiles: {error}");
+            StatusMessage = L.T($"無法儲存設定檔：{error}", $"Could not save profiles: {error}");
+        }
+        RaiseSaveStatus();
+    }
+
+    private void RaiseSaveStatus()
+    {
+        RaisePropertyChanged(nameof(SaveStatusText));
+        RaisePropertyChanged(nameof(SaveStatusIsError));
+        RaisePropertyChanged(nameof(SaveStatusIsSaved));
+    }
+
+    public bool SaveStatusIsError => _loadFailed || _saveState is ProfileSaveState.Invalid or ProfileSaveState.Failed;
+    public bool SaveStatusIsSaved => !_loadFailed && _saveState == ProfileSaveState.Saved;
+
+    /// <summary>Next to the profile name: "✓ 已自動儲存", "儲存中…" or why the edits are not on disk.</summary>
+    public string SaveStatusText => _loadFailed
+        ? L.T("沒有載入設定檔，不會自動儲存", "Profiles were not loaded; nothing is saved automatically")
+        : _saveState switch
+        {
+            ProfileSaveState.Saved => L.T("✓ 已自動儲存", "✓ Saved automatically"),
+            ProfileSaveState.Invalid => L.T($"未儲存：{_saveError}", $"Not saved: {_saveError}"),
+            ProfileSaveState.Failed => L.T($"儲存失敗：{_saveError}", $"Save failed: {_saveError}"),
+            _ => L.T("儲存中…", "Saving…")
+        };
 
     /// <summary>Starts mapping without user interaction when the settings ask for it.</summary>
     /// <param name="atSignIn">Launched by Windows at sign-in (<c>--startup</c>).</param>
@@ -673,6 +1015,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     private async Task StartAsync(bool automatic, bool atSignIn)
     {
         if (SelectedProfile is null) return;
+        ClearLastKnown();
         var result = await _coordinator.StartAsync(SelectedProfile, UpdateStatusFromWorker);
         IsRunning = _coordinator.IsRunning;
         StatusMessage = result.message;
@@ -696,7 +1039,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
                 return;
             }
             if (automatic) return;
-            var answer = MessageBox.Show(
+            var answer = AppDialog.Show(
                 L.T("Steam 在隱藏實體手把之前就已啟動，仍握有實體手把，會透過 Steam Input 轉給遊戲，造成按鍵圖示在 Xbox／PS 之間交替。\n\n" +
                     "• 是：設定「自動重新連接」（只需一次，會要求一次管理員權限）。之後 TSCC_WASD 會自動重新連接 USB 手把讓 Steam 放開它，不必再重啟 Steam。\n" +
                     "• 否：這次先重新啟動 Steam（請先關閉正在執行的 Steam 遊戲）。\n" +
@@ -730,7 +1073,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Sets up the elevated reconnect helper (one administrator prompt). True when it is ready.</summary>
     private async Task<bool> SetUpReconnectHelperAsync(bool confirm = true)
     {
-        if (confirm && MessageBox.Show(
+        if (confirm && AppDialog.Show(
                 L.T("「自動重新連接」會在 Steam 握著實體手把時，讓 USB 手把斷電重新連接一次（約 1–3 秒），Steam 就會放開它，不必重啟 Steam。\n\n" +
                     $"設定時 Windows 會要求一次管理員權限：TSCC_WASD 會複製到 {ControllerReconnector.HelperDirectory}，並建立一個只在需要時執行的排程工作。" +
                     "之後不再詢問。可隨時在「程式設定」移除。\n\n要現在設定嗎？",
@@ -817,7 +1160,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
             return;
         }
         if (!SteamHelper.StartedSince(since.Value)) return;
-        var answer = MessageBox.Show(
+        var answer = AppDialog.Show(
             L.T("Steam 是在實體手把被隱藏期間啟動的，現在可能看不到實體手把。\n\n" +
                 "要再重新啟動 Steam 一次，讓它重新認得實體手把嗎？\n（請先關閉正在執行的 Steam 遊戲。）",
                 "Steam started while the physical controllers were hidden and may not see them now.\n\n" +
@@ -841,7 +1184,7 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
         if (IsRunning && !running)
             StatusMessage = L.T($"映射已結束：{_coordinator.LastError ?? "已停止"}", $"Mapping ended: {_coordinator.LastError ?? "stopped"}");
         IsRunning = running;
-        if (running) { if (++_autoSwitchTicks % 4 == 0) AutoSwitchTick(); } // Once a second.
+        if (running) { if (++_autoSwitchTicks % 4 == 0) { AutoSwitchTick(); PollBattery(); RaiseHomeState(); } } // Once a second.
         else { _autoSwitchTicks = 0; RestoreAfterAutoSwitch(); }
         if (running && ++_antiCheatTicks % 20 == 0) CheckAntiCheat(); // Every 5 seconds.
         if (!running) _antiCheatWarned = null;
@@ -903,6 +1246,9 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        try { _saver.Flush(); }
+        catch (Exception ex) { AppLog.Warn($"Could not flush profiles on exit: {ex.Message}"); }
+        _saver.Dispose();
         _closing = true;
         _updateCts?.Cancel();
         _timer.Stop();

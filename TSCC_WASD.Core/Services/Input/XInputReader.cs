@@ -15,7 +15,7 @@ public interface IXInputSlotFilter
 }
 
 /// <summary>Reads the first available XInput slot (0–3) using the Windows inbox API.</summary>
-public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonOption, IXInputSlotFilter
+public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonOption, IXInputSlotFilter, IBatterySource, IControllerIdentity
 {
     private volatile int _excludedSlot = -1;
 
@@ -59,25 +59,44 @@ public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonO
         public ushort RightMotorSpeed;
     }
 
+    [DllImport("xinput1_4.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern uint XInputGetBatteryInformation(uint dwUserIndex, byte devType, out BatteryInformation information);
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct BatteryInformation
+    {
+        public byte BatteryType;  // 0 disconnected, 1 wired, 2 alkaline, 3 NiMH, 0xFF unknown
+        public byte BatteryLevel; // 0 empty, 1 low, 2 medium, 3 full
+    }
+
     private static bool _getStateExUnavailable;
     private volatile int _slot = -1;
     private int _rumble;
 
     internal delegate uint GetStateFunc(uint index, out State state);
     internal delegate void SetVibrationFunc(int slot, byte large, byte small);
+    internal delegate uint GetBatteryFunc(uint index, out BatteryInformation information);
 
+    private static readonly TimeSpan BatteryInterval = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan ScanInterval = TimeSpan.FromSeconds(1);
     private readonly GetStateFunc _getState;
     private readonly SetVibrationFunc _setVibration;
     private readonly Func<long> _clockMs;
+    private readonly GetBatteryFunc _getBattery;
+    private readonly object _batteryGate = new();
+    private BatteryStatus _battery;
+    private int _batterySlot = -1;
+    private long _nextBatteryRead;
     private long _nextFullScan;   // no pad in use: earliest time to look at all slots again
     private long _nextLowerScan;  // pad in use: earliest time to look for a lower-numbered pad
     private int _scannedExcluded = -1;
 
     public XInputReader() : this(GetState, Apply, () => Environment.TickCount64) { }
 
-    internal XInputReader(GetStateFunc getState, SetVibrationFunc setVibration, Func<long> clockMs)
+    internal XInputReader(GetStateFunc getState, SetVibrationFunc setVibration, Func<long> clockMs, GetBatteryFunc? getBattery = null)
     {
+        _getBattery = getBattery ?? GetBattery;
         _getState = getState;
         _setVibration = setVibration;
         _clockMs = clockMs;
@@ -108,10 +127,12 @@ public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonO
             if (_getState((uint)active, out state) == 0)
             {
                 state.Gamepad.Buttons = MapBack(state.Gamepad.Buttons, _backAsTouchpad);
+                RefreshBattery(active, now);
                 return true;
             }
             // The pad in use is gone: report no input now and look for another one on the next pass.
             _slot = -1;
+            ClearBattery();
             _nextFullScan = 0;
             state = default;
             return false;
@@ -139,12 +160,61 @@ public sealed class XInputReader : IInputReader, IRumbleTarget, IXboxBackButtonO
                 state.Gamepad.Buttons = MapBack(state.Gamepad.Buttons, _backAsTouchpad);
                 if (_slot != index) MoveRumble(index);
                 _nextLowerScan = now + (long)ScanInterval.TotalMilliseconds;
+                RefreshBattery(index, now);
                 return true;
             }
         }
         state = default;
         return false;
     }
+
+    public BatteryStatus Battery { get { lock (_batteryGate) return _battery; } }
+
+    /// <summary>XInput has no serial and the slot is not stable, so only the model identifies it.</summary>
+    public ControllerId? Identity { get { lock (_batteryGate) return _batterySlot >= 0 ? XInputId : null; } }
+    private static readonly ControllerId XInputId = new(ControllerId.XInput, null);
+
+    private void ClearBattery()
+    {
+        lock (_batteryGate) { _battery = default; _batterySlot = -1; }
+    }
+
+    /// <summary>Asks for the battery when the pad changed or the last answer is older than the interval; never throws.</summary>
+    private void RefreshBattery(int slot, long now)
+    {
+        lock (_batteryGate)
+        {
+            if (slot == _batterySlot && now < _nextBatteryRead) return;
+            _batterySlot = slot;
+            _nextBatteryRead = now + (long)BatteryInterval.TotalMilliseconds;
+        }
+        BatteryStatus battery;
+        try { battery = MapBattery(_getBattery((uint)slot, out var information), information); }
+        catch { battery = BatteryStatus.Unknown; }
+        lock (_batteryGate) _battery = battery;
+    }
+
+    /// <summary>XInput result and battery info to a status. Wired is unsupported; disconnected or odd data is unknown; XInput has no charging flag.</summary>
+    internal static BatteryStatus MapBattery(uint result, BatteryInformation information)
+    {
+        if (result != 0) return BatteryStatus.Unknown;
+        return information.BatteryType switch
+        {
+            1 => BatteryStatus.Unsupported,
+            2 or 3 => information.BatteryLevel switch
+            {
+                0 => BatteryStatus.Of(BatteryLevel.Empty, false),
+                1 => BatteryStatus.Of(BatteryLevel.Low, false),
+                2 => BatteryStatus.Of(BatteryLevel.Medium, false),
+                3 => BatteryStatus.Of(BatteryLevel.Full, false),
+                _ => BatteryStatus.Unknown
+            },
+            _ => BatteryStatus.Unknown
+        };
+    }
+
+    private static uint GetBattery(uint index, out BatteryInformation information) =>
+        XInputGetBatteryInformation(index, 0 /* BATTERY_DEVTYPE_GAMEPAD */, out information);
 
     private static uint GetState(uint index, out State state)
     {

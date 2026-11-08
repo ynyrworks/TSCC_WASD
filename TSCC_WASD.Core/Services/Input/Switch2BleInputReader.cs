@@ -13,7 +13,7 @@ namespace TSCC_WASD.Core.Services.Input;
 /// see it, and nothing has to be hidden. The controller is not paired: it connects while Sync is
 /// held and keeps its Switch 2 pairing.
 /// </summary>
-public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumbleTarget
+public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumbleTarget, IBatterySource, IControllerIdentity
 {
     private static readonly TimeSpan Fresh = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan RumbleInterval = TimeSpan.FromMilliseconds(15);
@@ -25,6 +25,8 @@ public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumble
     private State _latest;
     private MotionSample _motion;
     private bool _hasState, _hasMotion;
+    private BatteryStatus _battery;
+    private volatile ControllerId? _identity;
     private long _receivedAt;
     private volatile int _rumble; // large << 8 | small
     private volatile bool _calibrationChanged;
@@ -39,6 +41,10 @@ public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumble
     }
 
     public string Status { get { lock (_gate) return _status; } }
+
+    public BatteryStatus Battery { get { lock (_gate) return _battery; } }
+
+    public ControllerId? Identity => _identity;
 
     public bool TryGetState(out State state)
     {
@@ -71,6 +77,7 @@ public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumble
             _status = status;
             _hasState = _hasMotion = false;
             _latest = default;
+            _battery = default; _identity = null;
         }
     }
 
@@ -102,7 +109,7 @@ public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumble
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception ex) { SetStatus(L.T($"NS2 Pro 藍牙輸入已停止：{ex.Message}", $"NS2 Pro Bluetooth input stopped: {ex.Message}")); }
-        finally { lock (_gate) { _hasState = _hasMotion = false; _latest = default; } }
+        finally { lock (_gate) { _hasState = _hasMotion = false; _latest = default; _battery = default; _identity = null; } }
     }
 
     /// <summary>Waits for an NS2 Pro advertising in sync mode (or one already paired with this PC by another tool).</summary>
@@ -174,6 +181,7 @@ public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumble
             if (!left.IsValid || !right.IsValid)
                 throw new IOException(L.T("NS2 Pro 搖桿校準資料無效。", "NS2 Pro stick calibration data is invalid."));
             var factory = (left, right);
+            _identity = new ControllerId(ControllerId.Ns2Pro, address.ToString("x12"));
             bool userCalibration = _calibrationCache.TryLoadUser(out var userLeft, out var userRight);
             var calibration = userCalibration ? (userLeft, userRight) : factory;
             string name = userCalibration ? L.T("NS2 Pro（藍牙，使用者校準）", "NS2 Pro (Bluetooth, your calibration)")
@@ -199,6 +207,7 @@ public sealed class Switch2BleInputReader : IInputReader, IMotionSource, IRumble
                     _latest = state;
                     _receivedAt = Stopwatch.GetTimestamp();
                     _hasState = true;
+                    if (BatteryParser.TryParseNs2(report, bluetooth: false, out var battery)) _battery = battery; // Already converted to the USB layout.
                     _status = name;
                 }
             };

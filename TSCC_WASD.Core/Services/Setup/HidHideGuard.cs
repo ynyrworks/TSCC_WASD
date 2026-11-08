@@ -90,10 +90,11 @@ public sealed partial class HidHideGuard : Input.IHidHideRecovery
                 }
             }
             bool firstCall = !HasPendingRestore;
-            if (!firstCall && targets.Count == 0) return Summary(record);
+            if (!firstCall && targets.Count == 0) { _hiddenCount = record.Devices.Count; return Summary(record); }
 
             record.Devices.AddRange(targets);
             Save(record);
+            _hiddenCount = record.Devices.Count;
 
             var args = new List<string>();
             if (firstCall && record.AppAdded) args.AddRange(["--app-reg", appPath]);
@@ -117,8 +118,14 @@ public sealed partial class HidHideGuard : Input.IHidHideRecovery
             if (!record.CloakWasOn) args.Add("--cloak-off");
             if (args.Count > 0) _run(args);
             File.Delete(_recordPath);
+            _hiddenCount = 0;
         }
     }
+
+    private volatile int _hiddenCount;
+
+    /// <summary>Interfaces this guard hid in this run (last value written by Hide/Restore). A plain field read: never blocks and never touches the record file.</summary>
+    public int HiddenCount => _hiddenCount;
 
     /// <summary>`\\?\HID#VID_057E&amp;PID_2069&amp;MI_00#a&amp;37d9#{guid}` becomes `HID\VID_057E&amp;PID_2069&amp;MI_00\a&amp;37d9`.</summary>
     internal static string ToInstancePath(string interfacePath)

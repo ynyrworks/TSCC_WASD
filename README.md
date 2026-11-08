@@ -7,16 +7,14 @@ with Xbox prompts.
 
 It covers one common reWASD use case ("pretend my controller is a DS4") with free, open
 components: ViGEmBus for the virtual controller and HidHide to hide the real one. Free, no
-subscription, no telemetry. Built with C# / .NET 10 / WPF. **MIT licensed · version 1.0.0.**
+subscription, no telemetry. Built with C# / .NET 10 / WPF. **MIT licensed · version 1.1.**
 English and Traditional Chinese UI.
 
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-support%20this%20project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ynyr5566)
 
 **中文：** [繁體中文說明](docs/README.zh-TW.md) · [使用手冊](docs/MANUAL.zh-TW.md)
 
-**Full guide:** the [user manual](docs/MANUAL.md) covers install, first mapping, Steam, profiles, every controller and troubleshooting.
-
-![Main window](docs/images/editor.png)
+**Full guide:** the [user manual](docs/MANUAL.md) covers install, first setup, every page of the app, Steam, profiles, every controller and troubleshooting.
 
 **The name:** TSCC stands for **T**riangle, **S**quare, **C**ross and **C**ircle, the four
 PlayStation face buttons this tool makes your games show. The project was called *YnyrWASD*
@@ -30,7 +28,8 @@ until 0.4.0; 0.4.1 moves your existing profiles and settings over automatically.
   making you restart Steam; or let TSCC_WASD start Steam after mapping at sign-in.
 - **Your choice of prompts.** Output a virtual **DualShock 4** (PS prompts) or **Xbox 360** (Xbox prompts), with an optional A/B and X/Y swap.
 - **Profiles per game.** A profile can switch on automatically when a game's process comes to the foreground.
-- **Rumble, PS button and motion**, round stick dead zone, controller test and report export, tray icon, start with Windows.
+- **Four pages, built-in help.** A left navigation with **Home**, **Profiles**, **App settings** and **About & help**; a short guided tour on first launch (replay it from **About & help**); a small **?** tip beside every option; every change is saved automatically.
+- **Rumble, PS button and motion**, round stick dead zone, stick calibration, controller test and report export, tray icon, start with Windows.
 - **Everything in one download.** The ZIP includes the .NET runtime and the official ViGEmBus and HidHide installers.
 - **No telemetry, no background service.** The network is only used when you ask (**Check for updates**, **Install drivers**).
 
@@ -39,10 +38,10 @@ remapping, macros, touchpad surface, keyboard/mouse input, DualSense output and 
 
 ## Supported controllers
 
-**What 1.0 promises:** Xbox controllers (USB, Bluetooth) and the Nintendo Switch 2 Pro over USB, output as a DualShock 4 or Xbox 360
-controller. Everything else stays **experimental**: it may work, but 1.0 makes no promise about it.
+**What is promised:** Xbox controllers (USB, Bluetooth) and the Nintendo Switch 2 Pro over USB, output as a DualShock 4 or Xbox 360
+controller. Everything else stays **experimental**: it may work, but there is no promise about it.
 
-| Controller | Connection | Status in 1.0 |
+| Controller | Connection | Status |
 | --- | --- | --- |
 | Xbox Wireless Controller | USB | **Stable scope.** Hardware-tested; XInput access and HidHide isolation verified |
 | Xbox Wireless Controller | Bluetooth | **Stable scope.** Hardware-tested; HidHide isolation and PS prompts via Steam Input verified |
@@ -70,12 +69,13 @@ Later versions install from **Check for updates**, so you only download by hand 
 2. On first launch TSCC_WASD offers to install **ViGEmBus** (required) and **HidHide** (strongly recommended) with the official
    installers in the `drivers` folder. Choose **Yes**, finish both installers and reboot if asked. You do not configure HidHide;
    TSCC_WASD does that while it maps.
-3. Connect your controller. Keep **Input = Auto-detect** and **Hide physical controllers while mapping** checked, then click **Start mapping**.
-4. If TSCC_WASD says Steam was already running, choose **Yes** to set up automatic reconnect (once), or **No** to restart Steam this time.
-5. **Then** launch the game. If the game was already running, restart it.
+3. A short guided tour then points out the window; skip it or follow it. You can replay it from **About & help → Show the tour again**.
+4. Connect your controller. On the **Profiles** page keep **Input controller** on *Auto-detect*, pick **Output as** and keep **Hide physical controllers (needs HidHide)** on. Back on **Home**, click **Start mapping**.
+5. If TSCC_WASD says Steam was already running, choose **Yes** to set up automatic reconnect (once), or **No** and use **Restart Steam** on Home this time.
+6. **Then** launch the game. If the game was already running, restart it.
 
-Use **Pause** for short breaks and **Stop** when you are done; after stopping, your controller is visible to Windows again.
-Every step in detail, including per-game profiles, each controller, NS2 Pro Bluetooth and calibration, and what to do when something
+Use **Pause** (in the **▾** menu next to the main button) for short breaks and **Release everything (Stop)** when you are done; after stopping, your controller is visible to Windows again.
+Every page and step in detail, including per-game profiles, each controller, NS2 Pro Bluetooth and stick calibration, and what to do when something
 goes wrong, is in the **[user manual](docs/MANUAL.md)**.
 
 ## Configuration and troubleshooting
@@ -86,11 +86,10 @@ the [profile format](docs/PROFILES.md) and the [NS2 Pro details](docs/NS2-PRO.md
 
 ## Uninstall
 
-1. Stop mapping and close TSCC_WASD (this restores your HidHide settings). If **Start with
-   Windows** is on, turn it off first so the sign-in entry is removed.
+1. Stop mapping and close TSCC_WASD (this restores your HidHide settings). If **When signing in to Windows** (App settings) is set to a start-at-sign-in choice, set it to *Do nothing* first so the sign-in entry is removed.
 2. Delete the extracted TSCC_WASD folder and, to remove profiles, settings and logs,
    `%APPDATA%\TSCC_WASD`.
-3. If you set up **automatic reconnect**, click **App settings → Remove** before deleting the
+3. If you set up **automatic reconnect**, click **Remove** under *Automatic reconnect* on the **App settings** page before deleting the
    folder (or delete `%ProgramFiles%\TSCC_WASD` and the `\TSCC_WASD\ReconnectControllers`
    task in Task Scheduler as an administrator).
 4. Optionally uninstall **ViGEmBus** and **HidHide** in *Windows Settings → Apps → Installed apps*
@@ -137,8 +136,8 @@ are the building blocks TSCC_WASD relies on.
 
 ## Reporting problems
 
-Open a [GitHub issue](https://github.com/ynyrworks/TSCC_WASD/issues) and paste **About → Copy
-diagnostics**; attach the log (**About → Open log folder**) if asked. Whether a game shows PS
+Open a [GitHub issue](https://github.com/ynyrworks/TSCC_WASD/issues) (**About & help → Report an issue**) and paste **About & help → Copy
+diagnostics**; attach the log (**About & help → Open log folder**) if asked. Whether a game shows PS
 prompts is worth reporting too: use the *Game compatibility* template, and results are collected
 in the [compatibility list](docs/COMPATIBILITY.md).
 
@@ -150,15 +149,14 @@ game compatibility reports and pull requests help just as much.
 
 ## Why is it unsigned?
 
-TSCC_WASD 1.0 is **not code-signed**. A code-signing certificate costs money and needs vetting; this is a free personal
+TSCC_WASD is **not code-signed** yet. A code-signing certificate costs money and needs vetting; this is a free personal
 project and has none yet, so Windows SmartScreen may warn on the first run. That is why every release has a `.sha256` file:
-only run a ZIP whose hash matches. The in-app updater checks the SHA-256 of what it downloads before installing. Signing is
-not part of 1.0. Who builds, reviews and approves releases, what the app changes on your system and the privacy statement are in
+only run a ZIP whose hash matches. The in-app updater checks the SHA-256 of what it downloads before installing. Who builds, reviews and approves releases, what the app changes on your system and the privacy statement are in
 the [code signing policy](docs/CODE-SIGNING-POLICY.md).
 
 ## Code signing policy
 
-Releases, including 1.0, are not code-signed; check each download against its `.sha256` file. See
+Releases are not code-signed; check each download against its `.sha256` file. See
 the [code signing policy](docs/CODE-SIGNING-POLICY.md) for who builds, reviews and approves
 releases, and the privacy statement.
 

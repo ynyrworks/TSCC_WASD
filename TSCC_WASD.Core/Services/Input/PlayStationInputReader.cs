@@ -8,7 +8,7 @@ namespace TSCC_WASD.Core.Services.Input;
 /// Steam can keep it too). Experimental: written from the published report layouts and unit-tested
 /// with sample reports, not yet confirmed on hardware.
 /// </summary>
-public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbleTarget
+public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbleTarget, IBatterySource, IControllerIdentity
 {
     private static readonly TimeSpan Fresh = TimeSpan.FromMilliseconds(250);
     private readonly object _gate = new();
@@ -17,6 +17,8 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
     private State _latest;
     private MotionSample _motion;
     private bool _hasState, _hasMotion;
+    private BatteryStatus _battery;
+    private volatile ControllerId? _identity;
     private long _receivedAt;
     private volatile int _rumble; // large << 8 | small
     private string _status = L.T("尋找 DualShock 4／DualSense...", "Looking for a DualShock 4 / DualSense...");
@@ -25,6 +27,10 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
     public PlayStationInputReader() => _worker = Task.Run(() => RunAsync(_stop.Token));
 
     public string Status { get { lock (_gate) return _status; } }
+
+    public BatteryStatus Battery { get { lock (_gate) return _battery; } }
+
+    public ControllerId? Identity => _identity;
 
     public bool TryGetState(out State state)
     {
@@ -55,6 +61,7 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
             _status = status;
             _hasState = _hasMotion = false;
             _latest = default;
+            _battery = default; _identity = null;
         }
     }
 
@@ -71,6 +78,7 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
                         throw new IOException(L.T("等待 DualShock 4／DualSense 連線（USB 或藍牙）。", "Waiting for a DualShock 4 / DualSense (USB or Bluetooth)."));
                     var device = found[0];
                     bool dualSense = PlayStationReport.IsDualSense(device.ProductId);
+                    _identity = new ControllerId(dualSense ? ControllerId.DualSense : ControllerId.DualShock4, HidDevice.InstanceId(device.Path));
                     string name = (dualSense ? "DualSense" : "DualShock 4") + (device.Bluetooth ? L.T("（藍牙）", " (Bluetooth)") : " (USB)");
 
                     using var stream = HidDevice.OpenRead(device.Path, out int inputLength);
@@ -95,6 +103,7 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
                                 _receivedAt = Stopwatch.GetTimestamp();
                                 _hasState = true;
                                 _status = name;
+                                if (PlayStationReport.TryParseBattery(report.AsSpan(0, length), dualSense, out var battery)) _battery = battery;
                             }
                         }
                     }
@@ -113,7 +122,7 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
         catch (Exception ex) { SetStatus(L.T($"PlayStation 手把輸入已停止：{ex.Message}", $"PlayStation controller input stopped: {ex.Message}")); }
-        finally { lock (_gate) { _hasState = _hasMotion = false; _latest = default; } }
+        finally { lock (_gate) { _hasState = _hasMotion = false; _latest = default; _battery = default; _identity = null; } }
     }
 
     /// <summary>Sends a rumble report whenever the requested strength changes; stops the motors at the end.</summary>

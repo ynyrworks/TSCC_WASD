@@ -45,4 +45,19 @@ public class AboutInfoTests
     [Fact]
     public void SigningPolicyLinkPointsAtTheDoc() =>
         Assert.Equal("https://github.com/ynyrworks/TSCC_WASD/blob/main/docs/CODE-SIGNING-POLICY.md", AboutInfo.SigningPolicyUrl);
+
+    [Theory]
+    [InlineData("1.0.0", true, "版本 1.0.0 · 正式版")]
+    [InlineData("0.99.1", true, "版本 0.99.1 · 預覽版")]
+    [InlineData("1.0.0", false, "Version 1.0.0 · Stable")]
+    [InlineData("0.99.1", false, "Version 0.99.1 · Preview")]
+    public void VersionLineShowsTheChannel(string version, bool chinese, string expected) =>
+        Assert.Equal(expected, AboutInfo.VersionLine(version, chinese));
+
+    [Fact]
+    public void IssueAndNoticeLinksPointAtTheRepository()
+    {
+        Assert.Equal("https://github.com/ynyrworks/TSCC_WASD/issues", AboutInfo.IssuesUrl);
+        Assert.Equal("https://github.com/ynyrworks/TSCC_WASD/blob/main/THIRD-PARTY-NOTICES.md", AboutInfo.ThirdPartyNoticesUrl);
+    }
 }
