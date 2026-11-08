@@ -68,6 +68,9 @@ public partial class CalibrationWindow : Wpf.Ui.Controls.FluentWindow
             ? L.T($"目前輸入：左 ({pad.LeftThumbX}, {pad.LeftThumbY})　右 ({pad.RightThumbX}, {pad.RightThumbY})",
                   $"Input: left ({pad.LeftThumbX}, {pad.LeftThumbY})   right ({pad.RightThumbX}, {pad.RightThumbY})")
             : L.T("讀不到手把輸入。請確認映射正在執行、手把已連接。", "No controller input. Make sure mapping is running and the controller is connected.");
+        CenterWarn.Visibility = _model.State == CalibrationWizardModel.Step.MeasuringCenter && _model.CenterProblem != CenterCheck.Ok
+            ? Visibility.Visible : Visibility.Collapsed;
+        NoReportWarn.Visibility = _model.NoReports ? Visibility.Visible : Visibility.Collapsed;
         if (_model.State != _shown) ShowStep();
         var progress = _model.Progress;
         for (int i = 0; i < _bars.Length; i++) _bars[i].Value = progress[i];

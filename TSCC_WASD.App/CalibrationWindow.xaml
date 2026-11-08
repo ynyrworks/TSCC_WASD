@@ -39,6 +39,10 @@
                 <TextBlock Text="{app:T Zh=下, En=Down}" FontSize="12"/><ProgressBar x:Name="R3" Minimum="0" Maximum="1" Margin="0,2,0,6"/>
             </StackPanel>
         </Grid>
+        <TextBlock x:Name="CenterWarn" Visibility="Collapsed" TextWrapping="Wrap" Foreground="OrangeRed" Margin="0,0,0,8"
+                   Text="{app:T Zh=搖桿沒有放開或手把沒有送資料，請放開搖桿並等一下再試一次, En='The sticks were not released or the controller sent no steady data. Let go of the sticks, wait a moment and try again.'}"/>
+        <TextBlock x:Name="NoReportWarn" Visibility="Collapsed" TextWrapping="Wrap" Foreground="OrangeRed" Margin="0,0,0,8"
+                   Text="{app:T Zh=手把沒有送出新的輸入，請確認手把已連接且電量足夠, En='No new input from the controller. Check that it is connected and charged.'}"/>
         <TextBlock x:Name="RawText" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <ui:Button x:Name="ResetButton" app:HelpTip.Key="calib.reset" Margin="0" Content="{app:T Zh=清除校準, En='Clear calibration'}" Click="OnReset"/>
