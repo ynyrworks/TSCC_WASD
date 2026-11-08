@@ -314,7 +314,7 @@ Steam 就永遠看不到實體手把。登入後沒看到視窗是正常的：�
 | --- | --- |
 | `profiles.json`、`profiles.json.bak` | 設定檔與上一版備份 |
 | `settings.json` | 程式設定 |
-| `logs\` | 日誌，保留 7 天 |
+| `logs\` | 日誌，每天一個檔，保留最新的 7 個 |
 | `hidhide-restore.json` | 映射前的 HidHide 狀態，用來還原 |
 | `ns2-calibration.json` | 已記住的 NS2 Pro 校準 |
 

@@ -10,9 +10,17 @@ public static class AppPaths
     /// <summary>Name used before the rename (data folder, Run value, single-instance mutex).</summary>
     public const string LegacyName = "YnyrWASD";
 
-    private static string AppData => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    private static string RealAppData => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+    /// <summary>Tests set this to a temporary folder so nothing touches the real %APPDATA%.</summary>
+    public static string? RootOverride { get; set; }
+
+    private static string AppData => RootOverride ?? RealAppData;
 
     public static string DataDirectory => Path.Combine(AppData, Name);
+
+    /// <summary>The user's real data folder, whatever <see cref="RootOverride"/> says.</summary>
+    public static string RealDataDirectory => Path.Combine(RealAppData, Name);
 
     public static string File(string fileName) => Path.Combine(DataDirectory, fileName);
 

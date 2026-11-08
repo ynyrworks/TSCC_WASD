@@ -20,7 +20,7 @@ public class HomePageTests
     [Fact]
     public async Task MainCommandIsStartWhileStopped()
     {
-        var vm = new MainViewModel();
+        var vm = new MainViewModel(hidHideFactory: () => null);
         try
         {
             Assert.False(vm.IsRunning);
@@ -32,7 +32,7 @@ public class HomePageTests
     [Fact]
     public async Task MainCommandIsStopAndLabelIsStopWhileRunning()
     {
-        var vm = new MainViewModel();
+        var vm = new MainViewModel(hidHideFactory: () => null);
         try
         {
             typeof(MainViewModel).GetProperty(nameof(MainViewModel.IsRunning))!.SetValue(vm, true);
@@ -47,7 +47,7 @@ public class HomePageTests
     [Fact]
     public async Task NullReadingWhileMappingClearsControllerAndBatteryButStoppedKeepsThem()
     {
-        var vm = new MainViewModel();
+        var vm = new MainViewModel(hidHideFactory: () => null);
         try
         {
             var info = new ControllerInfo("NS2 Pro", ControllerConnection.Usb);
@@ -77,7 +77,7 @@ public class HomePageTests
     [Fact]
     public async Task ChangingInputTypeWhileStoppedClearsLastKnown()
     {
-        var vm = new MainViewModel();
+        var vm = new MainViewModel(hidHideFactory: () => null);
         try
         {
             var profile = new MappingProfile { InputType = InputDeviceType.Auto };

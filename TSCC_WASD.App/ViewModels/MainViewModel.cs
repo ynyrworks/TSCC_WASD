@@ -45,10 +45,10 @@ public sealed class MainViewModel : ObservableObject, IAsyncDisposable
     public static readonly TimeSpan DefaultSaveDelay = TimeSpan.FromMilliseconds(800);
 
     public MainViewModel(ProfileStore? profileStore = null, AppSettingsStore? settingsStore = null, TimeSpan? saveDelay = null,
-        Action<bool, string>? startupWriter = null)
+        Action<bool, string>? startupWriter = null, Func<HidHideGuard?>? hidHideFactory = null)
     {
         _startupWriter = startupWriter ?? StartupRegistration.Set;
-        _coordinator = new MappingCoordinator(profileStore, () => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true));
+        _coordinator = new MappingCoordinator(profileStore, hidHideFactory ?? (() => HidHideGuard.TryCreate(Settings?.HideThirdPartyXInput ?? true)));
         _settingsStore = settingsStore ?? new AppSettingsStore();
         Settings = _settingsStore.Load();
         _saver = new ProfileAutoSaver(CaptureProfiles, profiles => _coordinator.SaveProfiles(profiles),

@@ -170,7 +170,7 @@ public class TourTests
         {
             string path = TempSettingsPath();
             var store = new AppSettingsStore(path);
-            var vm = new MainViewModel(settingsStore: store);
+            var vm = new MainViewModel(settingsStore: store, hidHideFactory: () => null);
             try
             {
                 Assert.False(vm.TourCompleted);
@@ -181,7 +181,7 @@ public class TourTests
                 tour.Skip();
                 Assert.True(vm.TourCompleted);
                 Assert.True(new AppSettingsStore(path).Load().TourCompleted);
-                Assert.True(new MainViewModel(settingsStore: new AppSettingsStore(path)).TourCompleted);
+                Assert.True(new MainViewModel(settingsStore: new AppSettingsStore(path), hidHideFactory: () => null).TourCompleted);
             }
             finally { vm.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
         });
@@ -192,7 +192,7 @@ public class TourTests
     {
         await ShellPageTests.RunSta(() =>
         {
-            var vm = new MainViewModel(settingsStore: new AppSettingsStore(TempSettingsPath()));
+            var vm = new MainViewModel(settingsStore: new AppSettingsStore(TempSettingsPath()), hidHideFactory: () => null);
             try
             {
                 int requests = 0;
@@ -228,7 +228,7 @@ public class TourTests
     {
         await ShellPageTests.RunSta(() =>
         {
-            var vm = new MainViewModel(settingsStore: new AppSettingsStore(TempSettingsPath()));
+            var vm = new MainViewModel(settingsStore: new AppSettingsStore(TempSettingsPath()), hidHideFactory: () => null);
             try
             {
                 var window = new MainWindow(vm);
@@ -276,7 +276,7 @@ public class TourTests
     {
         await ShellPageTests.RunSta(() =>
         {
-            var vm = new MainViewModel(settingsStore: new AppSettingsStore(TempSettingsPath()));
+            var vm = new MainViewModel(settingsStore: new AppSettingsStore(TempSettingsPath()), hidHideFactory: () => null);
             try
             {
                 var host = ShellPageTests.ThemedHost(ApplicationTheme.Dark);
@@ -315,7 +315,7 @@ public class TourTests
     {
         await ShellPageTests.RunSta(() =>
         {
-            var vm = new MainViewModel(settingsStore: new AppSettingsStore(TempSettingsPath()));
+            var vm = new MainViewModel(settingsStore: new AppSettingsStore(TempSettingsPath()), hidHideFactory: () => null);
             try
             {
                 var host = ShellPageTests.ThemedHost(ApplicationTheme.Dark);

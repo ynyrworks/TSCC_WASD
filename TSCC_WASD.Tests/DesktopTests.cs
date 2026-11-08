@@ -31,7 +31,7 @@ public class DesktopTests
                 // Screenshot runs pick the UI language; normal runs keep the default.
                 if (Environment.GetEnvironmentVariable("YNYRWASD_LANGUAGE") is { Length: > 0 } language)
                     TSCC_WASD.Core.L.Apply(language);
-                vm = new MainViewModel(store, new AppSettingsStore(Path.Combine(dir, "settings.json")));
+                vm = new MainViewModel(store, new AppSettingsStore(Path.Combine(dir, "settings.json")), hidHideFactory: () => null);
                 Assert.Single(vm.Profiles);
                 vm.NewCommand.Execute(null);
                 Assert.Equal(2, vm.Profiles.Count);

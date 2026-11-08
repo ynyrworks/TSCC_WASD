@@ -57,7 +57,7 @@ public class SettingChoicesTests
     {
         string dir = Path.Combine(Path.GetTempPath(), "wasd-choices-" + Guid.NewGuid().ToString("N"));
         var store = new AppSettingsStore(Path.Combine(dir, "settings.json"));
-        return (new MainViewModel(settingsStore: store, startupWriter: writer), store,
+        return (new MainViewModel(settingsStore: store, startupWriter: writer, hidHideFactory: () => null), store,
             () => { try { Directory.Delete(dir, true); } catch (IOException) { } });
     }
 

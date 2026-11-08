@@ -4,6 +4,7 @@ Add-Type -AssemblyName PresentationCore, WindowsBase
 $ErrorActionPreference = 'Stop'
 $root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $icoPath = Join-Path $root 'TSCC_WASD.App\Assets\TSCC_WASD.ico'
+$pngPath = Join-Path $root 'TSCC_WASD.App\Assets\TSCC_WASD_256.png'   # in-app header image (sharp at any displayed size via HighQuality scaling)
 $previewPath = Join-Path $PSScriptRoot 'preview.png'
 $sizes = 16, 20, 24, 32, 40, 48, 64, 128, 256
 $smallMax = 24   # sizes <= this use the simplified variant
@@ -69,6 +70,8 @@ for ($i = 0; $i -lt $sizes.Count; $i++) {
 foreach ($p in $pngs) { $w.Write($p) }
 $w.Flush(); [IO.File]::WriteAllBytes($icoPath, $ms.ToArray())
 
+[IO.File]::WriteAllBytes($pngPath, (ToPng (Render 256)))
+
 # ---- preview sheet: each size 1:1 on light and dark, plus 256 enlarged ----
 $sheetW = 1100; $sheetH = 620
 $dv = [Windows.Media.DrawingVisual]::new(); $dc = $dv.RenderOpen()
@@ -91,4 +94,4 @@ $dc.Close()
 $sheet = [Windows.Media.Imaging.RenderTargetBitmap]::new($sheetW, $sheetH, 96, 96, [Windows.Media.PixelFormats]::Pbgra32)
 $sheet.Render($dv)
 [IO.File]::WriteAllBytes($previewPath, (ToPng $sheet))
-Write-Host "Wrote $icoPath and $previewPath"
+Write-Host "Wrote $icoPath, $pngPath and $previewPath"

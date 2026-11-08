@@ -68,7 +68,7 @@ public class ShellPageTests
     {
         await RunSta(() =>
         {
-            var vm = new MainViewModel();
+            var vm = new MainViewModel(hidHideFactory: () => null);
             var host = ThemedHost(ApplicationTheme.Dark);
             var nav = new NavigationView { PaneDisplayMode = NavigationViewPaneDisplayMode.Left };
             nav.SetPageProviderService(new MainWindow.SharedViewModelPages(vm));
@@ -148,7 +148,7 @@ public class ShellPageTests
     {
         await RunSta(() =>
         {
-            var vm = new MainViewModel();
+            var vm = new MainViewModel(hidHideFactory: () => null);
             var host = ThemedHost(theme);
             var nav = new NavigationView { PaneDisplayMode = NavigationViewPaneDisplayMode.Left };
             nav.SetPageProviderService(new MainWindow.SharedViewModelPages(vm));
@@ -174,7 +174,7 @@ public class ShellPageTests
     {
         await RunSta(() =>
         {
-            var vm = new MainViewModel();
+            var vm = new MainViewModel(hidHideFactory: () => null);
             // The view model's 250 ms poll timer overwrites InputSummary and IsRunning from the (stopped) coordinator
             // whenever Layout pumps the dispatcher; stop it so the values the test sets are the ones asserted.
             var timer = (DispatcherTimer)typeof(MainViewModel).GetField("_timer", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(vm)!;
