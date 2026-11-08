@@ -70,7 +70,7 @@ jobs:
           Compress-Archive -LiteralPath $packageDir -DestinationPath $zip.FullName -Force
           $hash = (Get-FileHash -LiteralPath $zip.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $($zip.Name)" | Set-Content -LiteralPath ($zip.FullName + '.sha256') -Encoding utf8
-      - name: Create draft preview
+      - name: Create draft release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -82,5 +82,13 @@ jobs:
           $match = [regex]::Match($changelog, "(?ms)^## $([regex]::Escape($version))\b.*?(?=^## |\z)")
           if (-not $match.Success) { throw "CHANGELOG.md has no section for $version" }
           $match.Value.Trim() | Set-Content -LiteralPath release-notes.md -Encoding utf8
-          gh release create $env:GITHUB_REF_NAME @files --verify-tag --draft --prerelease --title "TSCC_WASD $env:GITHUB_REF_NAME preview" --notes-file release-notes.md
+          # Stable = major 1 or higher and no '-' suffix (same rule as AboutInfo.IsPreview); anything else is a preview.
+          $parsed = $null
+          $stable = $false
+          if (-not $version.Contains('-') -and [version]::TryParse($version, [ref]$parsed)) { $stable = $parsed.Major -ge 1 }
+          if ($stable) {
+            gh release create $env:GITHUB_REF_NAME @files --verify-tag --draft --title "TSCC_WASD $env:GITHUB_REF_NAME" --notes-file release-notes.md
+          } else {
+            gh release create $env:GITHUB_REF_NAME @files --verify-tag --draft --prerelease --title "TSCC_WASD $env:GITHUB_REF_NAME preview" --notes-file release-notes.md
+          }
           if ($LASTEXITCODE -ne 0) { throw 'Draft release creation failed.' }
