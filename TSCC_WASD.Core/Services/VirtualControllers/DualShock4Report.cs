@@ -19,6 +19,10 @@ public static class DualShock4Report
     /// <param name="counter">Increments per report; DS4 stores it in the top six bits of the special byte.</param>
     /// <param name="timestamp">DS4 sensor clock in 5.33 µs units.</param>
     public static byte[] Build(State state, double deadZone, MotionSample? motion, byte counter, ushort timestamp)
+        => Build(state, deadZone, motion, counter, timestamp, BatteryStatus.Unknown);
+
+    /// <param name="battery">Physical controller battery; Unknown or Unsupported keeps the old "cable, full" bytes.</param>
+    public static byte[] Build(State state, double deadZone, MotionSample? motion, byte counter, ushort timestamp, BatteryStatus battery)
     {
         var report = new byte[Length];
         var gp = state.Gamepad;
@@ -54,8 +58,8 @@ public static class DualShock4Report
         report[TriggerOffset] = gp.LeftTrigger;
         report[TriggerOffset + 1] = gp.RightTrigger;
         BinaryPrimitives.WriteUInt16LittleEndian(report.AsSpan(TimestampOffset), timestamp);
-        report[BatteryOffset] = 0xFF;
-        report[BatterySpecialOffset] = 0x1B; // Cable connected, battery full.
+        report[BatteryOffset] = 0xFF; // Not read by games or BatteryParser; kept as before.
+        report[BatterySpecialOffset] = StatusByte(battery);
 
         if (motion is { } m)
         {
@@ -78,6 +82,25 @@ public static class DualShock4Report
             report[start + 5] = 0x80;
         }
         return report;
+    }
+
+    /// <summary>
+    /// DS4 status byte: low nibble 0-10 level, bit 4 cable/charging. Empty 0, Critical 1, Low 3, Medium 6, Full 10.
+    /// Charging sets bit 4 and keeps the level (nibble 11 would read back as "not charging").
+    /// Unknown or Unsupported gives the old 0x1B (cable, full).
+    /// </summary>
+    public static byte StatusByte(BatteryStatus battery)
+    {
+        if (!battery.IsKnown) return 0x1B;
+        int level = battery.Level switch
+        {
+            BatteryLevel.Empty => 0,
+            BatteryLevel.Critical => 1,
+            BatteryLevel.Low => 3,
+            BatteryLevel.Medium => 6,
+            _ => 10
+        };
+        return (byte)(level | (battery.Charging ? 0x10 : 0));
     }
 
     /// <summary>

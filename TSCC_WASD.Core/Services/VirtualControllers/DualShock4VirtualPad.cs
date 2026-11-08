@@ -5,13 +5,14 @@ using TSCC_WASD.Core.Services.Input;
 
 namespace TSCC_WASD.Core.Services.VirtualControllers;
 
-public sealed class DualShock4VirtualPad : IVirtualController
+public sealed class DualShock4VirtualPad : IVirtualController, IBatterySink
 {
     private readonly ViGEmClient _client;
     private readonly IDualShock4Controller _controller;
     private readonly long _startTicks = Stopwatch.GetTimestamp();
     private volatile bool _connected;
     private byte _counter;
+    private BatteryStatus _battery;
     private Thread? _feedbackThread;
 
     public DualShock4VirtualPad()
@@ -28,6 +29,9 @@ public sealed class DualShock4VirtualPad : IVirtualController
             throw;
         }
     }
+
+    /// <summary>Physical battery shown in the next reports; written by the mapping loop.</summary>
+    public BatteryStatus Battery { set => _battery = value; }
 
     public bool IsConnected => _connected;
     public string? LastError { get; private set; }
@@ -71,7 +75,7 @@ public sealed class DualShock4VirtualPad : IVirtualController
         double micros = Stopwatch.GetElapsedTime(_startTicks).TotalMicroseconds;
         ushort timestamp = (ushort)((long)(micros * 3 / 16) & 0xFFFF);
         _counter = (byte)((_counter + 1) & 0x3F);
-        _controller.SubmitRawReport(DualShock4Report.Build(state, deadZone, motion, _counter, timestamp));
+        _controller.SubmitRawReport(DualShock4Report.Build(state, deadZone, motion, _counter, timestamp, _battery));
     }
 
     /// <summary>Waits for output reports the game writes to the virtual DS4 and forwards rumble.</summary>

@@ -161,6 +161,8 @@ public sealed class MappingSession : IAsyncDisposable
                     if (available && _profile.SwapFaceButtons) state.Gamepad.Buttons = SwapFaceButtons(state.Gamepad.Buttons);
                     MotionSample? motion = available && _input is IMotionSource source && source.TryGetMotion(out var sample)
                         ? sample : null;
+                    if (_output is IBatterySink sink)
+                        sink.Battery = _input is IBatterySource battery ? battery.Battery : BatteryStatus.Unknown;
                     _output.PushState(available ? state : default, _profile.DeadZone, motion);
                     string pad = OutputName(_profile.OutputType);
                     status = paused
