@@ -13,7 +13,7 @@ hiding third-party XInput controllers stay **experimental**: they may work, but 
 **Not code-signed:** SmartScreen may warn. Compare the ZIP with its `.sha256` file first; the manual explains
 how and why.
 
-- **User manual** with screenshots, in English and Traditional Chinese: download and verify, installing the
+- **User manual** (text only) in English and Traditional Chinese: download and verify, installing the
   drivers, first mapping, Steam, profiles, every supported controller, NS2 Pro calibration, controller test,
   tray, updating, troubleshooting, uninstall and where logs live.
 - The README is shorter and points to the manual; it now has a "Why is it unsigned?" section.

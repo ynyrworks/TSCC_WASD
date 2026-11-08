@@ -31,6 +31,14 @@ button input, HidHide setup, game recognition or long-running stability.
 
 ## Manual hardware validation
 
+### 1.0.0 — in-app update to the published release, 2026-11-08
+
+Maintainer's PC. *Check for updates* in an earlier installed version (0.99.1 or 0.9.2; which one was not recorded)
+found the published 1.0.0, verified and installed `TSCC_WASD-1.0.0-win-x64.zip` and restarted.
+About showed 1.0.0 as the stable channel, existing profiles were kept and mapping worked. **Passed.**
+
+1.0.0 was released early by the maintainer's decision; see [RC-CHECKLIST.md](RC-CHECKLIST.md) for the conditions
+that were not met and the checks that are still not recorded (Xbox over USB and Bluetooth).
 ### Unreleased — 1.1 interface, stick calibration and DS4 battery, 2026-11-08
 
 Release build of the local branch `feat/ui-1.1` (after `fix/cal-progress`), run by the maintainer on their PC

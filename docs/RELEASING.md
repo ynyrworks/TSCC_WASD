@@ -43,7 +43,8 @@ accept versions such as `1.0.0-rc.1`.
 The release notes are this version's CHANGELOG section, so that section must state what the release
 promises, what stays experimental and that it is not code-signed.
 
-The tag workflow still creates a draft prerelease titled "preview". For a stable release, publish it with:
+The tag workflow creates a draft. For a version below 1.0.0 it is a prerelease titled "preview"; from 1.0.0 on it is
+a normal release titled `TSCC_WASD v<version>`. Review the draft, then publish a stable release with:
 
 ```powershell
 gh release edit v1.0.0 --draft=false --prerelease=false --latest --title "TSCC_WASD v1.0.0"
