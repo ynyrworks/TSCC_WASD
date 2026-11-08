@@ -170,7 +170,6 @@ Options of the selected profile:
 | Stick dead zone (0–0.95) | Round: the stick is judged as one point by its distance from centre, so diagonals are not pulled towards the axes. Default 0.08. Raise it if a stick drifts at rest |
 | Target polling rate (30–500 Hz) | Default 125. It is a target, not a real-time guarantee; you rarely need to change it |
 
-<!-- calibration: confirm after feat/calibration-wizard -->
 Two entries at the bottom of the page open sub-windows: **Calibrate sticks** (see [Stick calibration](#stick-calibration))
 and **Controller test and report export** (see [Controller test](#controller-test)).
 
@@ -187,7 +186,7 @@ The page has three groups.
 | Option | Meaning |
 | --- | --- |
 | When signing in to Windows | Drop-down: *Do nothing*; *Map when I open the app*; *Start at sign-in, in the tray, mapping*; *Start at sign-in mapping, and map when opened by hand*. The sign-in choices write a per-user `HKCU\...\Run` entry; choosing another option removes it. Seeing no window after sign-in is normal: open it from the tray icon |
-| Steam on automatic start | Drop-down: *Leave Steam alone*; *Restart Steam if running*; *Start Steam if not running*; *Restart if running, start if not*. Applies only when mapping starts automatically (at sign-in or when the app opens). When you press Start by hand, use **Restart Steam** |
+| Steam on automatic start | Drop-down: *Leave Steam alone*; *Restart Steam if running*; *Start Steam if not running*; *Restart if running, start if not*. Applies only when mapping starts automatically (at sign-in or when the app opens). When you click **Start mapping** yourself, use **Restart Steam** |
 | Automatic reconnect (no Steam restart) | **Set up** / **Remove**. See [Steam](#steam-and-why-it-may-need-a-restart) |
 
 **Drivers and hiding**
@@ -230,7 +229,6 @@ name is filled into the profile's **Game process** field. **Cancel** closes the 
 
 ### Calibrate sticks
 
-<!-- calibration: confirm after feat/calibration-wizard -->
 Opened from **Calibrate sticks** on the Profiles page, or from the button on the Home controller card. See
 [Stick calibration](#stick-calibration).
 
@@ -357,16 +355,15 @@ with TSCC_WASD. (The NS2 Pro over Bluetooth does not use Windows pairing, so thi
 
 ## Stick calibration
 
-<!-- calibration: confirm after feat/calibration-wizard -->
 Do this if a full push feels like a light one (for example you can walk but not run), or a stick drifts at rest. It works while
-mapping and applies as soon as you save. It needs a USB connection.
+mapping and applies as soon as you save. Xbox, PlayStation, Switch Pro and NS2 Pro (USB or Bluetooth) can all be calibrated; start mapping first.
 
 1. Open the wizard with **Calibrate sticks** on the **Profiles** page, or with the calibration button on the controller card on **Home**.
-   The window is called *Calibrate sticks*.
+   The window title names the controller, for example *Calibrate NS2 Pro sticks*.
 2. **Step 1 of 2:** put the controller down without touching either stick and click **Next**.
 3. **Step 2 of 2:** slowly circle each stick (**Left stick**, **Right stick**) three times at the edge, pushing fully. When the bar for every
    direction (Up, Down, Left, Right) is full, click **Save**. **Cancel** closes the wizard without saving.
-4. Your calibration takes priority whether Steam is open or not. To drop it, click **Clear my calibration**; the factory calibration or
+4. Your calibration takes priority whether Steam is open or not. To drop it, click **Clear calibration** (it clears only this controller, or this model); the factory calibration or
    automatic learning is used instead.
 
 ## Tray icon and start with Windows
@@ -410,7 +407,7 @@ can check. Versions before 0.9.1 only open the release page, so install a newer 
 | Automatic reconnect needs setting up again | The app was updated and the helper copy must match the running version. Click **Set up** under *Automatic reconnect* on **App settings** once |
 | After stopping, Steam does not show the controller | Unplug and replug it once, or click **Restart Steam** |
 | Bluetooth pairing drops after a few seconds with blinking lights | Remove the device in Windows Bluetooth settings and pair again (see [above](#pairing-that-drops-after-a-few-seconds)) |
-| No rumble | Check **Forward game rumble to the controller**; the game must send rumble to the DS4; NS2 Pro rumble needs USB; the original Switch Pro has no rumble yet |
+| No rumble | Check **Forward game rumble to the physical controller**; the game must send rumble to the DS4; NS2 Pro rumble needs USB; the original Switch Pro has no rumble yet |
 | Still seeing Xbox icons | The game must support DS4 natively or through Steam Input; check Steam Input settings; or check that **Output as** is not Xbox 360 |
 | Want Xbox icons | Set **Output as → Xbox 360** on the Profiles page; it applies while mapping |
 | A game refuses to start or kicks you (the app warns about EA Javelin) | Some anti-cheat rejects virtual controllers: click **Release everything (Stop)**, close TSCC_WASD and play that game with the physical controller or Steam Input |

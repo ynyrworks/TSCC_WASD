@@ -20,9 +20,8 @@ Steam 若占用 USB 控制介面，程式會讀取 Steam 已初始化的 HID 報
 不會關閉 Steam 或更換驅動。此時讀不到原廠搖桿校準，程式會依序使用：
 
 0. **你的校準（最優先）**：按「校準搖桿」（映射中也可以，儲存後立即套用），先放開搖桿量中心，
-   <!-- calibration: confirm after feat/calibration-wizard -->
    再把兩支搖桿沿邊緣轉圈推到底，八個方向的進度條滿了就能儲存。不論 Steam 開不開都使用這份校準，
-   也不會被原廠校準覆蓋；精靈裡可以「清除我的校準」。
+   也不會被原廠校準覆蓋；精靈裡可以「清除校準」。
 1. **已記住的原廠校準**：只要曾在 Steam 關閉時開過一次映射，校準就會存在
    `%APPDATA%\TSCC_WASD\ns2-calibration.json`，之後 Steam 開著也會沿用。**建議做一次。**
 2. **自動學習搖桿行程**：從保守範圍開始，搖桿推得更遠就自動放寬；每個方向推到底一次後，
@@ -73,7 +72,7 @@ See [validation record](VALIDATION.md) for what was actually exercised.
 
 NS2 Pro 的藍牙是藍牙 LE（BLE）。Windows 不會把它當成手把，所以 TSCC_WASD 用 WinRT 的 GATT API 自己連線：
 
-1. 拔掉 USB 線，「輸入手把」選 **自動偵測** 或 **只用 NS2 Pro（藍牙）**，按「啟動映射」。
+1. 拔掉 USB 線，「輸入手把」選 **自動偵測** 或 **只用 NS2 Pro（藍牙）**，按「開始映射」。
 2. 按住手把頂端的 **Sync** 鍵，直到燈號開始跑。約 1–2 秒後狀態會顯示「NS2 Pro（藍牙，原廠校準）」。
 3. 手把關機或斷線後，再按住一次 Sync 即可重新連線。
 
