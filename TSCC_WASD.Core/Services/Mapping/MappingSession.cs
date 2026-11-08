@@ -26,10 +26,7 @@ public sealed class MappingSession : IAsyncDisposable
     private StickCalibrationSet? _calibration;
 
     // The loop only stores the latest reading; the text is built when someone reads InputSummary.
-    /// <param name="Sequence">Counts new input reports: it changes only when the reading differs from the previous one (0 when unknown).</param>
-    public sealed record InputSnapshot(bool Paused, bool Available, State State, long Sequence = 0);
-    private long _sequence;
-    private InputSnapshot? _previousRaw;
+    public sealed record InputSnapshot(bool Paused, bool Available, State State);
 
     public MappingSession(MappingProfile profile, IInputReader input, IVirtualController output,
         Action<string>? statusCallback = null, StickCalibrationStore? calibrations = null)
@@ -188,11 +185,7 @@ public sealed class MappingSession : IAsyncDisposable
                     state = default;
                 }
                 bool paused = _paused;
-                // A new report is a reading that differs from the last one; an unchanged cached value is not counted.
-                if (_previousRaw is null || _previousRaw.Available != available
-                    || (available && (_previousRaw.State.PacketNumber != state.PacketNumber || !_previousRaw.State.Gamepad.Equals(state.Gamepad))))
-                    _sequence++;
-                _lastUncalibrated = _previousRaw = new InputSnapshot(paused, available, state, _sequence);
+                _lastUncalibrated = new InputSnapshot(paused, available, state);
                 if (available && ReportCapture.Shared.IsRecording && IsXInputSource())
                     ReportCapture.Shared.RecordText("XInput", $"parsed buttons={state.Gamepad.Buttons} LT={state.Gamepad.LeftTrigger} RT={state.Gamepad.RightTrigger} L=({state.Gamepad.LeftThumbX},{state.Gamepad.LeftThumbY}) R=({state.Gamepad.RightThumbX},{state.Gamepad.RightThumbY})");
                 if (available && ResolveCalibration() is { } calibration) state = calibration.Apply(state);

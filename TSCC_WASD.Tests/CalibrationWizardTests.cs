@@ -16,10 +16,7 @@ internal sealed class CalibrationKit : IDisposable
     public readonly StickCalibrationStore Store;
     public Gamepad Pad;
     public bool Available = true;
-    /// <summary>When true every read returns the same report (a stalled link); otherwise each read is a new report.</summary>
-    public bool Stale;
     public long NowMs;
-    private long _sequence;
 
     public CalibrationKit()
     {
@@ -29,7 +26,7 @@ internal sealed class CalibrationKit : IDisposable
     }
 
     public CalibrationWizardModel Model(ControllerId id, string name = "Test pad") =>
-        new(id, name, () => new MappingSession.InputSnapshot(false, Available, new State { Gamepad = Pad }, Stale ? _sequence : ++_sequence),
+        new(id, name, () => new MappingSession.InputSnapshot(false, Available, new State { Gamepad = Pad }),
             Store, Ns2, () => NowMs);
 
     public void Dispose() => TempDir.Delete(Dir);
@@ -226,33 +223,47 @@ public class CalibrationWizardTests
     }
 
     [Fact]
-    public void Stale_repeated_sample_does_not_complete_the_center_step()
+    public void Identical_readings_at_a_plausible_center_complete_and_save()
     {
         using var kit = new CalibrationKit();
-        var model = StartMeasuring(kit, CalibrationKit.Stick(-1600, -3800, 0, 0));
-        kit.Stale = true;
-        for (int i = 0; i < 200; i++) model.Tick();
-        Assert.Equal(CalibrationWizardModel.Step.MeasuringCenter, model.State);
-        kit.Stale = false;
+        var id = new ControllerId(ControllerId.DualSense);
+        var model = kit.Model(id);
+        kit.Pad = CalibrationKit.Stick(-1600, -3800, 0, 0);
+        model.Tick();
+        model.Advance();
         for (int i = 0; i < GenericStickCalibrator.CenterSamplesNeeded; i++) model.Tick();
         Assert.Equal(CalibrationWizardModel.Step.Range, model.State);
+        foreach (var pad in new[] { CalibrationKit.Stick(18000, 0, 20000, 0), CalibrationKit.Stick(-20000, 0, -20000, 0),
+            CalibrationKit.Stick(0, 20000, 0, 20000), CalibrationKit.Stick(0, -20000, 0, -20000) })
+        {
+            kit.Pad = pad;
+            model.Tick();
+        }
+        Assert.True(model.Advance());
+        Assert.True(kit.Store.TryGet(id, out var saved));
+        Assert.Equal(-1600, saved.Left.X.Center);
+        Assert.Equal(-3800, saved.Left.Y.Center);
     }
 
     [Fact]
-    public void No_new_report_for_two_seconds_is_flagged()
+    public void Unavailable_for_two_seconds_shows_no_data_and_adds_no_samples()
     {
         using var kit = new CalibrationKit();
         var model = StartMeasuring(kit, CalibrationKit.Stick(0, 0, 0, 0));
-        kit.Stale = true;
+        kit.Available = false;
         kit.NowMs = 1000;
-        model.Tick();
+        for (int i = 0; i < 100; i++) model.Tick();
         Assert.False(model.NoReports);
         kit.NowMs = 2500;
-        model.Tick();
+        for (int i = 0; i < 100; i++) model.Tick();
         Assert.True(model.NoReports);
-        kit.Stale = false;
-        model.Tick();
+        Assert.Equal(CalibrationWizardModel.Step.MeasuringCenter, model.State);
+        kit.Available = true;
+        for (int i = 0; i < GenericStickCalibrator.CenterSamplesNeeded - 1; i++) model.Tick();
+        Assert.Equal(CalibrationWizardModel.Step.MeasuringCenter, model.State);
         Assert.False(model.NoReports);
+        model.Tick();
+        Assert.Equal(CalibrationWizardModel.Step.Range, model.State);
     }
 
     [Fact]
