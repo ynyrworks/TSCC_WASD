@@ -39,6 +39,7 @@ About showed 1.0.0 as the stable channel, existing profiles were kept and mappin
 
 1.0.0 was released early by the maintainer's decision; see [RC-CHECKLIST.md](RC-CHECKLIST.md) for the conditions
 that were not met and the checks that are still not recorded (Xbox over USB and Bluetooth).
+
 ### Unreleased — 1.1 interface, stick calibration and DS4 battery, 2026-11-08
 
 Release build of the local branch `feat/ui-1.1` (after `fix/cal-progress`), run by the maintainer on their PC
