@@ -23,6 +23,7 @@ public sealed class SwitchProInputReader : IInputReader, IBatterySource, IContro
     private long _receivedAt;
     private string _status = L.T("尋找 Switch Pro 手把...", "Looking for a Switch Pro Controller...");
     private bool _disposed;
+    private readonly HidHideOpener _opener = new("Switch Pro");
 
     public SwitchProInputReader() => _worker = Task.Run(() => RunAsync(_stop.Token));
 
@@ -67,8 +68,14 @@ public sealed class SwitchProInputReader : IInputReader, IBatterySource, IContro
                     var device = found[0];
                     _identity = ControllerId.ForHid(ControllerId.SwitchPro, device.Path, device.Bluetooth);
                     string name = L.T("Switch Pro 手把", "Switch Pro Controller") + (device.Bluetooth ? L.T("（藍牙）", " (Bluetooth)") : " (USB)");
-                    using var stream = HidDevice.OpenRead(device.Path, out int inputLength);
-                    using var output = HidDevice.TryOpenWrite(device.Path, out int outputLength);
+                    // Read and write handles are opened together so one HidHide unhide covers both.
+                    var (stream, inputLength, output, outputLength) = _opener.Open(device.Path, () =>
+                    {
+                        var s = HidDevice.OpenRead(device.Path, out int inLen);
+                        return (s, inLen, HidDevice.TryOpenWrite(device.Path, out int outLen), outLen);
+                    });
+                    using var streamLease = stream;
+                    using var outputLease = output;
                     var adaptiveLeft = new AdaptiveStickCalibration();
                     var adaptiveRight = new AdaptiveStickCalibration();
                     var report = new byte[Math.Max(64, inputLength)];
@@ -135,6 +142,12 @@ public sealed class SwitchProInputReader : IInputReader, IBatterySource, IContro
                 }
                 catch (OperationCanceledException) when (!token.IsCancellationRequested)
                 { SetStatus(L.T("Switch Pro 手把沒有回報輸入，正在重新連線...", "The Switch Pro Controller stopped reporting; reconnecting...")); }
+                catch (HidHideDeniedException)
+                { SetStatus(L.T("Switch Pro：HidHide 拒絕存取手把（已嘗試重新註冊與暫時取消隱藏）", "Switch Pro: HidHide denied access to the controller (re-register and temporary unhide were tried)")); }
+                catch (Win32Exception ex) when (ex.NativeErrorCode == 5)
+                { SetStatus(_opener.HasRecovery
+                    ? L.T("Switch Pro：HidHide 拒絕存取手把", "Switch Pro: HidHide denied access to the controller")
+                    : L.T("Switch Pro：存取被拒", "Switch Pro: access denied")); }
                 catch (Exception ex) when (ex is IOException or Win32Exception or UnauthorizedAccessException)
                 { SetStatus(ex.Message); }
                 await Task.Delay(1000, token).ConfigureAwait(false);
