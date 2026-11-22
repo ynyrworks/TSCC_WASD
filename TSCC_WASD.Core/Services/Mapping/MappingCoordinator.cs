@@ -211,6 +211,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
             string appPath = Environment.ProcessPath ?? throw new InvalidOperationException(L.T("無法取得程式路徑。", "Could not determine the program path."));
             _hideInputType = inputType;
             Switch2InputReader.HidHideRecovery = _hider;
+            HidHideOpener.Shared = _hider;
             string message = _hider.Hide(appPath, inputType);
             HidingSince = DateTime.Now;
             var hider = _hider;
@@ -230,6 +231,7 @@ public sealed class MappingCoordinator : IAsyncDisposable
         var hider = _hider;
         _hider = null;
         if (ReferenceEquals(Switch2InputReader.HidHideRecovery, hider)) Switch2InputReader.HidHideRecovery = null;
+        if (ReferenceEquals(HidHideOpener.Shared, hider)) HidHideOpener.Shared = null;
         HidingSince = null;
         hider?.Restore();
     }

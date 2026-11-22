@@ -23,6 +23,7 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
     private volatile int _rumble; // large << 8 | small
     private string _status = L.T("尋找 DualShock 4／DualSense...", "Looking for a DualShock 4 / DualSense...");
     private bool _disposed;
+    private readonly HidHideOpener _opener = new("PlayStation");
 
     public PlayStationInputReader() => _worker = Task.Run(() => RunAsync(_stop.Token));
 
@@ -81,9 +82,15 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
                     _identity = ControllerId.ForHid(dualSense ? ControllerId.DualSense : ControllerId.DualShock4, device.Path, device.Bluetooth);
                     string name = (dualSense ? "DualSense" : "DualShock 4") + (device.Bluetooth ? L.T("（藍牙）", " (Bluetooth)") : " (USB)");
 
-                    using var stream = HidDevice.OpenRead(device.Path, out int inputLength);
+                    // Read and rumble handles are opened together so one HidHide unhide covers both.
+                    var (stream, inputLength, rumbleOutput, outputLength) = _opener.Open(device.Path, () =>
+                    {
+                        var s = HidDevice.OpenRead(device.Path, out int inLen);
+                        return (s, inLen, HidDevice.TryOpenWrite(device.Path, out int outLen), outLen);
+                    });
+                    using var streamLease = stream;
                     using var rumbleCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-                    var rumbleTask = RunRumbleAsync(device, dualSense, rumbleCts.Token);
+                    var rumbleTask = RunRumbleAsync(device, dualSense, rumbleOutput, outputLength, rumbleCts.Token);
                     try
                     {
                         var report = new byte[Math.Max(64, inputLength)];
@@ -115,6 +122,12 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
                 }
                 catch (OperationCanceledException) when (!token.IsCancellationRequested)
                 { SetStatus(L.T("PlayStation 手把沒有回報輸入，正在重新連線...", "The PlayStation controller stopped reporting; reconnecting...")); }
+                catch (HidHideDeniedException)
+                { SetStatus(L.T("PlayStation：HidHide 拒絕存取手把（已嘗試重新註冊與暫時取消隱藏）", "PlayStation: HidHide denied access to the controller (re-register and temporary unhide were tried)")); }
+                catch (Win32Exception ex) when (ex.NativeErrorCode == 5)
+                { SetStatus(_opener.HasRecovery
+                    ? L.T("PlayStation：HidHide 拒絕存取手把", "PlayStation: HidHide denied access to the controller")
+                    : L.T("PlayStation：存取被拒", "PlayStation: access denied")); }
                 catch (Exception ex) when (ex is IOException or Win32Exception or UnauthorizedAccessException)
                 { SetStatus(ex.Message); }
                 await Task.Delay(1000, token).ConfigureAwait(false);
@@ -126,13 +139,11 @@ public sealed class PlayStationInputReader : IInputReader, IMotionSource, IRumbl
     }
 
     /// <summary>Sends a rumble report whenever the requested strength changes; stops the motors at the end.</summary>
-    private async Task RunRumbleAsync(HidControllerPath device, bool dualSense, CancellationToken token)
+    private async Task RunRumbleAsync(HidControllerPath device, bool dualSense, FileStream? output, int outputLength, CancellationToken token)
     {
-        int sent = 0, outputLength = 0;
-        FileStream? output = null;
+        int sent = 0;
         try
         {
-            output = HidDevice.TryOpenWrite(device.Path, out outputLength);
             if (output is null) return;
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(20));
             while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
