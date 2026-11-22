@@ -1,7 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.1.2
 
+**Bluetooth controllers that connect while mapping is on are picked up without restarting mapping.** **Not code-signed:**
+compare the ZIP with its `.sha256` file first.
+
+- Fixed: a Switch Pro, DualShock 4 or DualSense that connected (or was switched off and on) while mapping was running
+  stayed at "access denied" until mapping was stopped and started again, because HidHide was already hiding it.
+  These controllers now get the same recovery the NS2 Pro has: TSCC_WASD registers itself with HidHide again and, if
+  that is not enough, unhides that one controller for a moment to open it. A Switch Pro opened this way also gets its
+  write handle, so it switches to full reports instead of staying in simple mode.
 - Fixed: a stick calibration of a Bluetooth Switch Pro, DualShock 4 or DualSense is now kept when the controller is
   paired again. It is saved under the controller's Bluetooth address instead of a Windows id that changes on every
   pairing; calibrations saved by earlier versions are found and moved to the new key when the controller connects.
